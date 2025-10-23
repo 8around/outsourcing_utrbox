@@ -1,0 +1,80 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useAuthStore } from '@/lib/stores/authStore'
+import { Menu, User, LogOut } from 'lucide-react'
+import { useState } from 'react'
+
+interface HeaderProps {
+  onMenuClick?: () => void
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
+  const pathname = usePathname()
+  const { user, logout } = useAuthStore()
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = '/login'
+  }
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
+        {/* Mobile menu button */}
+        {onMenuClick && (
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
+
+        {/* Logo */}
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="text-xl font-bold text-primary">UTRBOX</div>
+        </Link>
+
+        <div className="flex-1" />
+
+        {/* User menu */}
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="gap-2">
+                <div className="bg-primary-100 text-primary-600 flex h-8 w-8 items-center justify-center rounded-full">
+                  <User className="h-4 w-4" />
+                </div>
+                <div className="hidden text-left sm:block">
+                  <div className="text-sm font-medium">{user.name}</div>
+                  <div className="text-secondary-500 text-xs">{user.organization}</div>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span>{user.name}</span>
+                  <span className="text-secondary-500 text-xs font-normal">{user.email}</span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-error">
+                <LogOut className="mr-2 h-4 w-4" />
+                로그아웃
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+    </header>
+  )
+}
