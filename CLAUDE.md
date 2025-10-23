@@ -4,6 +4,10 @@
 **Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
 @./.taskmaster/CLAUDE.md
 
+## 임시 로그인 계정
+- Email: pulwind00@gmail.com
+- PW: Youngtest002!
+
 ## 대화
 - 사용자와 대화할떄는 무조건 한국말로
 
@@ -24,6 +28,7 @@
 ## 기능 개발 & 수정 & DB 설계시
 - PRD.md 파일을 읽어야함
 - FOLDER_STURCTURE.md의 디렉터리 구조를 기본적으로 따르고 모순점이 있다면 수정 후 반영해야함
+- 작업에 앞서 계획을 ./docs 디렉터리에 '000_' 세자리 숫자를 prefix로 하여 차례대로 붙여 마크다운 형식 문서를 작성하세요.
 
 ## 데이터베이스 관리 규칙
 
