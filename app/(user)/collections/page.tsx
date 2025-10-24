@@ -191,7 +191,7 @@ export default function CollectionsPage() {
                     ) : (
                       <div className="grid h-full grid-cols-2 gap-2">
                         {thumbnails.map((content, index) => (
-                          <div key={index} className='relative rounded overflow-hidden'>
+                          <div key={index} className="relative overflow-hidden rounded">
                             <Image
                               fill
                               src={content.file_url}
