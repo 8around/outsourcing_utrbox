@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { mockAuthApi } from '@/lib/api/mock'
 import { LoadingSpinner } from '@/components/common'
 import { useToast } from '@/hooks/use-toast'
 import {
@@ -31,10 +30,28 @@ import {
 const signupSchema = z
   .object({
     email: z.string().email('올바른 이메일 형식이 아닙니다'),
-    password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
+    password: z
+      .string()
+      .min(8, '비밀번호는 최소 8자 이상이어야 합니다')
+      .regex(/[a-z]/, '영어 소문자를 최소 1개 포함해야 합니다')
+      .regex(/[A-Z]/, '영어 대문자를 최소 1개 포함해야 합니다')
+      .regex(/\d/, '숫자를 최소 1개 포함해야 합니다')
+      .regex(/[@$!%*?&]/, '특수문자(@$!%*?&)를 최소 1개 포함해야 합니다'),
     passwordConfirm: z.string(),
-    name: z.string().min(2, '이름은 최소 2자 이상이어야 합니다'),
-    organization: z.string().min(2, '소속은 최소 2자 이상이어야 합니다'),
+    name: z
+      .string()
+      .min(2, '이름은 최소 2자 이상이어야 합니다')
+      .regex(
+        /^[a-zA-Z가-힣]+(\s[a-zA-Z가-힣]+)*$/,
+        '영어와 한글만 입력 가능하며, 단어 사이 단일 공백만 허용됩니다'
+      ),
+    organization: z
+      .string()
+      .min(2, '소속은 최소 2자 이상이어야 합니다')
+      .regex(
+        /^[a-zA-Z가-힣]+(\s[a-zA-Z가-힣]+)*$/,
+        '영어와 한글만 입력 가능하며, 단어 사이 단일 공백만 허용됩니다'
+      ),
     agreeTerms: z.boolean().refine((val) => val === true, {
       message: '이용약관에 동의해주세요',
     }),
@@ -72,20 +89,28 @@ export function SignupForm() {
     setIsLoading(true)
 
     try {
-      const response = await mockAuthApi.signup({
-        email: data.email,
-        password: data.password,
-        name: data.name,
-        organization: data.organization,
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          name: data.name,
+          organization: data.organization,
+        }),
       })
 
-      if (response.success) {
+      const result = await response.json()
+
+      if (result.success) {
         setShowSuccessDialog(true)
       } else {
         toast({
           variant: 'destructive',
           title: '회원가입 실패',
-          description: response.error || '회원가입에 실패했습니다.',
+          description: result.error || '회원가입에 실패했습니다.',
         })
       }
     } catch (error) {

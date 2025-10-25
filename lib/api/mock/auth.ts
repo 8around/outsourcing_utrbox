@@ -20,7 +20,7 @@ export const mockAuthApi = {
     }
 
     // Mock password check (in real app, this would be verified on backend)
-    if (password.length < 6) {
+    if (password.length < 8) {
       return {
         data: null,
         error: '이메일 또는 비밀번호가 올바르지 않습니다.',

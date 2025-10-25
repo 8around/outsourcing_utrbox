@@ -16,16 +16,13 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { mockAuthApi } from '@/lib/api/mock'
 import { LoadingSpinner } from '@/components/common'
 import { useToast } from '@/hooks/use-toast'
 
 const loginSchema = z.object({
   email: z.string().email('올바른 이메일 형식이 아닙니다'),
-  password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
-  rememberMe: z.boolean(),
+  password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
@@ -41,7 +38,6 @@ export function LoginForm() {
     defaultValues: {
       email: '',
       password: '',
-      rememberMe: false,
     },
   })
 
@@ -49,20 +45,41 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      const response = await mockAuthApi.login(data.email, data.password)
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      })
 
-      if (response.success && response.data) {
-        login(response.data)
+      const result = await response.json()
+
+      if (result.success && result.data) {
+        // 최소 사용자 정보만 저장 (세션은 쿠키에 자동 저장됨)
+        login({
+          id: result.data.user.id,
+          email: result.data.user.email,
+          name: result.data.user.name,
+          organization: result.data.user.organization,
+          role: result.data.user.role,
+          status: 'approved',
+          created_at: '',
+          updated_at: '',
+        })
         toast({
           title: '로그인 성공',
-          description: `환영합니다, ${response.data.name}님!`,
+          description: `환영합니다, ${result.data.user.name}님!`,
         })
         router.push('/dashboard')
       } else {
         toast({
           variant: 'destructive',
           title: '로그인 실패',
-          description: response.error || '로그인에 실패했습니다.',
+          description: result.error || '로그인에 실패했습니다.',
         })
       }
     } catch (error) {
@@ -104,21 +121,6 @@ export function LoginForm() {
                   <Input type="password" placeholder="••••••" {...field} />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="rememberMe"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-2 space-y-0">
-                <FormControl>
-                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-                <FormLabel className="cursor-pointer text-sm font-normal">
-                  로그인 상태 유지
-                </FormLabel>
               </FormItem>
             )}
           />

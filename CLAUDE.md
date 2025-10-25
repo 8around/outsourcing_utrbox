@@ -4,6 +4,8 @@
 **Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
 @./.taskmaster/CLAUDE.md
 
+## 주요 파일 
+
 ## 임시 로그인 계정
 - Email: pulwind00@gmail.com
 - PW: Youngtest002!
@@ -37,6 +39,8 @@
   - DATABASE_SCHEMA.md 파일과 실제 Supabase 데이터베이스는 항상 동기화되어야 함
   - 모든 테이블, 컬럼, 타입, 제약조건이 정확히 일치해야 함
   - RLS 정책, 인덱스, 트리거도 동일하게 유지되어야 함
+  - supabase 데이터베이스 types는 [database.type.ts](./types/database.type.ts) 파일에 위치
+  - brew로 설치된 supabase cli 명령어로 로컬 supabase에 동기화
 
 ### 데이터베이스 변경 프로세스
 - **컬럼 추가/수정 시 필수 절차**

@@ -1,0 +1,344 @@
+import { SupabaseClient } from '@supabase/supabase-js'
+import { Tables, Database } from '@/types/database.type'
+
+export type UserProfile = Tables<'users'>
+
+/**
+ * 현재 사용자의 프로필 정보 조회
+ */
+export async function getUserProfile(
+  supabase: SupabaseClient<Database>,
+): Promise<{
+  success: boolean
+  data: UserProfile | null
+  error: string | null
+}> {
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return {
+        success: false,
+        data: null,
+        error: authError?.message || '사용자 정보를 찾을 수 없습니다.',
+      }
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError) {
+      return {
+        success: false,
+        data: null,
+        error: profileError.message,
+      }
+    }
+
+    return {
+      success: true,
+      data: profile,
+      error: null,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : '알 수 없는 오류',
+    }
+  }
+}
+
+/**
+ * 사용자 승인 상태 확인
+ */
+export async function checkUserApproval(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<{
+  isApproved: boolean
+  status: 'approved' | 'pending' | 'rejected' | 'not_found'
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('is_approved')
+      .eq('id', userId)
+      .single()
+
+    if (error || !data) {
+      return {
+        isApproved: false,
+        status: 'not_found',
+      }
+    }
+
+    if (data.is_approved === true) {
+      return {
+        isApproved: true,
+        status: 'approved',
+      }
+    } else if (data.is_approved === false) {
+      return {
+        isApproved: false,
+        status: 'rejected',
+      }
+    } else {
+      return {
+        isApproved: false,
+        status: 'pending',
+      }
+    }
+  } catch (error) {
+    return {
+      isApproved: false,
+      status: 'not_found',
+    }
+  }
+}
+
+/**
+ * 회원가입
+ */
+export async function signUpUser(
+  supabase: SupabaseClient<Database>,
+  data: {
+    email: string
+    password: string
+    name: string
+    organization: string
+  },
+): Promise<{
+  success: boolean
+  data: {
+    user: {
+      id: string
+      email: string
+      name: string
+      organization: string
+      status: string
+    }
+  } | null
+  error: string | null
+  message?: string
+}> {
+  try {
+    // Supabase Auth에 사용자 생성 (metadata에 프로필 정보 포함)
+    // handle_new_user 트리거가 자동으로 public.users에 레코드 생성
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+          organization: data.organization,
+        },
+      },
+    })
+
+    if (authError) {
+      return {
+        success: false,
+        data: null,
+        error: authError.message,
+      }
+    }
+
+    if (!authData.user) {
+      return {
+        success: false,
+        data: null,
+        error: '사용자 생성에 실패했습니다.',
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email || '',
+          name: data.name,
+          organization: data.organization,
+          status: 'pending',
+        },
+      },
+      error: null,
+      message:
+        '회원가입이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.',
+    }
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : '알 수 없는 오류',
+    }
+  }
+}
+
+/**
+ * 로그인 (승인 상태 검증 포함)
+ */
+export async function signInUser(
+  supabase: SupabaseClient<Database>,
+  data: {
+    email: string
+    password: string
+  },
+): Promise<{
+  success: boolean
+  data: {
+    user: {
+      id: string
+      email: string | undefined
+      name: string | null
+      organization: string | null
+      role: string | null
+    }
+  } | null
+  error: string | null
+}> {
+  try {
+    // 1. Supabase Auth 로그인
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      })
+
+    if (authError) {
+      return {
+        success: false,
+        data: null,
+        error: '이메일 또는 비밀번호가 올바르지 않습니다.',
+      }
+    }
+
+    if (!authData.user) {
+      return {
+        success: false,
+        data: null,
+        error: '로그인에 실패했습니다.',
+      }
+    }
+
+    // 2. 사용자 프로필 및 승인 상태 확인
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single()
+
+    if (profileError || !profile) {
+      await supabase.auth.signOut()
+      return {
+        success: false,
+        data: null,
+        error: '사용자 정보를 찾을 수 없습니다.',
+      }
+    }
+
+    // 3. 승인 상태 확인
+    if (profile.is_approved !== true) {
+      await supabase.auth.signOut()
+      return {
+        success: false,
+        data: null,
+        error: '관리자 승인 대기 중입니다. 승인 후 로그인이 가능합니다.',
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          name: profile.name,
+          organization: profile.organization,
+          role: profile.role,
+        },
+      },
+      error: null,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : '알 수 없는 오류',
+    }
+  }
+}
+
+/**
+ * 로그아웃
+ */
+export async function signOutUser(
+  supabase: SupabaseClient<Database>,
+): Promise<{
+  success: boolean
+  error: string | null
+}> {
+  try {
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message,
+      }
+    }
+
+    return {
+      success: true,
+      error: null,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류',
+    }
+  }
+}
+
+/**
+ * 비밀번호 재설정 이메일 전송
+ */
+export async function resetUserPassword(
+  supabase: SupabaseClient<Database>,
+  email: string,
+): Promise<{
+  success: boolean
+  error: string | null
+  message?: string
+}> {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+    })
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message,
+      }
+    }
+
+    return {
+      success: true,
+      error: null,
+      message: '비밀번호 재설정 이메일이 전송되었습니다.',
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류',
+    }
+  }
+}
