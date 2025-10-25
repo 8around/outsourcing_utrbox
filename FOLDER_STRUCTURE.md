@@ -23,10 +23,7 @@ utrbox/
 ├── hooks/                 # 커스텀 React 훅
 ├── types/                 # TypeScript 타입 정의
 ├── styles/                # 전역 스타일 및 CSS 모듈
-├── public/                # 정적 자산
-├── tests/                 # 테스트 파일
-├── scripts/               # 빌드 및 유틸리티 스크립트
-└── docs/                  # 프로젝트 문서
+└── public/                # 정적 자산
 ```
 
 ---
@@ -72,161 +69,62 @@ Next.js 14 App Router 구조를 따르는 라우팅 및 페이지 구성
 app/
 ├── layout.tsx                 # 루트 레이아웃
 ├── page.tsx                   # 홈페이지
-├── loading.tsx                # 전역 로딩 컴포넌트
-├── error.tsx                  # 전역 에러 바운더리
-├── not-found.tsx              # 404 페이지
 ├── globals.css                # 전역 스타일
+├── favicon.ico                # 파비콘
 │
 ├── (auth)/                    # 인증 관련 라우트 그룹
 │   ├── layout.tsx                 # 인증 페이지 공통 레이아웃
 │   ├── login/
-│   │   ├── page.tsx              # 로그인 페이지
-│   │   └── loading.tsx           # 로그인 로딩 상태
+│   │   └── page.tsx              # 로그인 페이지
 │   ├── signup/
-│   │   ├── page.tsx              # 회원가입 페이지
-│   │   └── loading.tsx           # 회원가입 로딩 상태
-│   ├── reset-password/
-│   │   ├── page.tsx              # 비밀번호 재설정 페이지
-│   │   └── loading.tsx           # 재설정 로딩 상태
-│   └── verify-email/
-│       └── page.tsx              # 이메일 인증 페이지
+│   │   └── page.tsx              # 회원가입 페이지
+│   └── reset-password/
+│       └── page.tsx              # 비밀번호 재설정 페이지
 │
 ├── (user)/                    # 사용자 포털 라우트 그룹
 │   ├── layout.tsx                 # 사용자 포털 레이아웃 (사이드바, 헤더)
 │   ├── dashboard/
-│   │   ├── page.tsx              # 대시보드 메인
-│   │   ├── loading.tsx           # 대시보드 로딩
-│   │   └── components/           # 대시보드 전용 컴포넌트
-│   │       ├── StatsCard.tsx
-│   │       └── RecentActivity.tsx
+│   │   └── page.tsx              # 대시보드 메인
 │   ├── contents/
 │   │   ├── page.tsx              # 콘텐츠 목록
 │   │   ├── [id]/
-│   │   │   ├── page.tsx          # 콘텐츠 상세
-│   │   │   ├── edit/
-│   │   │   │   └── page.tsx      # 콘텐츠 수정
-│   │   │   └── loading.tsx       # 상세 페이지 로딩
-│   │   ├── upload/
-│   │   │   └── page.tsx          # 콘텐츠 업로드
-│   │   └── components/           # 콘텐츠 관련 컴포넌트
-│   │       ├── ContentGrid.tsx
-│   │       ├── ContentList.tsx
-│   │       └── UploadDropzone.tsx
-│   ├── collections/
-│   │   ├── page.tsx              # 컬렉션 목록
-│   │   ├── [id]/
-│   │   │   ├── page.tsx          # 컬렉션 상세
-│   │   │   └── loading.tsx       # 컬렉션 로딩
-│   │   ├── create/
-│   │   │   └── page.tsx          # 컬렉션 생성
-│   │   └── components/           # 컬렉션 관련 컴포넌트
-│   │       ├── CollectionTree.tsx
-│   │       └── CollectionCard.tsx
-│   ├── detections/
-│   │   ├── page.tsx              # 발견 결과 목록
-│   │   └── [id]/
-│   │       └── page.tsx          # 발견 결과 상세
-│   └── profile/
-│       ├── page.tsx              # 프로필 페이지
-│       └── settings/
-│           └── page.tsx          # 계정 설정
+│   │   │   └── page.tsx          # 콘텐츠 상세
+│   │   └── upload/
+│   │       └── page.tsx          # 콘텐츠 업로드
+│   └── collections/
+│       └── page.tsx              # 컬렉션 목록
 │
-├── (admin)/                   # 관리자 포털 라우트 그룹
+├── (admin)/                   # 관리자 포털 라우트 그룹 (admin 경로)
 │   ├── layout.tsx                 # 관리자 레이아웃 (관리자 사이드바, 헤더)
-│   ├── admin/
-│   │   ├── page.tsx              # 관리자 대시보드
-│   │   └── loading.tsx           # 관리자 대시보드 로딩
-│   ├── admin/members/
-│   │   ├── page.tsx              # 회원 목록
-│   │   ├── [id]/
-│   │   │   ├── page.tsx          # 회원 상세
-│   │   │   └── edit/
-│   │   │       └── page.tsx      # 회원 정보 수정
-│   │   └── components/           # 회원 관리 컴포넌트
-│   │       ├── MemberTable.tsx
-│   │       └── MemberFilters.tsx
-│   ├── admin/contents/
+│   ├── dashboard/
+│   │   └── page.tsx              # 관리자 대시보드
+│   ├── contents/
 │   │   ├── page.tsx              # 전체 콘텐츠 목록
-│   │   ├── [id]/
-│   │   │   ├── page.tsx          # 콘텐츠 검토 페이지
-│   │   │   └── analyze/
-│   │   │       └── page.tsx      # AI 분석 실행
-│   │   └── components/           # 콘텐츠 관리 컴포넌트
-│   │       ├── ContentReviewModal.tsx
-│   │       └── AnalysisResults.tsx
-│   ├── admin/analysis/
-│   │   ├── page.tsx              # AI 분석 관리
-│   │   ├── batch/
-│   │   │   └── page.tsx          # 일괄 분석
-│   │   └── components/           # 분석 관련 컴포넌트
-│   │       ├── AnalysisQueue.tsx
-│   │       └── AnalysisHistory.tsx
-│   ├── admin/detections/
-│   │   ├── page.tsx              # 전체 발견 목록
-│   │   ├── review/
-│   │   │   └── page.tsx          # 검토 대기 목록
-│   │   └── components/           # 검토 관련 컴포넌트
-│   │       ├── ComparisonModal.tsx
-│   │       └── ReviewForm.tsx
-│   └── admin/settings/
-│       ├── page.tsx              # 시스템 설정
-│       └── components/
-│           ├── APISettings.tsx
-│           └── SystemConfig.tsx
+│   │   └── [id]/
+│   │       └── page.tsx          # 콘텐츠 상세 및 분석
+│   ├── review/
+│   │   ├── page.tsx              # 검토 대기 목록
+│   │   └── [detectionId]/
+│   │       └── page.tsx          # 발견 검토 상세
+│   ├── users/
+│   │   ├── page.tsx              # 회원 목록
+│   │   └── [id]/
+│   │       └── page.tsx          # 회원 상세
+│   └── login/
+│       └── page.tsx              # 관리자 로그인 페이지
 │
 └── api/                       # API 라우트
-    ├── auth/
-    │   ├── login/
-    │   │   └── route.ts          # POST /api/auth/login
-    │   ├── logout/
-    │   │   └── route.ts          # POST /api/auth/logout
-    │   ├── signup/
-    │   │   └── route.ts          # POST /api/auth/signup
-    │   ├── reset/
-    │   │   └── route.ts          # POST /api/auth/reset
-    │   ├── verify/
-    │   │   └── route.ts          # POST /api/auth/verify
-    │   └── me/
-    │       └── route.ts          # GET /api/auth/me
-    ├── contents/
-    │   ├── route.ts              # GET, POST /api/contents
-    │   ├── [id]/
-    │   │   └── route.ts          # GET, PUT, DELETE /api/contents/[id]
-    │   ├── upload/
-    │   │   └── route.ts          # POST /api/contents/upload
-    │   └── batch/
-    │       └── route.ts          # POST /api/contents/batch
-    ├── collections/
-    │   ├── route.ts              # GET, POST /api/collections
-    │   └── [id]/
-    │       └── route.ts          # GET, PUT, DELETE /api/collections/[id]
-    ├── analysis/
-    │   ├── start/
-    │   │   └── route.ts          # POST /api/analysis/start
-    │   ├── [id]/
-    │   │   └── route.ts          # GET /api/analysis/[id]
-    │   └── batch/
-    │       └── route.ts          # POST /api/analysis/batch
-    ├── detections/
-    │   ├── route.ts              # GET /api/detections
-    │   ├── [id]/
-    │   │   └── route.ts          # GET, PUT /api/detections/[id]
-    │   └── review/
-    │       └── route.ts          # POST /api/detections/review
-    ├── admin/
-    │   ├── users/
-    │   │   ├── route.ts          # GET /api/admin/users
-    │   │   └── [id]/
-    │   │       └── route.ts      # GET, PUT /api/admin/users/[id]
-    │   ├── stats/
-    │   │   └── route.ts          # GET /api/admin/stats
-    │   └── system/
-    │       └── route.ts          # GET, PUT /api/admin/system
-    └── webhooks/
-        ├── google/
-        │   └── route.ts          # POST /api/webhooks/google
-        └── supabase/
-            └── route.ts          # POST /api/webhooks/supabase
+    └── auth/
+        ├── login/
+        │   └── route.ts          # POST /api/auth/login
+        ├── logout/
+        │   └── route.ts          # POST /api/auth/logout
+        ├── signup/
+        │   └── route.ts          # POST /api/auth/signup
+        ├── reset-password/
+        │   └── route.ts          # POST /api/auth/reset-password
+        └── me/
+            └── route.ts          # GET /api/auth/me
 ```
 
 ---
@@ -254,39 +152,42 @@ components/
 │   ├── LoginForm.tsx         # 로그인 폼
 │   ├── SignupForm.tsx        # 회원가입 폼
 │   ├── ResetPasswordForm.tsx # 비밀번호 재설정 폼
-│   └── AuthGuard.tsx         # 인증 가드 컴포넌트
-├── content/                   # 콘텐츠 관련 컴포넌트
-│   ├── ContentCard.tsx       # 콘텐츠 카드
-│   ├── ContentGrid.tsx       # 콘텐츠 그리드
-│   ├── ContentList.tsx       # 콘텐츠 리스트
-│   ├── ContentDetail.tsx     # 콘텐츠 상세
-│   ├── ContentUploader.tsx   # 업로드 컴포넌트
-│   └── ContentFilters.tsx    # 필터 컴포넌트
+│   └── index.ts              # Export 파일
 ├── admin/                     # 관리자 전용 컴포넌트
-│   ├── MemberTable.tsx       # 회원 테이블
-│   ├── ReviewModal.tsx       # 검토 모달
-│   ├── ComparisonView.tsx    # 비교 뷰
-│   ├── AnalysisPanel.tsx     # 분석 패널
-│   └── StatsDashboard.tsx    # 통계 대시보드
+│   ├── contents/             # 콘텐츠 관리 컴포넌트
+│   │   ├── ContentTable.tsx        # 콘텐츠 테이블
+│   │   ├── ContentFilters.tsx      # 콘텐츠 필터
+│   │   ├── AnalysisButton.tsx      # 분석 버튼
+│   │   └── AnalysisStatusBadge.tsx # 분석 상태 배지
+│   ├── dashboard/            # 대시보드 컴포넌트
+│   │   ├── StatsCard.tsx           # 통계 카드
+│   │   └── ActivityFeed.tsx        # 활동 피드
+│   ├── layout/               # 관리자 레이아웃 컴포넌트
+│   │   ├── AdminLayout.tsx         # 관리자 레이아웃
+│   │   ├── AdminHeader.tsx         # 관리자 헤더
+│   │   └── AdminSidebar.tsx        # 관리자 사이드바
+│   ├── review/               # 검토 관련 컴포넌트
+│   │   ├── DetectionList.tsx       # 발견 목록
+│   │   ├── ImageCompareViewer.tsx  # 이미지 비교 뷰어
+│   │   └── ReviewPanel.tsx         # 검토 패널
+│   └── users/                # 회원 관리 컴포넌트
+│       ├── UserTable.tsx           # 회원 테이블
+│       ├── UserFilters.tsx         # 회원 필터
+│       ├── UserActionButtons.tsx   # 회원 액션 버튼
+│       └── UserDetailCard.tsx      # 회원 상세 카드
 ├── layout/                    # 레이아웃 컴포넌트
 │   ├── Header.tsx            # 헤더
 │   ├── Sidebar.tsx           # 사이드바
 │   ├── Footer.tsx            # 푸터
-│   ├── Navigation.tsx        # 네비게이션
-│   └── Breadcrumb.tsx        # 브레드크럼
-├── common/                    # 공통 컴포넌트
-│   ├── LoadingSpinner.tsx    # 로딩 스피너
-│   ├── ErrorBoundary.tsx     # 에러 바운더리
-│   ├── EmptyState.tsx        # 빈 상태
-│   ├── Pagination.tsx        # 페이지네이션
-│   ├── SearchInput.tsx       # 검색 입력
-│   ├── ConfirmDialog.tsx     # 확인 대화상자
-│   └── ImageViewer.tsx       # 이미지 뷰어
-└── providers/                 # Context Provider
-    ├── AuthProvider.tsx       # 인증 컨텍스트
-    ├── ThemeProvider.tsx      # 테마 컨텍스트
-    ├── ToastProvider.tsx      # 토스트 컨텍스트
-    └── QueryProvider.tsx      # React Query 프로바이더
+│   └── index.ts              # Export 파일
+└── common/                    # 공통 컴포넌트
+    ├── LoadingSpinner.tsx    # 로딩 스피너
+    ├── EmptyState.tsx        # 빈 상태
+    ├── Pagination.tsx        # 페이지네이션
+    ├── SearchInput.tsx       # 검색 입력
+    ├── ConfirmDialog.tsx     # 확인 대화상자
+    ├── ImageViewer.tsx       # 이미지 뷰어
+    └── index.ts              # Export 파일
 ```
 
 ---
@@ -301,38 +202,31 @@ lib/
 │   ├── client.ts             # Supabase 클라이언트 초기화
 │   ├── server.ts             # 서버사이드 클라이언트
 │   ├── auth.ts               # 인증 헬퍼 함수
-│   ├── database.ts           # 데이터베이스 쿼리 함수
-│   ├── storage.ts            # 스토리지 헬퍼 함수
-│   └── realtime.ts           # 실시간 구독 함수
-├── google-vision/             # Google Vision API 연동
-│   ├── client.ts             # Google Vision 클라이언트
-│   ├── analyze.ts            # 이미지 분석 함수
-│   ├── types.ts              # API 타입 정의
-│   └── utils.ts              # 유틸리티 함수
+│   └── middleware.ts         # 미들웨어 헬퍼 함수
 ├── api/                       # API 클라이언트
-│   ├── client.ts             # API 클라이언트 설정
-│   ├── auth.ts               # 인증 API 호출
-│   ├── contents.ts           # 콘텐츠 API 호출
-│   ├── collections.ts        # 컬렉션 API 호출
-│   ├── analysis.ts           # 분석 API 호출
-│   └── admin.ts              # 관리자 API 호출
+│   └── mock/                 # Mock API 데이터
+│       ├── auth.ts           # 인증 Mock
+│       ├── contents.ts       # 콘텐츠 Mock
+│       ├── collections.ts    # 컬렉션 Mock
+│       └── index.ts          # Export 파일
+├── admin/                     # 관리자 관련 로직
+│   ├── types.ts              # 관리자 타입 정의
+│   ├── mock-data.ts          # 관리자 Mock 데이터
+│   └── store.ts              # 관리자 상태 관리
+├── stores/                    # 전역 상태 관리
+│   ├── authStore.ts          # 인증 상태
+│   └── contentStore.ts       # 콘텐츠 상태
+├── mock-data/                 # Mock 데이터
+│   ├── users.ts              # 사용자 Mock 데이터
+│   ├── contents.ts           # 콘텐츠 Mock 데이터
+│   ├── collections.ts        # 컬렉션 Mock 데이터
+│   ├── analysisResults.ts    # 분석 결과 Mock 데이터
+│   ├── detectedContents.ts   # 발견된 콘텐츠 Mock 데이터
+│   └── index.ts              # Export 파일
 ├── utils/                     # 유틸리티 함수
-│   ├── format.ts             # 포맷팅 유틸리티
-│   ├── date.ts               # 날짜 유틸리티
-│   ├── file.ts               # 파일 유틸리티
-│   ├── image.ts              # 이미지 처리 유틸리티
-│   ├── string.ts             # 문자열 유틸리티
-│   └── validation.ts         # 유효성 검증 유틸리티
-├── validators/                # 유효성 검증 (Zod 스키마)
-│   ├── auth.ts               # 인증 스키마
-│   ├── content.ts            # 콘텐츠 스키마
-│   ├── collection.ts         # 컬렉션 스키마
-│   └── user.ts               # 사용자 스키마
-└── constants/                 # 상수 정의
-    ├── routes.ts             # 라우트 상수
-    ├── api.ts                # API 엔드포인트
-    ├── messages.ts           # 메시지 상수
-    └── config.ts             # 설정 상수
+│   ├── validation.ts         # 유효성 검증 유틸리티
+│   └── errors.ts             # 에러 처리 유틸리티
+└── utils.ts                   # 공통 유틸리티 함수
 ```
 
 ---
@@ -343,15 +237,7 @@ lib/
 
 ```
 hooks/
-├── useAuth.ts                # 인증 관련 훅
-├── useUser.ts                # 사용자 정보 훅
-├── useContent.ts             # 콘텐츠 관련 훅
-├── useCollection.ts          # 컬렉션 관련 훅
-├── useUpload.ts              # 업로드 관련 훅
-├── useAnalysis.ts            # 분석 관련 훅
-├── useDebounce.ts            # 디바운스 훅
-├── useIntersection.ts        # Intersection Observer 훅
-└── useMediaQuery.ts          # 미디어 쿼리 훅
+└── use-toast.ts              # Toast 훅 (shadcn/ui)
 ```
 
 ### 6.2 types 디렉터리
@@ -373,77 +259,18 @@ types/
 
 ```
 styles/
-├── globals.css               # 전역 스타일
-├── variables.css             # CSS 변수
-└── components/               # 컴포넌트별 스타일
-    ├── button.module.css
-    ├── card.module.css
-    └── table.module.css
+└── components/               # 컴포넌트별 스타일 (현재 비어있음)
 ```
 
 ### 6.4 public 디렉터리
 
 ```
 public/
-├── images/
-│   ├── logo.svg             # 로고
-│   ├── favicon.ico          # 파비콘
-│   └── og-image.png         # Open Graph 이미지
+├── images/                   # 이미지 파일
 ├── fonts/                    # 커스텀 폰트
-│   ├── Inter-Regular.woff2
-│   └── NotoSansKR-Regular.woff2
 └── icons/                    # 아이콘
-    ├── upload.svg
-    ├── download.svg
-    └── delete.svg
 ```
 
-### 6.5 tests 디렉터리
-
-```
-tests/
-├── unit/                     # 단위 테스트
-│   ├── components/
-│   ├── hooks/
-│   └── utils/
-├── integration/              # 통합 테스트
-│   ├── api/
-│   └── auth/
-├── e2e/                      # E2E 테스트
-│   ├── auth.spec.ts
-│   ├── upload.spec.ts
-│   └── admin.spec.ts
-└── fixtures/                 # 테스트 픽스처
-    ├── users.json
-    └── contents.json
-```
-
-### 6.6 scripts 디렉터리
-
-```
-scripts/
-├── setup.js                  # 초기 설정 스크립트
-├── seed.js                   # 시드 데이터 스크립트
-├── migrate.js                # 마이그레이션 스크립트
-└── backup.js                 # 백업 스크립트
-```
-
-### 6.7 docs 디렉터리
-
-```
-docs/
-├── api/                      # API 문서
-│   ├── authentication.md
-│   ├── contents.md
-│   └── admin.md
-├── guides/                   # 사용 가이드
-│   ├── user-guide.md
-│   └── admin-guide.md
-└── development/              # 개발 문서
-    ├── setup.md
-    ├── deployment.md
-    └── troubleshooting.md
-```
 
 ---
 
@@ -469,11 +296,6 @@ docs/
 ### 7.4 설정 파일
 - **설정**: kebab-case 또는 dotfile (예: `next.config.js`, `.eslintrc.json`)
 - **환경 변수**: `.env`, `.env.local`, `.env.production`
-
-### 7.5 테스트 파일
-- **단위 테스트**: `*.test.ts` 또는 `*.test.tsx`
-- **E2E 테스트**: `*.spec.ts`
-- **테스트 유틸리티**: `test-utils.ts`
 
 ---
 
@@ -534,30 +356,6 @@ export { ContentList } from './ContentList'
 ### 9.4 일관된 구조 유지
 - 모든 feature 폴더는 동일한 구조 유지
 - 새로운 기능 추가 시 기존 패턴 따르기
-
----
-
-## 10. 빌드 출력 구조
-
-### 10.1 Next.js 빌드 출력
-
-```
-.next/
-├── cache/                    # 빌드 캐시
-├── server/                   # 서버 번들
-├── static/                   # 정적 자산
-└── BUILD_ID                  # 빌드 식별자
-```
-
-### 10.2 Vercel 배포 구조
-
-```
-.vercel/
-├── output/                   # 빌드 출력
-│   ├── functions/           # 서버리스 함수
-│   └── static/              # 정적 파일
-└── project.json             # 프로젝트 설정
-```
 
 ---
 

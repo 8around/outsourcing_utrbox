@@ -63,3 +63,5 @@ supabase/.branches/
 
 # MCP
 .mcp.json
+
+.serena/
