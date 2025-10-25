@@ -9,19 +9,10 @@ const protectedPaths = ['/dashboard', '/contents', '/collections']
 const adminPaths = ['/admin']
 
 // 인증이 필요 없는 공개 경로
-const publicPaths = ['/login', '/signup', '/reset-password', '/']
+const publicPaths = ['/login', '/signup', '/reset-password']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // 정적 파일 및 API 경로는 미들웨어 건너뛰기
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.includes('.')
-  ) {
-    return NextResponse.next()
-  }
 
   // Supabase 미들웨어 클라이언트 생성
   const { supabase, response } = createMiddlewareSupabase(request)
@@ -35,6 +26,13 @@ export async function middleware(request: NextRequest) {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser()
+
+    // 루트('/') 접근 시 리디렉션
+    if (pathname === '/') {
+      return NextResponse.redirect(
+        new URL(user ? '/dashboard' : '/login', request.url)
+      )
+    }
 
     // 로그인한 사용자가 인증 페이지에 접근하는 경우
     if (user && (pathname === '/login' || pathname === '/signup')) {
@@ -93,11 +91,13 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public files (public directory)
+     * - robots.txt, sitemap.xml (SEO files)
+     * - .*\..* (any file with extension)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|manifest.webmanifest|.*\\..*).*)',
   ],
 }
