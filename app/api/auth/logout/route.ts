@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         error: null,
-        message: '로그아웃되었습니다.',
+        message: '로그아웃 되었습니다.',
       },
       {
         status: 200,

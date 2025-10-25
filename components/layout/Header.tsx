@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -13,19 +12,45 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { Menu, User, LogOut } from 'lucide-react'
-import { useState } from 'react'
+import { useToast } from '@/hooks/use-toast'
 
 interface HeaderProps {
   onMenuClick?: () => void
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
-  const pathname = usePathname()
   const { user, logout } = useAuthStore()
+  const { toast } = useToast()
 
-  const handleLogout = () => {
-    logout()
-    window.location.href = '/login'
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        toast({
+          variant: 'destructive',
+          title: '로그아웃 실패',
+          description: result.error,
+        })
+        return
+      }
+
+      // 성공 시
+      logout()
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: '네트워크 오류',
+        description: '서버에 연결할 수 없습니다. 다시 시도해주세요.',
+      })
+    }
   }
 
   return (
