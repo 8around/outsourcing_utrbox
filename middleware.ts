@@ -23,20 +23,28 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 공개 경로는 통과
-  if (publicPaths.some((path) => pathname.startsWith(path))) {
-    return NextResponse.next()
-  }
-
   // Supabase 미들웨어 클라이언트 생성
   const { supabase, response } = createMiddlewareSupabase(request)
 
   try {
-    // 현재 사용자 확인 (쿠키 기반 단일 경로)
+    // 1) 세션 먼저 확인 (필요 시 토큰 갱신 트리거)
+    await supabase.auth.getSession()
+
+    // 2) 현재 사용자 확인
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser()
+
+    // 로그인한 사용자가 인증 페이지에 접근하는 경우
+    if (user && (pathname === '/login' || pathname === '/signup')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+
+    // 공개 경로는 통과
+    if (publicPaths.some((path) => pathname === path)) {
+      return response
+    }
 
     if (userError || !user) {
       // 사용자 정보를 가져올 수 없으면 로그인 페이지로 리다이렉트
