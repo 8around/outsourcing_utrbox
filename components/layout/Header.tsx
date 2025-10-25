@@ -72,7 +72,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 
         {/* User menu */}
         {user && (
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="gap-2">
                 <div className="bg-primary-100 text-primary-600 flex h-8 w-8 items-center justify-center rounded-full">
