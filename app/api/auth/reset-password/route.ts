@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: '이메일을 입력해주세요.',
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: '올바른 이메일 형식이 아닙니다.',
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: result.error,
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
         error: null,
         message: result.message,
       },
-      { status: 200 },
+      { status: 200 }
     )
   } catch (error) {
     console.error('Reset password error:', error)
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: '비밀번호 재설정 중 오류가 발생했습니다.',
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

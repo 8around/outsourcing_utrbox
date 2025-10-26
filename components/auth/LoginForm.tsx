@@ -66,9 +66,7 @@ export function LoginForm() {
           name: result.data.user.name,
           organization: result.data.user.organization,
           role: result.data.user.role,
-          status: 'approved',
-          created_at: '',
-          updated_at: '',
+          isApproved: result.data.user.isApproved,
         })
         toast({
           title: '로그인 성공',

@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
           data: null,
           error: '이메일과 비밀번호를 입력해주세요.',
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
             })
           },
         },
-      },
+      }
     )
 
     // 로그인 처리 (헬퍼 함수 사용)
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         data: null,
         error: '로그인 중 오류가 발생했습니다.',
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

@@ -188,16 +188,17 @@ export default function AdminContentDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {(content.label_data as { labels?: { description: string; score: number }[] })
-                      ?.labels?.map((label, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between rounded-lg border p-3"
-                        >
-                          <span className="font-medium">{label.description}</span>
-                          <Badge variant="outline">{(label.score * 100).toFixed(0)}%</Badge>
-                        </div>
-                      ))}
+                    {(
+                      content.label_data as { labels?: { description: string; score: number }[] }
+                    )?.labels?.map((label, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between rounded-lg border p-3"
+                      >
+                        <span className="font-medium">{label.description}</span>
+                        <Badge variant="outline">{(label.score * 100).toFixed(0)}%</Badge>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>

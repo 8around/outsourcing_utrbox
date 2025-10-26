@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
             })
           },
         },
-      },
+      }
     )
 
     // 로그아웃 처리 (헬퍼 함수 사용)
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         {
           status: 400,
           headers: response.headers,
-        },
+        }
       )
     }
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       {
         status: 200,
         headers: response.headers,
-      },
+      }
     )
   } catch (error) {
     console.error('Logout error:', error)
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: '로그아웃 중 오류가 발생했습니다.',
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

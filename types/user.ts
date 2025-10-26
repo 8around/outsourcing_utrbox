@@ -1,7 +1,6 @@
 // User type definitions
 
-export type UserRole = 'Admin' | 'Member'
-export type UserStatus = 'pending' | 'approved' | 'blocked'
+export type UserRole = 'admin' | 'member'
 
 export interface User {
   id: string
@@ -9,7 +8,5 @@ export interface User {
   name: string
   organization: string
   role: UserRole
-  status: UserStatus
-  created_at: string
-  updated_at: string
+  isApproved: boolean | null
 }

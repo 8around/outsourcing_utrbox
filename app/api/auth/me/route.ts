@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
           data: null,
           error: result.error,
         },
-        { status: 401 },
+        { status: 401 }
       )
     }
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         data: result.data,
         error: null,
       },
-      { status: 200 },
+      { status: 200 }
     )
   } catch (error) {
     console.error('Get user profile error:', error)
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         data: null,
         error: '사용자 정보를 가져오는 중 오류가 발생했습니다.',
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

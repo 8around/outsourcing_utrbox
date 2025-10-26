@@ -24,7 +24,7 @@ export function createMiddlewareSupabase(request: NextRequest) {
           })
         },
       },
-    },
+    }
   )
 
   return { supabase, response }

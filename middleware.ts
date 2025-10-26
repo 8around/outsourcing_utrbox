@@ -29,9 +29,7 @@ export async function middleware(request: NextRequest) {
 
     // 루트('/') 접근 시 리디렉션
     if (pathname === '/') {
-      return NextResponse.redirect(
-        new URL(user ? '/dashboard' : '/login', request.url)
-      )
+      return NextResponse.redirect(new URL(user ? '/dashboard' : '/login', request.url))
     }
 
     // 로그인한 사용자가 인증 페이지에 접근하는 경우
@@ -61,18 +59,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // 승인되지 않은 사용자 체크
-    if (profile.is_approved !== true) {
-      // 승인 대기 중인 사용자는 특정 페이지로 리다이렉트
-      if (pathname !== '/pending-approval') {
-        return NextResponse.redirect(new URL('/pending-approval', request.url))
-      }
-      return response
-    }
-
     // 관리자 전용 경로 체크
     if (adminPaths.some((path) => pathname.startsWith(path))) {
-      if (profile.role !== 'Admin') {
+      if (profile.role !== 'admin') {
         // 관리자가 아니면 대시보드로 리다이렉트
         return NextResponse.redirect(new URL('/dashboard', request.url))
       }

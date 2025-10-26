@@ -1,25 +1,35 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Footer } from '@/components/layout/Footer'
 import { useAuthStore } from '@/lib/stores/authStore'
+import { useAuthRecovery } from '@/hooks/use-auth-recovery'
+import { LoadingSpinner } from '@/components/common'
 import { cn } from '@/lib/utils'
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const pathname = usePathname()
   const { isAuthenticated } = useAuthStore()
+  const { recovering } = useAuthRecovery()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Check authentication
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!recovering && !isAuthenticated) {
       router.push('/login')
     }
-  }, [isAuthenticated, router])
+  }, [recovering, isAuthenticated, router])
+
+  if (recovering) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
 
   if (!isAuthenticated) {
     return null

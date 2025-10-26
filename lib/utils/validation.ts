@@ -3,13 +3,11 @@
  */
 
 // 비밀번호 정규식: 8자 이상, 대소문자, 숫자, 특수문자 포함
-export const passwordRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+export const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
 
 export const passwordValidation = {
   regex: passwordRegex,
-  message:
-    '비밀번호는 8자 이상, 대문자, 소문자, 숫자, 특수문자를 각각 최소 1개 포함해야 합니다.',
+  message: '비밀번호는 8자 이상, 대문자, 소문자, 숫자, 특수문자를 각각 최소 1개 포함해야 합니다.',
 }
 
 export function validatePassword(password: string): {
@@ -49,8 +47,7 @@ export const nameRegex = /^[a-zA-Z가-힣]+(\s[a-zA-Z가-힣]+)*$/
 
 export const nameValidation = {
   regex: nameRegex,
-  message:
-    '영어와 한글만 입력 가능하며, 단어 사이 단일 공백만 허용됩니다.',
+  message: '영어와 한글만 입력 가능하며, 단어 사이 단일 공백만 허용됩니다.',
 }
 
 export function validateName(name: string): {
@@ -86,8 +83,7 @@ export const organizationRegex = /^[a-zA-Z가-힣]+(\s[a-zA-Z가-힣]+)*$/
 
 export const organizationValidation = {
   regex: organizationRegex,
-  message:
-    '영어와 한글만 입력 가능하며, 단어 사이 단일 공백만 허용됩니다.',
+  message: '영어와 한글만 입력 가능하며, 단어 사이 단일 공백만 허용됩니다.',
 }
 
 export function validateOrganization(organization: string): {

@@ -1,14 +1,13 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Tables, Database } from '@/types/database.type'
+import { formatApiError } from '../utils/errors'
 
 export type UserProfile = Tables<'users'>
 
 /**
  * 현재 사용자의 프로필 정보 조회
  */
-export async function getUserProfile(
-  supabase: SupabaseClient<Database>,
-): Promise<{
+export async function getUserProfile(supabase: SupabaseClient<Database>): Promise<{
   success: boolean
   data: UserProfile | null
   error: string | null
@@ -56,54 +55,6 @@ export async function getUserProfile(
 }
 
 /**
- * 사용자 승인 상태 확인
- */
-export async function checkUserApproval(
-  supabase: SupabaseClient<Database>,
-  userId: string,
-): Promise<{
-  isApproved: boolean
-  status: 'approved' | 'pending' | 'rejected' | 'not_found'
-}> {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('is_approved')
-      .eq('id', userId)
-      .single()
-
-    if (error || !data) {
-      return {
-        isApproved: false,
-        status: 'not_found',
-      }
-    }
-
-    if (data.is_approved === true) {
-      return {
-        isApproved: true,
-        status: 'approved',
-      }
-    } else if (data.is_approved === false) {
-      return {
-        isApproved: false,
-        status: 'rejected',
-      }
-    } else {
-      return {
-        isApproved: false,
-        status: 'pending',
-      }
-    }
-  } catch (error) {
-    return {
-      isApproved: false,
-      status: 'not_found',
-    }
-  }
-}
-
-/**
  * 회원가입
  */
 export async function signUpUser(
@@ -113,7 +64,7 @@ export async function signUpUser(
     password: string
     name: string
     organization: string
-  },
+  }
 ): Promise<{
   success: boolean
   data: {
@@ -170,8 +121,7 @@ export async function signUpUser(
         },
       },
       error: null,
-      message:
-        '회원가입이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.',
+      message: '회원가입이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.',
     }
   } catch (error) {
     return {
@@ -190,7 +140,7 @@ export async function signInUser(
   data: {
     email: string
     password: string
-  },
+  }
 ): Promise<{
   success: boolean
   data: {
@@ -200,24 +150,22 @@ export async function signInUser(
       name: string | null
       organization: string | null
       role: string | null
+      isApproved: boolean
     }
   } | null
   error: string | null
 }> {
   try {
     // 1. Supabase Auth 로그인
-    const { data: authData, error: authError } =
-      await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      })
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    })
 
     if (authError) {
-      return {
-        success: false,
-        data: null,
-        error: '이메일 또는 비밀번호가 올바르지 않습니다.',
-      }
+      const error = formatApiError(authError)
+      
+      return error
     }
 
     if (!authData.user) {
@@ -246,11 +194,16 @@ export async function signInUser(
 
     // 3. 승인 상태 확인
     if (profile.is_approved !== true) {
+      const message =
+        profile.is_approved === null
+          ? '관리자 승인 대기 중입니다. 승인 후 로그인이 가능합니다.'
+          : '관리자 승인 거절되었습니다. 관리자에게 문의해주세요.'
+
       await supabase.auth.signOut()
       return {
         success: false,
         data: null,
-        error: '관리자 승인 대기 중입니다. 승인 후 로그인이 가능합니다.',
+        error: message,
       }
     }
 
@@ -263,6 +216,7 @@ export async function signInUser(
           name: profile.name,
           organization: profile.organization,
           role: profile.role,
+          isApproved: profile.is_approved,
         },
       },
       error: null,
@@ -279,9 +233,7 @@ export async function signInUser(
 /**
  * 로그아웃
  */
-export async function signOutUser(
-  supabase: SupabaseClient<Database>,
-): Promise<{
+export async function signOutUser(supabase: SupabaseClient<Database>): Promise<{
   success: boolean
   error: string | null
 }> {
@@ -312,7 +264,7 @@ export async function signOutUser(
  */
 export async function resetUserPassword(
   supabase: SupabaseClient<Database>,
-  email: string,
+  email: string
 ): Promise<{
   success: boolean
   error: string | null
