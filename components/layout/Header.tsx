@@ -11,14 +11,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { Menu, User, LogOut } from 'lucide-react'
+import { User, LogOut } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
-interface HeaderProps {
-  onMenuClick?: () => void
-}
-
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header() {
   const { user, logout } = useAuthStore()
   const { toast } = useToast()
 
@@ -56,15 +52,8 @@ export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
       <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
-        {/* Mobile menu button */}
-        {onMenuClick && (
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
-            <Menu className="h-5 w-5" />
-          </Button>
-        )}
-
         {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <div className="text-xl font-bold text-primary">UTRBOX</div>
         </Link>
 

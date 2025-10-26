@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createMiddlewareSupabase } from '@/lib/supabase/middleware'
 
-// 보호된 경로 목록
-const protectedPaths = ['/dashboard', '/contents', '/collections']
+// 보호된 경로 목록 (루트 경로는 파일 탐색기)
+const protectedPaths = ['/', '/contents']
 
 // 관리자 전용 경로
 const adminPaths = ['/admin']
@@ -27,14 +27,17 @@ export async function middleware(request: NextRequest) {
       error: userError,
     } = await supabase.auth.getUser()
 
-    // 루트('/') 접근 시 리디렉션
+    // 루트 경로 리디렉션
     if (pathname === '/') {
-      return NextResponse.redirect(new URL(user ? '/dashboard' : '/login', request.url))
+      if (!user) {
+        return NextResponse.redirect(new URL('/login', request.url))
+      }
+      // 로그인한 사용자는 그대로 진행 (파일 탐색기 표시)
     }
 
     // 로그인한 사용자가 인증 페이지에 접근하는 경우
     if (user && (pathname === '/login' || pathname === '/signup')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      return NextResponse.redirect(new URL('/', request.url))
     }
 
     // 공개 경로는 통과
@@ -62,8 +65,8 @@ export async function middleware(request: NextRequest) {
     // 관리자 전용 경로 체크
     if (adminPaths.some((path) => pathname.startsWith(path))) {
       if (profile.role !== 'admin') {
-        // 관리자가 아니면 대시보드로 리다이렉트
-        return NextResponse.redirect(new URL('/dashboard', request.url))
+        // 관리자가 아니면 루트로 리다이렉트
+        return NextResponse.redirect(new URL('/', request.url))
       }
     }
 

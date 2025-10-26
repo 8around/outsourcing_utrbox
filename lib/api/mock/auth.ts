@@ -28,15 +28,9 @@ export const mockAuthApi = {
       }
     }
 
-    if (user.status === 'blocked') {
-      return {
-        data: null,
-        error: '차단된 계정입니다. 관리자에게 문의하세요.',
-        success: false,
-      }
-    }
-
-    if (user.status === 'pending') {
+    // Note: User type does not have 'status' property
+    // Check isApproved instead
+    if (user.isApproved === false) {
       return {
         data: null,
         error: '승인 대기 중인 계정입니다.',
@@ -70,16 +64,14 @@ export const mockAuthApi = {
       }
     }
 
-    // Create new user (pending status)
+    // Create new user (pending approval)
     const newUser: User = {
       id: `user-${Date.now()}`,
       email: userData.email,
       name: userData.name,
       organization: userData.organization,
-      role: 'Member',
-      status: 'pending',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      role: 'member',
+      isApproved: null,
     }
 
     return {

@@ -72,7 +72,7 @@ export function LoginForm() {
           title: '로그인 성공',
           description: `환영합니다, ${result.data.user.name}님!`,
         })
-        router.push('/dashboard')
+        router.push('/')
       } else {
         toast({
           variant: 'destructive',

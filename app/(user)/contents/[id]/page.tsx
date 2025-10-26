@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { mockContentsApi } from '@/lib/api/mock'
-import { Content, AnalysisResult, DetectedContent } from '@/types'
+import { Content, DetectedContent, getAnalysisStatus } from '@/types'
 import {
   ArrowLeft,
   Download,
@@ -36,12 +36,80 @@ import { ko } from 'date-fns/locale'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 
+// Supabase Storage URL 생성 헬퍼 함수 (Mock 환경에서는 Unsplash 사용)
+function getFileUrl(filePath: string): string {
+  const imageMap: Record<string, string> = {
+    'jeju_seongsan': 'photo-1519681393784-d120267933ba',
+    'busan_haeundae': 'photo-1506905925346-21bda4d32df4',
+    'gyeongju_bulguksa': 'photo-1478436127897-769e1b3f0f36',
+    'paris_eiffel': 'photo-1502602898657-3e91760cbb34',
+    'london_bigben': 'photo-1513635269975-59663e0ac1ad',
+    'newyork_liberty': 'photo-1485871981521-5b1fd3805eee',
+    'promo_banner': 'photo-1558655146-d09347e92766',
+    'launch_poster': 'photo-1561070791-2526d30994b5',
+    'sns_ad': 'photo-1572635196237-14b3f281503f',
+    'laptop_product': 'photo-1496181133206-80ce9b88a853',
+    'smartphone_white': 'photo-1511707171634-5f897ff02aa9',
+    'wireless_earbuds': 'photo-1590658268037-6bf12165a8df',
+    'smartwatch_black': 'photo-1523275335684-37898b6baf30',
+    'random_test': 'photo-1501594907352-04cda38ebc29',
+    'error_test': 'photo-1469854523086-cc02fe5d8800',
+    'branding_design_a': 'photo-1558655146-d09347e92766',
+    'poster_design': 'photo-1561070791-2526d30994b5',
+    'anniversary_event': 'photo-1511795409834-ef04bbd61622',
+    'product_launch': 'photo-1505373877841-8d25f7d46678',
+    'workshop_group': 'photo-1511578314322-379afb476865',
+  }
+
+  const fileKey = filePath.split('/')[1]?.split('_').slice(1).join('_').replace('.jpg', '').replace('.png', '') || ''
+  const imageId = imageMap[fileKey] || 'photo-1501594907352-04cda38ebc29'
+  return `https://images.unsplash.com/${imageId}`
+}
+
+// 파일 크기 계산 헬퍼 함수 (Mock 환경)
+function getFileSize(filePath: string): number {
+  return Math.floor(Math.random() * 2097152) + 1048576
+}
+
+// 분석 상태 색상 헬퍼 함수
+function getStatusColor(content: Content): string {
+  const status = getAnalysisStatus(content)
+  switch (status) {
+    case 'completed':
+      return 'bg-success/10 text-success'
+    case 'analyzing':
+      return 'bg-primary/10 text-primary'
+    case 'pending':
+      return 'bg-warning/10 text-warning'
+    case 'failed':
+      return 'bg-error/10 text-error'
+    default:
+      return 'bg-secondary-100 text-secondary-600'
+  }
+}
+
+// 분석 상태 텍스트 헬퍼 함수
+function getStatusText(content: Content): string {
+  const status = getAnalysisStatus(content)
+  switch (status) {
+    case 'completed':
+      return '분석 완료'
+    case 'analyzing':
+      return '분석 중'
+    case 'pending':
+      return '대기 중'
+    case 'failed':
+      return '실패'
+    default:
+      return status
+  }
+}
+
 export default function ContentDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
   const [content, setContent] = useState<Content | null>(null)
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
   const [detectedContents, setDetectedContents] = useState<DetectedContent[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showImageViewer, setShowImageViewer] = useState(false)
@@ -66,14 +134,8 @@ export default function ContentDetailPage() {
 
       setContent(contentResponse.data)
 
-      // Load analysis result if completed
-      if (contentResponse.data?.analysis_status === 'completed') {
-        const analysisResponse = await mockContentsApi.getAnalysisResult(contentId)
-        if (analysisResponse.success) {
-          setAnalysisResult(analysisResponse.data)
-        }
-
-        // Load detected contents
+      // Load detected contents if analysis is completed
+      if (contentResponse.data && getAnalysisStatus(contentResponse.data) === 'completed') {
         const detectedResponse = await mockContentsApi.getDetectedContents(contentId)
         if (detectedResponse.success) {
           setDetectedContents(detectedResponse.data || [])
@@ -123,35 +185,6 @@ export default function ContentDetailPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-success/10 text-success'
-      case 'analyzing':
-        return 'bg-primary/10 text-primary'
-      case 'pending':
-        return 'bg-warning/10 text-warning'
-      case 'failed':
-        return 'bg-error/10 text-error'
-      default:
-        return 'bg-secondary-100 text-secondary-600'
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return '분석 완료'
-      case 'analyzing':
-        return '분석 중'
-      case 'pending':
-        return '대기 중'
-      case 'failed':
-        return '실패'
-      default:
-        return status
-    }
-  }
 
   const getReviewStatusColor = (status: string) => {
     switch (status) {
@@ -227,8 +260,8 @@ export default function ContentDetailPage() {
               onClick={() => setShowImageViewer(true)}
             >
               <img
-                src={content.file_url}
-                alt={content.title}
+                src={getFileUrl(content.file_path)}
+                alt={content.file_name}
                 className="h-full w-full object-contain"
               />
             </div>
@@ -245,8 +278,8 @@ export default function ContentDetailPage() {
 
               <TabsContent value="info" className="mt-6 space-y-4">
                 <div>
-                  <h2 className="text-2xl font-bold">{content.title}</h2>
-                  <p className="text-secondary-500 mt-2">{content.description}</p>
+                  <h2 className="text-2xl font-bold">{content.file_name}</h2>
+                  <p className="text-secondary-500 mt-2">{content.message || ""}</p>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -255,7 +288,7 @@ export default function ContentDetailPage() {
                     <div>
                       <p className="text-secondary-500 text-sm">업로드 날짜</p>
                       <p className="font-medium">
-                        {format(new Date(content.upload_date), 'yyyy년 MM월 dd일', {
+                        {format(new Date(content.created_at), 'yyyy년 MM월 dd일', {
                           locale: ko,
                         })}
                       </p>
@@ -266,7 +299,7 @@ export default function ContentDetailPage() {
                     <FileType className="text-secondary-400 h-5 w-5" />
                     <div>
                       <p className="text-secondary-500 text-sm">파일 형식</p>
-                      <p className="font-medium uppercase">{content.file_type}</p>
+                      <p className="font-medium uppercase">{content.file_name.split(".").pop()?.toUpperCase() || ""}</p>
                     </div>
                   </div>
 
@@ -275,7 +308,7 @@ export default function ContentDetailPage() {
                     <div>
                       <p className="text-secondary-500 text-sm">파일 크기</p>
                       <p className="font-medium">
-                        {(content.file_size / (1024 * 1024)).toFixed(2)} MB
+                        {(getFileSize(content.file_path) / (1024 * 1024)).toFixed(2)} MB
                       </p>
                     </div>
                   </div>
@@ -286,9 +319,9 @@ export default function ContentDetailPage() {
                       <p className="text-secondary-500 text-sm">분석 상태</p>
                       <Badge
                         variant="secondary"
-                        className={getStatusColor(content.analysis_status)}
+                        className={getStatusColor(content)}
                       >
-                        {getStatusText(content.analysis_status)}
+                        {getStatusText(content)}
                       </Badge>
                     </div>
                   </div>
@@ -484,8 +517,8 @@ export default function ContentDetailPage() {
 
       {/* Image Viewer */}
       <ImageViewer
-        src={content.file_url}
-        alt={content.title}
+        src={getFileUrl(content.file_path)}
+        alt={content.file_name}
         open={showImageViewer}
         onClose={() => setShowImageViewer(false)}
       />
