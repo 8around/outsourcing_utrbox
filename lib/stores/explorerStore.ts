@@ -4,9 +4,6 @@ export type ViewMode = 'grid' | 'list'
 export type SortBy = 'name' | 'date' | 'size' | 'detections'
 
 interface ExplorerStore {
-  // 네비게이션 상태
-  currentPath: string | null // null = 루트, collectionId = 컬렉션 내부
-
   // 선택 상태
   selectedContentIds: string[]
 
@@ -14,10 +11,6 @@ interface ExplorerStore {
   viewMode: ViewMode
   sortBy: SortBy
   searchQuery: string
-
-  // 네비게이션 액션
-  navigateToCollection: (collectionId: string) => void
-  navigateToRoot: () => void
 
   // 선택 액션
   setSelectedContents: (ids: string[]) => void
@@ -32,7 +25,6 @@ interface ExplorerStore {
 }
 
 const initialState = {
-  currentPath: null,
   selectedContentIds: [],
   viewMode: 'grid' as ViewMode,
   sortBy: 'date' as SortBy,
@@ -41,18 +33,6 @@ const initialState = {
 
 export const useExplorerStore = create<ExplorerStore>((set) => ({
   ...initialState,
-
-  navigateToCollection: (collectionId) =>
-    set({
-      currentPath: collectionId,
-      selectedContentIds: [], // 네비게이션 시 선택 초기화
-    }),
-
-  navigateToRoot: () =>
-    set({
-      currentPath: null,
-      selectedContentIds: [], // 네비게이션 시 선택 초기화
-    }),
 
   setSelectedContents: (ids) =>
     set({

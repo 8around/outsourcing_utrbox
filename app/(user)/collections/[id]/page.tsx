@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useContentStore } from '@/lib/stores/contentStore'
 import { useExplorerStore } from '@/lib/stores/explorerStore'
@@ -8,11 +9,13 @@ import { mockContents, mockCollections, getDetectionCount } from '@/lib/mock-dat
 import { StatsCards, ContentExplorerView, ExplorerToolbar } from '@/components/explorer'
 import { getAnalysisStatus } from '@/types/content'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useRouter } from 'next/navigation'
 import { FullHeightContainer } from '@/components/layout'
 
-export default function ExplorerPage() {
+export default function CollectionPage() {
+  const params = useParams()
   const router = useRouter()
+  const collectionId = params.id as string
+
   const { user } = useAuthStore()
   const { setContents, setCollections } = useContentStore()
   const [isLoading, setIsLoading] = useState(true)
@@ -50,13 +53,16 @@ export default function ExplorerPage() {
   const completedContents = userContents.filter((c) => getAnalysisStatus(c) === 'completed')
   const totalDetections = userContents.reduce((sum, c) => sum + getDetectionCount(c.id), 0)
 
-  // displayData: 루트 뷰 (모든 컬렉션 + 미분류 콘텐츠)
+  // 현재 컬렉션 정보
+  const currentCollection = userCollections.find((c) => c.id === collectionId)
+
+  // displayData: 컬렉션 뷰 (선택된 컬렉션의 콘텐츠만)
   const displayData = useMemo(() => {
     return {
-      collections: userCollections,
-      contents: userContents.filter((c) => c.collection_id === null),
+      collections: [],
+      contents: userContents.filter((c) => c.collection_id === collectionId),
     }
-  }, [userCollections, userContents])
+  }, [userContents, collectionId])
 
   // Filter and sort contents
   const filteredContents = useMemo(() => {
@@ -96,9 +102,16 @@ export default function ExplorerPage() {
     router.push(`/contents/${id}`)
   }
 
-  const handleNavigateToCollection = (id: string) => {
-    router.push(`/collections/${id}`)
+  const handleNavigateToRoot = () => {
+    router.push('/')
   }
+
+  // 컬렉션이 존재하지 않으면 루트로 리다이렉트
+  useEffect(() => {
+    if (!isLoading && !currentCollection) {
+      router.push('/')
+    }
+  }, [isLoading, currentCollection, router])
 
   if (isLoading) {
     return (
@@ -111,6 +124,10 @@ export default function ExplorerPage() {
         <Skeleton className="h-[600px]" />
       </div>
     )
+  }
+
+  if (!currentCollection) {
+    return null // 리다이렉트 처리 중
   }
 
   return (
@@ -128,9 +145,9 @@ export default function ExplorerPage() {
       {/* Explorer */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <ExplorerToolbar
-          currentPath={null}
-          currentCollection={null}
-          onNavigateToRoot={() => router.push('/')}
+          currentPath={collectionId}
+          currentCollection={currentCollection}
+          onNavigateToRoot={handleNavigateToRoot}
           viewMode={viewMode}
           onViewModeChange={(mode) => {
             if (mode !== viewMode) {
@@ -146,12 +163,12 @@ export default function ExplorerPage() {
           <ContentExplorerView
             contents={filteredContents}
             collections={displayData.collections}
-            currentPath={null}
+            currentPath={collectionId}
             viewMode={viewMode}
             selectedIds={selectedContentIds}
             onSelectContent={setSelectedContents}
             onOpenContent={handleOpenContent}
-            onNavigateToCollection={handleNavigateToCollection}
+            onNavigateToCollection={() => {}} // 컬렉션 뷰에서는 더 이상 하위 탐색 없음
           />
         </div>
       </div>
