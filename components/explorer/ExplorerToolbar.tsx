@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { ViewMode, SortBy } from '@/lib/stores/explorerStore'
 import { Collection } from '@/types/collection'
 import { Button } from '@/components/ui/button'
@@ -19,7 +20,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Grid, List, Search, Upload } from 'lucide-react'
-import Link from 'next/link'
+import { UploadModal } from './UploadModal'
 
 interface ExplorerToolbarProps {
   currentPath: string | null
@@ -44,7 +45,10 @@ export function ExplorerToolbar({
   searchQuery,
   onSearchChange,
 }: ExplorerToolbarProps) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+
   return (
+    <>
     <div className="border-b bg-background">
       {/* Breadcrumb */}
       <div className="border-b px-4 py-3">
@@ -123,14 +127,20 @@ export function ExplorerToolbar({
         </div>
 
         {/* Upload Button */}
-        <Link href="/contents/upload">
-          <Button className="gap-2">
-            <Upload className="h-4 w-4" />
-            <span className="hidden sm:inline">업로드</span>
-          </Button>
-        </Link>
+        <Button className="gap-2" onClick={() => setIsUploadModalOpen(true)}>
+          <Upload className="h-4 w-4" />
+          <span className="hidden sm:inline">업로드</span>
+        </Button>
         </div>
       </div>
     </div>
+
+    {/* Upload Modal */}
+    <UploadModal
+      open={isUploadModalOpen}
+      onOpenChange={setIsUploadModalOpen}
+      defaultCollectionId={currentCollection?.id || null}
+    />
+    </>
   )
 }

@@ -98,7 +98,6 @@ export const mockContentsApi = {
     userId: string
     collectionId: string | null
     title: string
-    description: string
     file: File
   }): Promise<ApiResponse<Content>> => {
     await delay(1500) // Simulate upload time
@@ -110,7 +109,7 @@ export const mockContentsApi = {
       file_name: data.file.name,
       file_path: `uploads/${data.userId}/${data.file.name}`,
       is_analyzed: null, // pending
-      message: data.description || null,
+      message: null,
       label_data: null,
       text_data: null,
       created_at: new Date().toISOString(),
