@@ -4,7 +4,8 @@ import {
   Content,
   AnalysisResult,
   DetectedContent,
-  ReviewStatus,
+  AdminReviewStatus,
+  getAnalysisStatus,
 } from '@/types'
 import { mockContents, mockAnalysisResults, mockDetectedContents } from '@/lib/mock-data'
 
@@ -36,7 +37,7 @@ export const mockContentsApi = {
 
     // Filter by status
     if (params.status) {
-      filteredContents = filteredContents.filter((c) => c.analysis_status === params.status)
+      filteredContents = filteredContents.filter((c) => getAnalysisStatus(c) === params.status)
     }
 
     // Search by title or description
@@ -44,8 +45,8 @@ export const mockContentsApi = {
       const searchLower = params.search.toLowerCase()
       filteredContents = filteredContents.filter(
         (c) =>
-          c.title.toLowerCase().includes(searchLower) ||
-          c.description.toLowerCase().includes(searchLower)
+          c.file_name.toLowerCase().includes(searchLower) ||
+          (c.message && c.message.toLowerCase().includes(searchLower))
       )
     }
 
@@ -106,14 +107,13 @@ export const mockContentsApi = {
       id: `content-${Date.now()}`,
       user_id: data.userId,
       collection_id: data.collectionId,
-      title: data.title,
-      description: data.description,
-      file_url: URL.createObjectURL(data.file), // Mock URL
-      file_size: data.file.size,
-      file_type: data.file.type.includes('png') ? 'png' : 'jpg',
-      analysis_status: 'pending',
-      detection_count: 0,
-      upload_date: new Date().toISOString(),
+      file_name: data.file.name,
+      file_path: `uploads/${data.userId}/${data.file.name}`,
+      is_analyzed: null, // pending
+      message: data.description || null,
+      label_data: null,
+      text_data: null,
+      created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
 
@@ -173,7 +173,7 @@ export const mockContentsApi = {
     await delay()
 
     const detectedList = mockDetectedContents.filter(
-      (d) => d.original_content_id === originalContentId
+      (d) => d.content_id === originalContentId
     )
 
     return {
@@ -206,8 +206,7 @@ export const mockContentsApi = {
 
     const updated: DetectedContent = {
       ...detected,
-      review_status: reviewData.reviewStatus as ReviewStatus,
-      review_note: reviewData.reviewNote,
+      admin_review_status: reviewData.reviewStatus as AdminReviewStatus,
       reviewed_by: reviewData.reviewedBy,
       reviewed_at: new Date().toISOString(),
     }

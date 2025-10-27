@@ -4,7 +4,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 1 발견 결과 (3건)
   {
     id: 'detected-1',
-    original_content_id: 'content-1',
+    content_id: 'content-1',
     detected_url: 'https://example.com/detected/seongsan1.jpg',
     similarity_score: 0.98,
     detection_type: 'full',
@@ -16,7 +16,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-2',
-    original_content_id: 'content-1',
+    content_id: 'content-1',
     detected_url: 'https://example.com/detected/seongsan2.jpg',
     similarity_score: 0.87,
     detection_type: 'partial',
@@ -28,7 +28,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-3',
-    original_content_id: 'content-1',
+    content_id: 'content-1',
     detected_url: 'https://example.com/detected/seongsan3.jpg',
     similarity_score: 0.75,
     detection_type: 'similar',
@@ -40,7 +40,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 2 발견 결과 (5건)
   {
     id: 'detected-4',
-    original_content_id: 'content-2',
+    content_id: 'content-2',
     detected_url: 'https://example.com/detected/beach1.jpg',
     similarity_score: 0.99,
     detection_type: 'full',
@@ -52,7 +52,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-5',
-    original_content_id: 'content-2',
+    content_id: 'content-2',
     detected_url: 'https://example.com/detected/beach2.jpg',
     similarity_score: 0.96,
     detection_type: 'full',
@@ -64,7 +64,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-6',
-    original_content_id: 'content-2',
+    content_id: 'content-2',
     detected_url: 'https://example.com/detected/beach3.jpg',
     similarity_score: 0.92,
     detection_type: 'full',
@@ -73,7 +73,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-7',
-    original_content_id: 'content-2',
+    content_id: 'content-2',
     detected_url: 'https://example.com/detected/beach-partial1.jpg',
     similarity_score: 0.84,
     detection_type: 'partial',
@@ -82,7 +82,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-8',
-    original_content_id: 'content-2',
+    content_id: 'content-2',
     detected_url: 'https://example.com/detected/beach-partial2.jpg',
     similarity_score: 0.78,
     detection_type: 'partial',
@@ -93,7 +93,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 3 발견 결과 (1건)
   {
     id: 'detected-9',
-    original_content_id: 'content-3',
+    content_id: 'content-3',
     detected_url: 'https://example.com/detected/temple1.jpg',
     similarity_score: 0.89,
     detection_type: 'full',
@@ -107,7 +107,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 4 발견 결과 (8건)
   {
     id: 'detected-10',
-    original_content_id: 'content-4',
+    content_id: 'content-4',
     detected_url: 'https://example.com/detected/eiffel1.jpg',
     similarity_score: 0.97,
     detection_type: 'full',
@@ -119,7 +119,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-11',
-    original_content_id: 'content-4',
+    content_id: 'content-4',
     detected_url: 'https://example.com/detected/eiffel2.jpg',
     similarity_score: 0.95,
     detection_type: 'full',
@@ -131,7 +131,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-12',
-    original_content_id: 'content-4',
+    content_id: 'content-4',
     detected_url: 'https://example.com/detected/eiffel3.jpg',
     similarity_score: 0.93,
     detection_type: 'full',
@@ -140,7 +140,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-13',
-    original_content_id: 'content-4',
+    content_id: 'content-4',
     detected_url: 'https://example.com/detected/eiffel4.jpg',
     similarity_score: 0.9,
     detection_type: 'full',
@@ -149,7 +149,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-14',
-    original_content_id: 'content-4',
+    content_id: 'content-4',
     detected_url: 'https://example.com/detected/eiffel-partial1.jpg',
     similarity_score: 0.85,
     detection_type: 'partial',
@@ -158,7 +158,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-15',
-    original_content_id: 'content-4',
+    content_id: 'content-4',
     detected_url: 'https://example.com/detected/eiffel-partial2.jpg',
     similarity_score: 0.82,
     detection_type: 'partial',
@@ -167,7 +167,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-16',
-    original_content_id: 'content-4',
+    content_id: 'content-4',
     detected_url: 'https://example.com/detected/eiffel-partial3.jpg',
     similarity_score: 0.79,
     detection_type: 'partial',
@@ -176,7 +176,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-17',
-    original_content_id: 'content-4',
+    content_id: 'content-4',
     detected_url: 'https://example.com/detected/eiffel-partial4.jpg',
     similarity_score: 0.76,
     detection_type: 'partial',
@@ -187,7 +187,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 5 발견 결과 (2건)
   {
     id: 'detected-18',
-    original_content_id: 'content-5',
+    content_id: 'content-5',
     detected_url: 'https://example.com/detected/bigben1.jpg',
     similarity_score: 0.91,
     detection_type: 'full',
@@ -199,7 +199,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-19',
-    original_content_id: 'content-5',
+    content_id: 'content-5',
     detected_url: 'https://example.com/detected/bigben2.jpg',
     similarity_score: 0.88,
     detection_type: 'full',
@@ -210,7 +210,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 7 발견 결과 (4건)
   {
     id: 'detected-20',
-    original_content_id: 'content-7',
+    content_id: 'content-7',
     detected_url: 'https://example.com/detected/skytree1.jpg',
     similarity_score: 0.94,
     detection_type: 'full',
@@ -219,7 +219,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-21',
-    original_content_id: 'content-7',
+    content_id: 'content-7',
     detected_url: 'https://example.com/detected/skytree2.jpg',
     similarity_score: 0.91,
     detection_type: 'full',
@@ -228,7 +228,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-22',
-    original_content_id: 'content-7',
+    content_id: 'content-7',
     detected_url: 'https://example.com/detected/skytree-partial1.jpg',
     similarity_score: 0.83,
     detection_type: 'partial',
@@ -237,7 +237,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-23',
-    original_content_id: 'content-7',
+    content_id: 'content-7',
     detected_url: 'https://example.com/detected/skytree-partial2.jpg',
     similarity_score: 0.77,
     detection_type: 'partial',
@@ -248,7 +248,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 8 발견 결과 (6건)
   {
     id: 'detected-24',
-    original_content_id: 'content-8',
+    content_id: 'content-8',
     detected_url: 'https://example.com/detected/opera1.jpg',
     similarity_score: 0.99,
     detection_type: 'full',
@@ -260,7 +260,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-25',
-    original_content_id: 'content-8',
+    content_id: 'content-8',
     detected_url: 'https://example.com/detected/opera2.jpg',
     similarity_score: 0.96,
     detection_type: 'full',
@@ -272,7 +272,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-26',
-    original_content_id: 'content-8',
+    content_id: 'content-8',
     detected_url: 'https://example.com/detected/opera3.jpg',
     similarity_score: 0.93,
     detection_type: 'full',
@@ -281,7 +281,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-27',
-    original_content_id: 'content-8',
+    content_id: 'content-8',
     detected_url: 'https://example.com/detected/opera-partial1.jpg',
     similarity_score: 0.86,
     detection_type: 'partial',
@@ -290,7 +290,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-28',
-    original_content_id: 'content-8',
+    content_id: 'content-8',
     detected_url: 'https://example.com/detected/opera-partial2.jpg',
     similarity_score: 0.81,
     detection_type: 'partial',
@@ -299,7 +299,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-29',
-    original_content_id: 'content-8',
+    content_id: 'content-8',
     detected_url: 'https://example.com/detected/opera-partial3.jpg',
     similarity_score: 0.74,
     detection_type: 'partial',
@@ -310,7 +310,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 9 발견 결과 (2건)
   {
     id: 'detected-30',
-    original_content_id: 'content-9',
+    content_id: 'content-9',
     detected_url: 'https://example.com/detected/venice1.jpg',
     similarity_score: 0.9,
     detection_type: 'full',
@@ -319,7 +319,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-31',
-    original_content_id: 'content-9',
+    content_id: 'content-9',
     detected_url: 'https://example.com/detected/venice2.jpg',
     similarity_score: 0.85,
     detection_type: 'full',
@@ -330,7 +330,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 11 발견 결과 (3건)
   {
     id: 'detected-32',
-    original_content_id: 'content-11',
+    content_id: 'content-11',
     detected_url: 'https://example.com/detected/sagrada1.jpg',
     similarity_score: 0.95,
     detection_type: 'full',
@@ -339,7 +339,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-33',
-    original_content_id: 'content-11',
+    content_id: 'content-11',
     detected_url: 'https://example.com/detected/sagrada2.jpg',
     similarity_score: 0.92,
     detection_type: 'full',
@@ -348,7 +348,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-34',
-    original_content_id: 'content-11',
+    content_id: 'content-11',
     detected_url: 'https://example.com/detected/sagrada-partial1.jpg',
     similarity_score: 0.8,
     detection_type: 'partial',
@@ -359,7 +359,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 12 발견 결과 (1건)
   {
     id: 'detected-35',
-    original_content_id: 'content-12',
+    content_id: 'content-12',
     detected_url: 'https://example.com/detected/prague1.jpg',
     similarity_score: 0.87,
     detection_type: 'full',
@@ -370,7 +370,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 14 발견 결과 (1건)
   {
     id: 'detected-36',
-    original_content_id: 'content-14',
+    content_id: 'content-14',
     detected_url: 'https://example.com/detected/phone1.jpg',
     similarity_score: 0.91,
     detection_type: 'full',
@@ -381,7 +381,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 17 발견 결과 (2건)
   {
     id: 'detected-37',
-    original_content_id: 'content-17',
+    content_id: 'content-17',
     detected_url: 'https://example.com/detected/watch1.jpg',
     similarity_score: 0.93,
     detection_type: 'full',
@@ -390,7 +390,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-38',
-    original_content_id: 'content-17',
+    content_id: 'content-17',
     detected_url: 'https://example.com/detected/watch2.jpg',
     similarity_score: 0.89,
     detection_type: 'full',
@@ -401,7 +401,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 19 발견 결과 (1건)
   {
     id: 'detected-39',
-    original_content_id: 'content-19',
+    content_id: 'content-19',
     detected_url: 'https://example.com/detected/tablet1.jpg',
     similarity_score: 0.88,
     detection_type: 'full',
@@ -412,7 +412,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 22 발견 결과 (1건)
   {
     id: 'detected-40',
-    original_content_id: 'content-22',
+    content_id: 'content-22',
     detected_url: 'https://example.com/detected/poster1.jpg',
     similarity_score: 0.86,
     detection_type: 'full',
@@ -423,7 +423,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 26 발견 결과 (2건)
   {
     id: 'detected-41',
-    original_content_id: 'content-26',
+    content_id: 'content-26',
     detected_url: 'https://example.com/detected/event1.jpg',
     similarity_score: 0.89,
     detection_type: 'full',
@@ -432,7 +432,7 @@ export const mockDetectedContents: DetectedContent[] = [
   },
   {
     id: 'detected-42',
-    original_content_id: 'content-26',
+    content_id: 'content-26',
     detected_url: 'https://example.com/detected/event2.jpg',
     similarity_score: 0.84,
     detection_type: 'full',
@@ -443,7 +443,7 @@ export const mockDetectedContents: DetectedContent[] = [
   // Content 27 발견 결과 (1건)
   {
     id: 'detected-43',
-    original_content_id: 'content-27',
+    content_id: 'content-27',
     detected_url: 'https://example.com/detected/launch1.jpg',
     similarity_score: 0.9,
     detection_type: 'full',

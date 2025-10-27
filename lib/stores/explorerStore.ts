@@ -4,42 +4,54 @@ export type ViewMode = 'grid' | 'list'
 export type SortBy = 'name' | 'date' | 'size' | 'detections'
 
 interface ExplorerStore {
-  // 상태
-  selectedCollectionId: string | null
+  // 네비게이션 상태
+  currentPath: string | null // null = 루트, collectionId = 컬렉션 내부
+
+  // 선택 상태
   selectedContentIds: string[]
+
+  // 뷰 설정
   viewMode: ViewMode
   sortBy: SortBy
   searchQuery: string
-  expandedFolderIds: string[]
 
-  // 액션
-  setSelectedCollection: (id: string | null) => void
+  // 네비게이션 액션
+  navigateToCollection: (collectionId: string) => void
+  navigateToRoot: () => void
+
+  // 선택 액션
   setSelectedContents: (ids: string[]) => void
+
+  // 뷰 설정 액션
   toggleViewMode: () => void
   setSortBy: (sort: SortBy) => void
   setSearchQuery: (query: string) => void
-  toggleFolder: (id: string) => void
-  expandFolder: (id: string) => void
-  collapseFolder: (id: string) => void
+
+  // 초기화
   reset: () => void
 }
 
 const initialState = {
-  selectedCollectionId: null,
+  currentPath: null,
   selectedContentIds: [],
   viewMode: 'grid' as ViewMode,
   sortBy: 'date' as SortBy,
   searchQuery: '',
-  expandedFolderIds: [],
 }
 
 export const useExplorerStore = create<ExplorerStore>((set) => ({
   ...initialState,
 
-  setSelectedCollection: (id) =>
+  navigateToCollection: (collectionId) =>
     set({
-      selectedCollectionId: id,
-      selectedContentIds: [], // 컬렉션 변경 시 선택 초기화
+      currentPath: collectionId,
+      selectedContentIds: [], // 네비게이션 시 선택 초기화
+    }),
+
+  navigateToRoot: () =>
+    set({
+      currentPath: null,
+      selectedContentIds: [], // 네비게이션 시 선택 초기화
     }),
 
   setSelectedContents: (ids) =>
@@ -61,27 +73,6 @@ export const useExplorerStore = create<ExplorerStore>((set) => ({
     set({
       searchQuery: query,
     }),
-
-  toggleFolder: (id) =>
-    set((state) => ({
-      expandedFolderIds: state.expandedFolderIds.includes(id)
-        ? state.expandedFolderIds.filter((folderId) => folderId !== id)
-        : [...state.expandedFolderIds, id],
-    })),
-
-  expandFolder: (id) =>
-    set((state) => ({
-      expandedFolderIds: state.expandedFolderIds.includes(id)
-        ? state.expandedFolderIds
-        : [...state.expandedFolderIds, id],
-    })),
-
-  collapseFolder: (id) =>
-    set((state) => ({
-      expandedFolderIds: state.expandedFolderIds.filter(
-        (folderId) => folderId !== id
-      ),
-    })),
 
   reset: () => set(initialState),
 }))

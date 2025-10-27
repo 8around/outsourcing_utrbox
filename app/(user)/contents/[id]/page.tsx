@@ -35,6 +35,7 @@ import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
+import { PageContainer } from '@/components/layout'
 
 // Supabase Storage URL 생성 헬퍼 함수 (Mock 환경에서는 Unsplash 사용)
 function getFileUrl(filePath: string): string {
@@ -115,6 +116,38 @@ export default function ContentDetailPage() {
   const [showImageViewer, setShowImageViewer] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // 분석 결과 파생
+  const analysisResult = content
+    ? {
+        labels:
+          content.label_data &&
+          typeof content.label_data === 'object' &&
+          'responses' in content.label_data &&
+          Array.isArray(content.label_data.responses) &&
+          content.label_data.responses.length > 0 &&
+          'labelAnnotations' in content.label_data.responses[0]
+            ? (content.label_data.responses[0].labelAnnotations as Array<{
+                description: string
+                score: number
+              }>)
+            : [],
+        texts:
+          content.text_data &&
+          typeof content.text_data === 'object' &&
+          'responses' in content.text_data &&
+          Array.isArray(content.text_data.responses) &&
+          content.text_data.responses.length > 0 &&
+          'textAnnotations' in content.text_data.responses[0]
+            ? (content.text_data.responses[0].textAnnotations as Array<{
+                description: string
+              }>)
+            : [],
+        full_matching_images: detectedContents.filter((d) => d.detection_type === 'full'),
+        partial_matching_images: detectedContents.filter((d) => d.detection_type === 'partial'),
+        similar_images: detectedContents.filter((d) => d.detection_type === 'similar'),
+      }
+    : null
 
   useEffect(() => {
     const loadContent = async () => {
@@ -231,9 +264,10 @@ export default function ContentDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <PageContainer maxWidth="7xl">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => router.back()} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           뒤로가기
@@ -352,7 +386,7 @@ export default function ContentDetailPage() {
                         <div className="space-y-2">
                           {analysisResult.texts.map((text, index) => (
                             <Card key={index} className="p-3">
-                              <p className="text-sm">{text}</p>
+                              <p className="text-sm">{text.description}</p>
                             </Card>
                           ))}
                         </div>
@@ -402,16 +436,16 @@ export default function ContentDetailPage() {
                             <div className="flex items-start justify-between gap-4">
                               <div className="min-w-0 flex-1">
                                 <a
-                                  href={detection.detected_url}
+                                  href={detection.source_url || '#'}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="flex items-center gap-1 text-primary hover:underline"
                                 >
-                                  <span className="truncate">{detection.detected_url}</span>
+                                  <span className="truncate">{detection.source_url || '출처 URL 없음'}</span>
                                   <ExternalLink className="h-3 w-3 flex-shrink-0" />
                                 </a>
                                 <p className="text-secondary-500 mt-1 text-sm">
-                                  일치율: {(detection.similarity_score * 100).toFixed(1)}% •{' '}
+                                  유형:{' '}
                                   {detection.detection_type === 'full'
                                     ? '완전 일치'
                                     : detection.detection_type === 'partial'
@@ -420,13 +454,13 @@ export default function ContentDetailPage() {
                                 </p>
                                 <p className="text-secondary-400 mt-1 text-xs">
                                   발견일:{' '}
-                                  {format(new Date(detection.detected_at), 'yyyy.MM.dd', {
+                                  {format(new Date(detection.created_at), 'yyyy.MM.dd', {
                                     locale: ko,
                                   })}
                                 </p>
                               </div>
                               <Select
-                                value={detection.review_status}
+                                value={detection.admin_review_status}
                                 onValueChange={(value) => handleReviewUpdate(detection.id, value)}
                               >
                                 <SelectTrigger className="w-32">
@@ -464,7 +498,7 @@ export default function ContentDetailPage() {
             <div className="space-y-4">
               <div>
                 <p className="text-secondary-500 text-sm">총 발견 건수</p>
-                <p className="text-error text-3xl font-bold">{content.detection_count}</p>
+                <p className="text-error text-3xl font-bold">{detectedContents.length}</p>
               </div>
               <div className="border-t pt-4">
                 <p className="text-secondary-500 mb-2 text-sm">검토 현황</p>
@@ -472,25 +506,25 @@ export default function ContentDetailPage() {
                   <div className="flex justify-between text-sm">
                     <span>검토 중</span>
                     <span className="font-medium">
-                      {detectedContents.filter((d) => d.review_status === 'pending').length}
+                      {detectedContents.filter((d) => d.admin_review_status === 'pending').length}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>일치</span>
                     <span className="text-error font-medium">
-                      {detectedContents.filter((d) => d.review_status === 'match').length}
+                      {detectedContents.filter((d) => d.admin_review_status === 'match').length}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>불일치</span>
                     <span className="text-success font-medium">
-                      {detectedContents.filter((d) => d.review_status === 'no_match').length}
+                      {detectedContents.filter((d) => d.admin_review_status === 'no_match').length}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>불명확</span>
                     <span className="text-warning font-medium">
-                      {detectedContents.filter((d) => d.review_status === 'unclear').length}
+                      {detectedContents.filter((d) => d.admin_review_status === 'cannot_compare').length}
                     </span>
                   </div>
                 </div>
@@ -534,6 +568,7 @@ export default function ContentDetailPage() {
         isDestructive
         isLoading={isDeleting}
       />
-    </div>
+      </div>
+    </PageContainer>
   )
 }

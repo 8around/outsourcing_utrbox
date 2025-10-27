@@ -1,6 +1,7 @@
 'use client'
 
 import { ViewMode, SortBy } from '@/lib/stores/explorerStore'
+import { Collection } from '@/types/collection'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -10,10 +11,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { Grid, List, Search, Upload } from 'lucide-react'
 import Link from 'next/link'
 
 interface ExplorerToolbarProps {
+  currentPath: string | null
+  currentCollection: Collection | null
+  onNavigateToRoot: () => void
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
   sortBy: SortBy
@@ -23,6 +34,9 @@ interface ExplorerToolbarProps {
 }
 
 export function ExplorerToolbar({
+  currentPath,
+  currentCollection,
+  onNavigateToRoot,
   viewMode,
   onViewModeChange,
   sortBy,
@@ -31,8 +45,36 @@ export function ExplorerToolbar({
   onSearchChange,
 }: ExplorerToolbarProps) {
   return (
-    <div className="border-b bg-background p-4">
-      <div className="flex flex-wrap items-center gap-4">
+    <div className="border-b bg-background">
+      {/* Breadcrumb */}
+      <div className="border-b px-4 py-3">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                className="cursor-pointer hover:text-primary"
+                onClick={onNavigateToRoot}
+              >
+                모든 콘텐츠
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {currentPath && currentCollection && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink className="text-foreground">
+                    {currentCollection.name}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
+      {/* Toolbar */}
+      <div className="p-4">
+        <div className="flex flex-wrap items-center gap-4">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">
           <Search className="text-secondary-400 absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
@@ -87,6 +129,7 @@ export function ExplorerToolbar({
             <span className="hidden sm:inline">업로드</span>
           </Button>
         </Link>
+        </div>
       </div>
     </div>
   )

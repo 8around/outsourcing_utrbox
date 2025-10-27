@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast'
 import { Upload, X, FileImage, CheckCircle2, AlertCircle } from 'lucide-react'
 import { LoadingSpinner } from '@/components/common'
+import { PageContainer } from '@/components/layout'
 
 interface FileWithPreview extends File {
   preview: string
@@ -165,9 +166,10 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
-      {/* Header */}
-      <div>
+    <PageContainer maxWidth="4xl">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
         <h1 className="text-3xl font-bold">콘텐츠 업로드</h1>
         <p className="text-secondary-500 mt-1">JPG, PNG 파일을 업로드하세요 (최대 10MB)</p>
       </div>
@@ -335,6 +337,7 @@ export default function UploadPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PageContainer>
   )
 }

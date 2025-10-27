@@ -1,11 +1,12 @@
 'use client'
 
 import { Content, getAnalysisStatus } from '@/types/content'
+import { Collection } from '@/types/collection'
 import { ViewMode } from '@/lib/stores/explorerStore'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Image, AlertCircle } from 'lucide-react'
+import { Image, AlertCircle, FolderOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -56,18 +57,24 @@ function getFileSize(filePath: string): number {
 
 interface ContentExplorerViewProps {
   contents: Content[]
+  collections: Collection[]
+  currentPath: string | null
   viewMode: ViewMode
   selectedIds: string[]
   onSelectContent: (ids: string[]) => void
   onOpenContent: (id: string) => void
+  onNavigateToCollection: (id: string) => void
 }
 
 export function ContentExplorerView({
   contents,
+  collections,
+  currentPath,
   viewMode,
   selectedIds,
   onSelectContent,
   onOpenContent,
+  onNavigateToCollection,
 }: ContentExplorerViewProps) {
   const getStatusColor = (content: Content) => {
     const status = getAnalysisStatus(content)
@@ -113,12 +120,20 @@ export function ContentExplorerView({
       // Shift + Click: 범위 선택 (구현 생략, 기본 다중 선택으로 대체)
       onSelectContent([...selectedIds, id])
     } else {
-      // 일반 클릭: 단일 선택
-      onSelectContent([id])
+      // 일반 클릭: 상세 페이지로 이동 (컬렉션과 동일)
+      onOpenContent(id)
     }
   }
 
-  if (contents.length === 0) {
+  // Level 1: 루트 뷰 (컬렉션 + 미분류 콘텐츠)
+  const isRootView = currentPath === null
+
+  // 컬렉션별 콘텐츠 개수 계산
+  const getCollectionContentCount = (collectionId: string) => {
+    return contents.filter((c) => c.collection_id === collectionId).length
+  }
+
+  if (isRootView && collections.length === 0 && contents.length === 0) {
     return (
       <div className="text-secondary-500 flex h-full flex-col items-center justify-center">
         <Image className="text-secondary-300 mb-4 h-16 w-16" />
@@ -132,6 +147,27 @@ export function ContentExplorerView({
     return (
       <ScrollArea className="h-full">
         <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {/* Level 1: 컬렉션 카드 렌더링 */}
+          {isRootView &&
+            collections.map((collection) => (
+              <Card
+                key={collection.id}
+                className="hover:border-primary group cursor-pointer overflow-hidden transition-all"
+                onClick={() => onNavigateToCollection(collection.id)}
+              >
+                <div className="flex flex-col items-center gap-3 p-6">
+                  <FolderOpen className="text-primary h-16 w-16" />
+                  <div className="text-center">
+                    <h3 className="truncate font-semibold">{collection.name}</h3>
+                    <Badge variant="secondary" className="mt-2">
+                      {getCollectionContentCount(collection.id)}개
+                    </Badge>
+                  </div>
+                </div>
+              </Card>
+            ))}
+
+          {/* 콘텐츠 카드 렌더링 */}
           {contents.map((content) => (
             <Card
               key={content.id}
@@ -140,7 +176,6 @@ export function ContentExplorerView({
                 selectedIds.includes(content.id) && 'border-primary ring-primary ring-2'
               )}
               onClick={(e) => handleContentClick(content.id, e)}
-              onDoubleClick={() => onOpenContent(content.id)}
             >
               {/* Thumbnail */}
               <div className="relative aspect-video overflow-hidden bg-secondary-100">
@@ -186,6 +221,26 @@ export function ContentExplorerView({
     <ScrollArea className="h-full">
       <div className="p-4">
         <div className="divide-y rounded-lg border">
+          {/* Level 1: 컬렉션 행 렌더링 */}
+          {isRootView &&
+            collections.map((collection) => (
+              <div
+                key={collection.id}
+                className="hover:bg-secondary-50 flex cursor-pointer items-center gap-4 p-4 transition-colors"
+                onClick={() => onNavigateToCollection(collection.id)}
+              >
+                <FolderOpen className="text-primary h-8 w-8 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate font-semibold">{collection.name}</h3>
+                </div>
+                <Badge variant="secondary">{getCollectionContentCount(collection.id)}개</Badge>
+                <span className="text-secondary-500 text-sm">
+                  {format(new Date(collection.created_at), 'yyyy.MM.dd', { locale: ko })}
+                </span>
+              </div>
+            ))}
+
+          {/* 콘텐츠 행 렌더링 */}
           {contents.map((content) => (
             <Link
               key={content.id}

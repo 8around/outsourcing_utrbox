@@ -5,15 +5,11 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import { useContentStore } from '@/lib/stores/contentStore'
 import { useExplorerStore } from '@/lib/stores/explorerStore'
 import { mockContents, mockCollections, getDetectionCount } from '@/lib/mock-data'
-import { StatsCards, FolderTree, ContentExplorerView, ExplorerToolbar } from '@/components/explorer'
+import { StatsCards, ContentExplorerView, ExplorerToolbar } from '@/components/explorer'
 import { getAnalysisStatus } from '@/types/content'
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from '@/components/ui/resizable'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useRouter } from 'next/navigation'
+import { FullHeightContainer } from '@/components/layout'
 
 export default function ExplorerPage() {
   const router = useRouter()
@@ -22,12 +18,13 @@ export default function ExplorerPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   const {
-    selectedCollectionId,
+    currentPath,
     selectedContentIds,
     viewMode,
     sortBy,
     searchQuery,
-    setSelectedCollection,
+    navigateToCollection,
+    navigateToRoot,
     setSelectedContents,
     toggleViewMode,
     setSortBy,
@@ -56,14 +53,31 @@ export default function ExplorerPage() {
   const completedContents = userContents.filter((c) => getAnalysisStatus(c) === 'completed')
   const totalDetections = userContents.reduce((sum, c) => sum + getDetectionCount(c.id), 0)
 
+  // displayData: 계층적 데이터 구조
+  const displayData = useMemo(() => {
+    if (currentPath === null) {
+      // Level 1: 루트 뷰 (모든 컬렉션 + 미분류 콘텐츠)
+      return {
+        collections: userCollections,
+        contents: userContents.filter((c) => c.collection_id === null),
+      }
+    }
+
+    // Level 2: 컬렉션 뷰 (선택된 컬렉션의 콘텐츠만)
+    return {
+      collections: [],
+      contents: userContents.filter((c) => c.collection_id === currentPath),
+    }
+  }, [currentPath, userCollections, userContents])
+
+  // 현재 컬렉션 정보
+  const currentCollection = currentPath
+    ? userCollections.find((c) => c.id === currentPath)
+    : null
+
   // Filter and sort contents
   const filteredContents = useMemo(() => {
-    let filtered = userContents
-
-    // Filter by collection
-    if (selectedCollectionId) {
-      filtered = filtered.filter((c) => c.collection_id === selectedCollectionId)
-    }
+    let filtered = displayData.contents
 
     // Filter by search query
     if (searchQuery.trim()) {
@@ -93,7 +107,7 @@ export default function ExplorerPage() {
     })
 
     return sorted
-  }, [userContents, selectedCollectionId, searchQuery, sortBy])
+  }, [displayData.contents, searchQuery, sortBy])
 
   const handleOpenContent = (id: string) => {
     router.push(`/contents/${id}`)
@@ -113,9 +127,9 @@ export default function ExplorerPage() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <FullHeightContainer>
       {/* Stats Cards */}
-      <div className="p-6">
+      <div className="mb-6">
         <StatsCards
           totalContents={userContents.length}
           completedAnalysis={completedContents.length}
@@ -125,47 +139,35 @@ export default function ExplorerPage() {
       </div>
 
       {/* Explorer */}
-      <div className="flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
-          {/* Left: Folder Tree */}
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-            <FolderTree
-              collections={userCollections}
-              selectedId={selectedCollectionId}
-              onSelectCollection={setSelectedCollection}
-            />
-          </ResizablePanel>
-
-          <ResizableHandle withHandle />
-
-          {/* Right: Content View */}
-          <ResizablePanel defaultSize={80}>
-            <div className="flex h-full flex-col">
-              <ExplorerToolbar
-                viewMode={viewMode}
-                onViewModeChange={(mode) => {
-                  if (mode !== viewMode) {
-                    toggleViewMode()
-                  }
-                }}
-                sortBy={sortBy}
-                onSortChange={setSortBy}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-              />
-              <div className="flex-1 overflow-hidden">
-                <ContentExplorerView
-                  contents={filteredContents}
-                  viewMode={viewMode}
-                  selectedIds={selectedContentIds}
-                  onSelectContent={setSelectedContents}
-                  onOpenContent={handleOpenContent}
-                />
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <ExplorerToolbar
+          currentPath={currentPath}
+          currentCollection={currentCollection ?? null}
+          onNavigateToRoot={navigateToRoot}
+          viewMode={viewMode}
+          onViewModeChange={(mode) => {
+            if (mode !== viewMode) {
+              toggleViewMode()
+            }
+          }}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+        <div className="flex-1 overflow-hidden">
+          <ContentExplorerView
+            contents={filteredContents}
+            collections={displayData.collections}
+            currentPath={currentPath}
+            viewMode={viewMode}
+            selectedIds={selectedContentIds}
+            onSelectContent={setSelectedContents}
+            onOpenContent={handleOpenContent}
+            onNavigateToCollection={navigateToCollection}
+          />
+        </div>
       </div>
-    </div>
+    </FullHeightContainer>
   )
 }
