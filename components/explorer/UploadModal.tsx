@@ -251,7 +251,7 @@ export function UploadModal({
                   <Card key={index} className="p-4">
                     <div className="flex gap-4">
                       {/* Preview */}
-                      <div className="relative h-32 w-32 flex-shrink-0 bg-secondary-100 rounded">
+                      <div className="relative h-32 w-32 flex-shrink-0 bg-secondary rounded-xl">
                         <img
                           src={item.file.preview}
                           alt={item.title}
