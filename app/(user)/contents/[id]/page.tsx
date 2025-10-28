@@ -332,19 +332,19 @@ export default function ContentDetailPage() {
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger
                     value="full"
-                    className="data-[state=active]:text-error data-[state=active]:border-b-2 data-[state=active]:border-error"
+                    className="data-[state=active]:text-error data-[state=active]:bg-error/10"
                   >
                     일치 ({groupedDetections.full.length})
                   </TabsTrigger>
                   <TabsTrigger
                     value="partial"
-                    className="data-[state=active]:text-warning data-[state=active]:border-b-2 data-[state=active]:border-warning"
+                    className="data-[state=active]:text-warning data-[state=active]:bg-warning/10"
                   >
-                    부분일치 ({groupedDetections.partial.length})
+                    부분 일치 ({groupedDetections.partial.length})
                   </TabsTrigger>
                   <TabsTrigger
                     value="similar"
-                    className="data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary"
+                    className="data-[state=active]:text-primary data-[state=active]:bg-primary/10"
                   >
                     유사 ({groupedDetections.similar.length})
                   </TabsTrigger>
