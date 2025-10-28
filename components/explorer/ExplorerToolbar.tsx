@@ -19,13 +19,16 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { Grid, List, Search, Upload } from 'lucide-react'
+import { Grid, List, Search, Upload, FolderPlus } from 'lucide-react'
 import { UploadModal } from './UploadModal'
+import { CreateCollectionModal } from './CreateCollectionModal'
 
 interface ExplorerToolbarProps {
   currentPath: string | null
   currentCollection: Collection | null
+  collections?: Collection[] // 사용자의 컬렉션 목록
   onNavigateToRoot: () => void
+  onRefresh?: () => void // 목록 갱신 콜백
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
   sortBy: SortBy
@@ -37,7 +40,9 @@ interface ExplorerToolbarProps {
 export function ExplorerToolbar({
   currentPath,
   currentCollection,
+  collections = [],
   onNavigateToRoot,
+  onRefresh,
   viewMode,
   onViewModeChange,
   sortBy,
@@ -46,6 +51,9 @@ export function ExplorerToolbar({
   onSearchChange,
 }: ExplorerToolbarProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [isCreateCollectionModalOpen, setIsCreateCollectionModalOpen] = useState(false)
+
+  const isRootPath = currentCollection === null
 
   return (
     <>
@@ -126,7 +134,19 @@ export function ExplorerToolbar({
           </Button>
         </div>
 
-        {/* Upload Button */}
+        {/* Collection Button (루트 경로에서만 표시) */}
+        {isRootPath && (
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => setIsCreateCollectionModalOpen(true)}
+          >
+            <FolderPlus className="h-4 w-4" />
+            <span className="hidden sm:inline">컬렉션 추가</span>
+          </Button>
+        )}
+
+        {/* Upload Button (항상 표시) */}
         <Button className="gap-2" onClick={() => setIsUploadModalOpen(true)}>
           <Upload className="h-4 w-4" />
           <span className="hidden sm:inline">업로드</span>
@@ -135,11 +155,28 @@ export function ExplorerToolbar({
       </div>
     </div>
 
+    {/* Create Collection Modal */}
+    <CreateCollectionModal
+      open={isCreateCollectionModalOpen}
+      onOpenChange={setIsCreateCollectionModalOpen}
+      onCollectionCreated={() => {
+        if (onRefresh) {
+          onRefresh()
+        }
+      }}
+    />
+
     {/* Upload Modal */}
     <UploadModal
       open={isUploadModalOpen}
       onOpenChange={setIsUploadModalOpen}
       defaultCollectionId={currentCollection?.id || null}
+      collections={collections}
+      onUploadComplete={() => {
+        if (onRefresh) {
+          onRefresh()
+        }
+      }}
     />
     </>
   )

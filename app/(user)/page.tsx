@@ -130,7 +130,21 @@ export default function ExplorerPage() {
         <ExplorerToolbar
           currentPath={null}
           currentCollection={null}
+          collections={userCollections}
           onNavigateToRoot={() => router.push('/')}
+          onRefresh={() => {
+            // 목록 갱신 (현재는 Mock 데이터이므로 페이지 새로고침)
+            setIsLoading(true)
+            const loadData = async () => {
+              await new Promise((resolve) => setTimeout(resolve, 500))
+              const userContents = mockContents.filter((c) => c.user_id === user?.id)
+              const userCollections = mockCollections.filter((c) => c.user_id === user?.id)
+              setContents(userContents)
+              setCollections(userCollections)
+              setIsLoading(false)
+            }
+            loadData()
+          }}
           viewMode={viewMode}
           onViewModeChange={(mode) => {
             if (mode !== viewMode) {

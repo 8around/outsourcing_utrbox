@@ -21,9 +21,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { mockCollections } from '@/lib/mock-data'
-import { mockContentsApi } from '@/lib/api/mock'
 import { useToast } from '@/hooks/use-toast'
+import { uploadContent } from '@/lib/api/contents'
+import { Collection } from '@/types'
 import { Upload, X, CheckCircle2, AlertCircle } from 'lucide-react'
 import { LoadingSpinner } from '@/components/common'
 
@@ -44,6 +44,7 @@ interface UploadModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   defaultCollectionId?: string | null
+  collections?: Collection[] // 사용자의 컬렉션 목록
   onUploadComplete?: () => void
 }
 
@@ -51,6 +52,7 @@ export function UploadModal({
   open,
   onOpenChange,
   defaultCollectionId = null,
+  collections = [],
   onUploadComplete,
 }: UploadModalProps) {
   const { user } = useAuthStore()
@@ -58,7 +60,7 @@ export function UploadModal({
   const [uploadItems, setUploadItems] = useState<UploadItem[]>([])
   const [isUploading, setIsUploading] = useState(false)
 
-  const userCollections = mockCollections.filter((c) => c.user_id === user?.id)
+  const userCollections = collections
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -108,19 +110,18 @@ export function UploadModal({
     updateItem(index, { status: 'uploading', progress: 0 })
 
     try {
-      // Simulate upload progress
-      for (let progress = 0; progress <= 100; progress += 20) {
-        await new Promise((resolve) => setTimeout(resolve, 200))
-        updateItem(index, { progress })
-      }
-
-      // Upload using mock API
-      const response = await mockContentsApi.uploadContent({
-        userId: user!.id,
-        collectionId: item.collectionId,
-        title: item.title,
-        file: item.file,
-      })
+      // Upload using Supabase API
+      const response = await uploadContent(
+        {
+          file: item.file,
+          title: item.title,
+          userId: user!.id,
+          collectionId: item.collectionId,
+        },
+        (progress) => {
+          updateItem(index, { progress })
+        }
+      )
 
       if (response.success) {
         updateItem(index, { status: 'success', progress: 100 })
@@ -131,6 +132,7 @@ export function UploadModal({
         })
       }
     } catch (error) {
+      console.error('업로드 중 오류:', error)
       updateItem(index, {
         status: 'error',
         error: '업로드 중 오류가 발생했습니다',
