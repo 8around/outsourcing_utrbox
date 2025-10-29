@@ -142,10 +142,6 @@ export default function ExplorerPage() {
     router.push(`/contents/${id}`)
   }
 
-  const handleNavigateToCollection = (id: string) => {
-    router.push(`/collections/${id}`)
-  }
-
   if (error) {
     return (
       <FullHeightContainer>
@@ -164,12 +160,10 @@ export default function ExplorerPage() {
         <ContentExplorerView
           contents={filteredContents}
           collections={displayData.collections}
-          currentPath={null}
           viewMode={viewMode}
           selectedIds={selectedContentIds}
           onSelectContent={setSelectedContents}
           onOpenContent={handleOpenContent}
-          onNavigateToCollection={handleNavigateToCollection}
           isLoading={isLoading || isLoadingContents}
         />
 

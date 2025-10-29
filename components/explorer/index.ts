@@ -1,4 +1,6 @@
 export { StatsCards } from './StatsCards'
 export { ContentExplorerView } from './ContentExplorerView'
 export { ExplorerToolbar } from './ExplorerToolbar'
+export { CollectionSelect } from './CollectionSelect'
+export { CreateCollectionModal } from './CreateCollectionModal'
 export { Pagination } from './Pagination'

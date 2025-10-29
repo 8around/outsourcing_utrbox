@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Image as ImageIcon, AlertCircle, FolderOpen } from 'lucide-react'
+import { Image as ImageIcon, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -18,24 +18,20 @@ import Image from 'next/image'
 interface ContentExplorerViewProps {
   contents: Content[]
   collections: Collection[]
-  currentPath: string | null
   viewMode: ViewMode
   selectedIds: string[]
   onSelectContent: (ids: string[]) => void
   onOpenContent: (id: string) => void
-  onNavigateToCollection: (id: string) => void
   isLoading?: boolean
 }
 
 export function ContentExplorerView({
   contents,
   collections,
-  currentPath,
   viewMode,
   selectedIds,
   onSelectContent,
   onOpenContent,
-  onNavigateToCollection,
   isLoading = false,
 }: ContentExplorerViewProps) {
   const getStatusColor = (content: Content) => {
@@ -85,14 +81,6 @@ export function ContentExplorerView({
       // 일반 클릭: 상세 페이지로 이동 (컬렉션과 동일)
       onOpenContent(id)
     }
-  }
-
-  // Level 1: 루트 뷰 (컬렉션 + 미분류 콘텐츠)
-  const isRootView = currentPath === null
-
-  // 컬렉션별 콘텐츠 개수 계산
-  const getCollectionContentCount = (collectionId: string) => {
-    return contents.filter((c) => c.collection_id === collectionId).length
   }
 
   // 로딩 중일 때 Skeleton 표시
@@ -156,26 +144,6 @@ export function ContentExplorerView({
     return (
       <ScrollArea className="h-full">
         <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {/* Level 1: 컬렉션 카드 렌더링 */}
-          {isRootView &&
-            collections.map((collection) => (
-              <Card
-                key={collection.id}
-                className="hover:border-primary group cursor-pointer overflow-hidden transition-all"
-                onClick={() => onNavigateToCollection(collection.id)}
-              >
-                <div className="flex flex-col min-h-full justify-center items-center gap-3 p-6">
-                  <FolderOpen className="text-primary h-16 w-16" />
-                  <div className="text-center">
-                    <h3 className="truncate font-semibold">{collection.name}</h3>
-                    <Badge variant="secondary" className="mt-2">
-                      {getCollectionContentCount(collection.id)}개
-                    </Badge>
-                  </div>
-                </div>
-              </Card>
-            ))}
-
           {/* 콘텐츠 카드 렌더링 */}
           {contents.map((content) => (
             <Card
@@ -234,25 +202,6 @@ export function ContentExplorerView({
     <ScrollArea className="h-full">
       <div className="p-4">
         <div className="divide-y rounded-lg border">
-          {/* Level 1: 컬렉션 행 렌더링 */}
-          {isRootView &&
-            collections.map((collection) => (
-              <div
-                key={collection.id}
-                className="hover:bg-secondary-50 flex cursor-pointer items-center gap-4 p-4 transition-colors"
-                onClick={() => onNavigateToCollection(collection.id)}
-              >
-                <FolderOpen className="text-primary h-8 w-8 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-semibold">{collection.name}</h3>
-                </div>
-                <Badge variant="secondary">{getCollectionContentCount(collection.id)}개</Badge>
-                <span className="text-secondary-500 text-sm">
-                  {format(new Date(collection.created_at), 'yyyy.MM.dd', { locale: ko })}
-                </span>
-              </div>
-            ))}
-
           {/* 콘텐츠 행 렌더링 */}
           {contents.map((content) => (
             <Link

@@ -197,8 +197,6 @@ export async function getContentsByCollection(
     // collectionId가 null이면 is null 조건, 아니면 eq 조건
     if (collectionId) {
       query = query.eq('collection_id', collectionId)
-    } else {
-      query = query.is('collection_id', null)
     }
 
     // 정렬 적용

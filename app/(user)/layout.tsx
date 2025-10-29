@@ -8,7 +8,7 @@ import { useAuthRecovery } from '@/hooks/use-auth-recovery'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useExplorerStore } from '@/lib/stores/explorerStore'
 import { LoadingSpinner } from '@/components/common'
-import { StatsCards, ExplorerToolbar } from '@/components/explorer'
+import { StatsCards, ExplorerToolbar, CreateCollectionModal } from '@/components/explorer'
 import { getCollections, getCollection } from '@/lib/api/collections'
 import { Collection } from '@/types'
 
@@ -28,6 +28,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   const [collections, setCollections] = useState<Collection[]>([])
   const [currentCollection, setCurrentCollection] = useState<Collection | null>(null)
   const [isLoadingLayout, setIsLoadingLayout] = useState(true)
+  const [isCreateCollectionModalOpen, setIsCreateCollectionModalOpen] = useState(false)
 
   // 컬렉션 목록 로드
   useEffect(() => {
@@ -70,6 +71,20 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
     loadCurrentCollection()
   }, [collectionId])
 
+  // 컬렉션 변경 핸들러 (드롭다운에서 선택 시)
+  const handleCollectionChange = (collectionId: string | null) => {
+    if (collectionId === null) {
+      router.push('/collections')
+    } else {
+      router.push(`/collections/${collectionId}`)
+    }
+  }
+
+  // 컬렉션 생성 핸들러
+  const handleCreateCollection = () => {
+    setIsCreateCollectionModalOpen(true)
+  }
+
   // 새로고침 핸들러
   const handleRefresh = async () => {
     if (!user) return
@@ -110,15 +125,15 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
       <Header />
       <main className="bg-secondary-50 flex min-h-0 flex-1 flex-col">
         {/* StatsCards - 레이아웃 레벨 */}
-        <div className="flex flex-col px-4 py-4 gap-y-4 sm:px-6 sm:py-6 sm:gap-y-6 lg:px-8 xl:px-12">
+        <div className="flex flex-col px-4 pt-4 gap-y-4 sm:px-6 sm:pt-6 sm:gap-y-6 lg:px-8 xl:px-12">
           <StatsCards />
 
           {/* ExplorerToolbar - 레이아웃 레벨 */}
           <ExplorerToolbar
-            currentPath={collectionId}
             currentCollection={currentCollection}
             collections={collections}
-            onNavigateToRoot={() => router.push('/collections')}
+            onCollectionChange={handleCollectionChange}
+            onCreateCollection={handleCreateCollection}
             onRefresh={handleRefresh}
           />
         </div>
@@ -127,6 +142,15 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
       <Footer />
+
+      {/* 컬렉션 생성 모달 */}
+      <CreateCollectionModal
+        open={isCreateCollectionModalOpen}
+        onOpenChange={setIsCreateCollectionModalOpen}
+        onCollectionCreated={() => {
+          handleRefresh()
+        }}
+      />
     </div>
   )
 }

@@ -181,12 +181,10 @@ export default function CollectionPage() {
         <ContentExplorerView
           contents={filteredContents}
           collections={displayData.collections}
-          currentPath={collectionId}
           viewMode={viewMode}
           selectedIds={selectedContentIds}
           onSelectContent={setSelectedContents}
           onOpenContent={handleOpenContent}
-          onNavigateToCollection={() => {}} // 컬렉션 뷰에서는 더 이상 하위 탐색 없음
           isLoading={isLoading || isLoadingContents}
         />
 
