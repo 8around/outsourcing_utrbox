@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ViewMode, SortBy, SortOrder } from '@/lib/stores/explorerStore'
+import { useExplorerStore } from '@/lib/stores/explorerStore'
 import { Collection } from '@/types/collection'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,14 +29,6 @@ interface ExplorerToolbarProps {
   collections?: Collection[] // 사용자의 컬렉션 목록
   onNavigateToRoot: () => void
   onRefresh?: () => void // 목록 갱신 콜백
-  viewMode: ViewMode
-  onViewModeChange: (mode: ViewMode) => void
-  sortBy: SortBy
-  onSortChange: (sort: SortBy) => void
-  sortOrder: SortOrder
-  onSortOrderChange: () => void
-  searchQuery: string
-  onSearchChange: (query: string) => void
 }
 
 export function ExplorerToolbar({
@@ -45,15 +37,9 @@ export function ExplorerToolbar({
   collections = [],
   onNavigateToRoot,
   onRefresh,
-  viewMode,
-  onViewModeChange,
-  sortBy,
-  onSortChange,
-  sortOrder,
-  onSortOrderChange,
-  searchQuery,
-  onSearchChange,
 }: ExplorerToolbarProps) {
+  const { viewMode, sortBy, sortOrder, searchQuery, toggleViewMode, setSortBy, toggleSortOrder, setSearchQuery } =
+    useExplorerStore()
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [isCreateCollectionModalOpen, setIsCreateCollectionModalOpen] = useState(false)
 
@@ -98,14 +84,14 @@ export function ExplorerToolbar({
             type="text"
             placeholder="콘텐츠 검색..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
           />
         </div>
 
         {/* Sort */}
         <div className="flex gap-2">
-          <Select value={sortBy} onValueChange={(value) => onSortChange(value as SortBy)}>
+          <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="정렬" />
             </SelectTrigger>
@@ -118,7 +104,7 @@ export function ExplorerToolbar({
           <Button
             variant="outline"
             size="icon"
-            onClick={onSortOrderChange}
+            onClick={toggleSortOrder}
             title={sortOrder === 'asc' ? '오름차순' : '내림차순'}
           >
             <ArrowUpDown className="h-4 w-4" />
@@ -130,7 +116,7 @@ export function ExplorerToolbar({
           <Button
             variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => onViewModeChange('grid')}
+            onClick={() => toggleViewMode()}
             className="h-8 w-8 p-0"
             title="그리드 뷰"
           >
@@ -139,7 +125,7 @@ export function ExplorerToolbar({
           <Button
             variant={viewMode === 'list' ? 'secondary' : 'ghost'}
             size="sm"
-            onClick={() => onViewModeChange('list')}
+            onClick={() => toggleViewMode()}
             className="h-8 w-8 p-0"
             title="리스트 뷰"
           >
