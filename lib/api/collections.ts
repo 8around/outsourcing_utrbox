@@ -12,6 +12,13 @@ interface ApiResponse<T> {
   success: boolean
 }
 
+interface PaginatedApiResponse<T> {
+  data: T | null
+  totalCount: number
+  error: string | null
+  success: boolean
+}
+
 /**
  * 새 컬렉션을 생성합니다.
  * @param params - 컬렉션 생성 파라미터 (name, userId)
@@ -67,26 +74,40 @@ export async function createCollection(
  * @param userId - 사용자 ID
  * @param sortBy - 정렬 기준 ('name' | 'date')
  * @param sortOrder - 정렬 순서 ('asc' | 'desc')
- * @returns ApiResponse<Collection[]> - 컬렉션 목록 또는 에러
+ * @param page - 페이지 번호 (1부터 시작, 선택사항)
+ * @param pageSize - 페이지당 아이템 수 (기본값: 12)
+ * @returns PaginatedApiResponse<Collection[]> - 컬렉션 목록 및 전체 개수 또는 에러
  */
 export async function getCollections(
   userId: string,
   sortBy: 'name' | 'date' = 'date',
-  sortOrder: 'asc' | 'desc' = 'desc'
-): Promise<ApiResponse<Collection[]>> {
+  sortOrder: 'asc' | 'desc' = 'desc',
+  page?: number,
+  pageSize: number = 12
+): Promise<PaginatedApiResponse<Collection[]>> {
   try {
     const column = sortBy === 'name' ? 'name' : 'created_at'
     const ascending = sortOrder === 'asc'
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('collections')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('user_id', userId)
       .order(column, { ascending })
+
+    // 페이지네이션 적용 (page가 제공된 경우에만)
+    if (page !== undefined && page > 0) {
+      const from = (page - 1) * pageSize
+      const to = from + pageSize - 1
+      query = query.range(from, to)
+    }
+
+    const { data, error, count } = await query
 
     if (error) {
       return {
         data: null,
+        totalCount: 0,
         error: error.message,
         success: false,
       }
@@ -94,6 +115,7 @@ export async function getCollections(
 
     return {
       data: data as Collection[],
+      totalCount: count || 0,
       error: null,
       success: true,
     }
@@ -101,6 +123,7 @@ export async function getCollections(
     console.error('컬렉션 조회 중 오류:', error)
     return {
       data: null,
+      totalCount: 0,
       error: '컬렉션을 불러오는 중 오류가 발생했습니다.',
       success: false,
     }

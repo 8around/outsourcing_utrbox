@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Image as ImageIcon, FolderOpen, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useAuthStore } from '@/lib/stores/authStore'
@@ -34,70 +33,56 @@ function StatCard({ title, value, icon, description }: StatCardProps) {
   )
 }
 
-function StatsCardsSkeleton() {
-  return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      {[...Array(4)].map((_, i) => (
-        <Skeleton key={i} className="h-32" />
-      ))}
-    </div>
-  )
-}
-
 export function StatsCards() {
   const { user } = useAuthStore()
-  
+
+  // 초기값 0으로 즉시 렌더링
   const [totalContents, setTotalContents] = useState(0)
   const [completedAnalysis, setCompletedAnalysis] = useState(0)
   const [totalDetections, setTotalDetections] = useState(0)
   const [totalCollections, setTotalCollections] = useState(0)
 
-  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadStats = async () => {
       if (!user) return
 
-      setIsLoading(true)
       setError(null)
 
       try {
-        const [contentsCountRes, completedCountRes, detectionsCountRes, collectionsCountRes] =
-          await Promise.all([
-            getContentsCount(user.id),
-            getCompletedAnalysisCount(user.id),
-            getMatchedAnalyzedContentsCount(user.id),
-            getCollectionsCount(user.id),
-          ])
+        // 백그라운드에서 각 통계 데이터 비동기 로드
+        getContentsCount(user.id).then((res) => {
+          if (res.success && res.data !== null) {
+            setTotalContents(res.data)
+          }
+        })
 
-        if (contentsCountRes.success && contentsCountRes.data) {
-          setTotalContents(contentsCountRes.data)
-        }
-        if (completedCountRes.success && completedCountRes.data) {
-          setCompletedAnalysis(completedCountRes.data)
-        }
-        if (detectionsCountRes.success && detectionsCountRes.data) {
-          setTotalDetections(detectionsCountRes.data)
-        }
-        if (collectionsCountRes.success && collectionsCountRes.data) {
-          setTotalCollections(collectionsCountRes.data)
-        }
-        
+        getCompletedAnalysisCount(user.id).then((res) => {
+          if (res.success && res.data !== null) {
+            setCompletedAnalysis(res.data)
+          }
+        })
+
+        getMatchedAnalyzedContentsCount(user.id).then((res) => {
+          if (res.success && res.data !== null) {
+            setTotalDetections(res.data)
+          }
+        })
+
+        getCollectionsCount(user.id).then((res) => {
+          if (res.success && res.data !== null) {
+            setTotalCollections(res.data)
+          }
+        })
       } catch (err) {
         console.error('통계 데이터 로드 오류:', err)
         setError('통계 데이터를 불러올 수 없습니다.')
-      } finally {
-        setIsLoading(false)
       }
     }
 
     loadStats()
   }, [user])
-
-  if (isLoading) {
-    return <StatsCardsSkeleton />
-  }
 
   if (error) {
     return (

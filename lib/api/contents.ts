@@ -14,6 +14,13 @@ interface ApiResponse<T> {
   success: boolean
 }
 
+interface PaginatedApiResponse<T> {
+  data: T | null
+  totalCount: number
+  error: string | null
+  success: boolean
+}
+
 /**
  * 파일명을 안전하게 sanitize합니다 (특수문자 제거)
  */
@@ -166,19 +173,26 @@ export async function getContents(
  * @param collectionId - 컬렉션 ID (null이면 미분류 콘텐츠)
  * @param sortBy - 정렬 기준 ('name' | 'date')
  * @param sortOrder - 정렬 순서 ('asc' | 'desc')
- * @returns ApiResponse<Content[]> - 콘텐츠 목록 또는 에러
+ * @param page - 페이지 번호 (1부터 시작, 선택사항)
+ * @param pageSize - 페이지당 아이템 수 (기본값: 12)
+ * @returns PaginatedApiResponse<Content[]> - 콘텐츠 목록 및 전체 개수 또는 에러
  */
 export async function getContentsByCollection(
   userId: string,
   collectionId: string | null,
   sortBy: 'name' | 'date' = 'date',
-  sortOrder: 'asc' | 'desc' = 'desc'
-): Promise<ApiResponse<Content[]>> {
+  sortOrder: 'asc' | 'desc' = 'desc',
+  page?: number,
+  pageSize: number = 12
+): Promise<PaginatedApiResponse<Content[]>> {
   try {
     const column = sortBy === 'name' ? 'file_name' : 'created_at'
     const ascending = sortOrder === 'asc'
 
-    let query = supabase.from('contents').select('*').eq('user_id', userId)
+    let query = supabase
+      .from('contents')
+      .select('*', { count: 'exact' })
+      .eq('user_id', userId)
 
     // collectionId가 null이면 is null 조건, 아니면 eq 조건
     if (collectionId) {
@@ -187,11 +201,22 @@ export async function getContentsByCollection(
       query = query.is('collection_id', null)
     }
 
-    const { data, error } = await query.order(column, { ascending })
+    // 정렬 적용
+    query = query.order(column, { ascending })
+
+    // 페이지네이션 적용 (page가 제공된 경우에만)
+    if (page !== undefined && page > 0) {
+      const from = (page - 1) * pageSize
+      const to = from + pageSize - 1
+      query = query.range(from, to)
+    }
+
+    const { data, error, count } = await query
 
     if (error) {
       return {
         data: null,
+        totalCount: 0,
         error: error.message,
         success: false,
       }
@@ -199,6 +224,7 @@ export async function getContentsByCollection(
 
     return {
       data: data as Content[],
+      totalCount: count || 0,
       error: null,
       success: true,
     }
@@ -206,6 +232,7 @@ export async function getContentsByCollection(
     console.error('콘텐츠 조회 중 오류:', error)
     return {
       data: null,
+      totalCount: 0,
       error: '콘텐츠를 불러오는 중 오류가 발생했습니다.',
       success: false,
     }

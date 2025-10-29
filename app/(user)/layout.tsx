@@ -1,24 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { useAuthStore } from '@/lib/stores/authStore'
 import { useAuthRecovery } from '@/hooks/use-auth-recovery'
 import { LoadingSpinner } from '@/components/common'
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
-  const { isAuthenticated } = useAuthStore()
   const { recovering } = useAuthRecovery()
-
-  // Check authentication
-  useEffect(() => {
-    if (!recovering && !isAuthenticated) {
-      router.push('/login')
-    }
-  }, [recovering, isAuthenticated, router])
 
   if (recovering) {
     return (
@@ -26,10 +14,6 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         <LoadingSpinner size="lg" />
       </div>
     )
-  }
-
-  if (!isAuthenticated) {
-    return null
   }
 
   return (

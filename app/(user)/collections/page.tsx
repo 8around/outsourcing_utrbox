@@ -1,28 +1,23 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { useParams, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useExplorerStore } from '@/lib/stores/explorerStore'
-import { getCollections, getCollection } from '@/lib/api/collections'
+import { getCollections } from '@/lib/api/collections'
 import { getContentsByCollection } from '@/lib/api/contents'
 import { StatsCards, ContentExplorerView, ExplorerToolbar, Pagination } from '@/components/explorer'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { FullHeightContainer } from '@/components/layout'
 import { Content, Collection } from '@/types'
 
-export default function CollectionPage() {
-  const params = useParams()
+export default function ExplorerPage() {
   const router = useRouter()
-  const collectionId = params.id as string
-
   const { user } = useAuthStore()
   const [userContents, setUserContents] = useState<Content[]>([])
   const [userCollections, setUserCollections] = useState<Collection[]>([])
-  const [currentCollection, setCurrentCollection] = useState<Collection | null>(null)
   const [totalContents, setTotalContents] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
@@ -44,7 +39,7 @@ export default function CollectionPage() {
     setSearchQuery,
   } = useExplorerStore()
 
-  // 초기 데이터 로드
+  // 초기 데이터 로드 (컬렉션 + 첫 페이지 콘텐츠)
   useEffect(() => {
     const loadInitialData = async () => {
       if (!user) return
@@ -53,10 +48,9 @@ export default function CollectionPage() {
       setError(null)
 
       try {
-        const [collectionsRes, contentsRes, collectionRes] = await Promise.all([
+        const [collectionsRes, contentsRes] = await Promise.all([
           getCollections(user.id, sortBy, sortOrder),
-          getContentsByCollection(user.id, collectionId, sortBy, sortOrder, 1, PAGE_SIZE),
-          getCollection(collectionId),
+          getContentsByCollection(user.id, null, sortBy, sortOrder, 1, PAGE_SIZE),
         ])
 
         if (collectionsRes.success && collectionsRes.data) {
@@ -71,12 +65,6 @@ export default function CollectionPage() {
         } else {
           setError(contentsRes.error || '콘텐츠를 불러올 수 없습니다.')
         }
-
-        if (collectionRes.success && collectionRes.data) {
-          setCurrentCollection(collectionRes.data)
-        } else {
-          setError(collectionRes.error || '컬렉션을 찾을 수 없습니다.')
-        }
       } catch (err) {
         console.error('데이터 로드 오류:', err)
         setError('데이터를 불러오는 중 오류가 발생했습니다.')
@@ -86,9 +74,9 @@ export default function CollectionPage() {
     }
 
     loadInitialData()
-  }, [user, collectionId])
+  }, [user])
 
-  // 정렬, 페이지 변경 시 콘텐츠만 다시 로드
+  // 정렬, 페이지 변경 시 콘텐츠만 다시 로드 (ContentExplorerView만 로딩)
   useEffect(() => {
     const loadContents = async () => {
       if (!user || isLoading) return
@@ -99,7 +87,7 @@ export default function CollectionPage() {
       try {
         const contentsRes = await getContentsByCollection(
           user.id,
-          collectionId,
+          null,
           sortBy,
           sortOrder,
           currentPage,
@@ -138,13 +126,13 @@ export default function CollectionPage() {
     setCurrentPage(page)
   }
 
-  // displayData: 컬렉션 뷰 (선택된 컬렉션의 콘텐츠만)
+  // displayData: 루트 뷰 (모든 컬렉션 + 미분류 콘텐츠)
   const displayData = useMemo(() => {
     return {
-      collections: [],
-      contents: userContents, // 이미 해당 컬렉션만 가져옴
+      collections: userCollections,
+      contents: userContents, // 이미 미분류만 가져옴
     }
-  }, [userContents])
+  }, [userCollections, userContents])
 
   // 클라이언트 사이드 검색 (서버 pagination 후)
   const filteredContents = useMemo(() => {
@@ -170,10 +158,9 @@ export default function CollectionPage() {
     router.push(`/contents/${id}`)
   }
 
-  const handleNavigateToRoot = () => {
-    router.push('/collections')
+  const handleNavigateToCollection = (id: string) => {
+    router.push(`/collections/${id}`)
   }
-
 
   if (isLoading) {
     return (
@@ -188,19 +175,14 @@ export default function CollectionPage() {
     )
   }
 
-  if (error || !currentCollection) {
+  if (error) {
     return (
       <div className="p-6">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>데이터 로드 실패</AlertTitle>
-          <AlertDescription>
-            {error || '컬렉션을 찾을 수 없습니다. 메인 페이지로 돌아가세요.'}
-          </AlertDescription>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
-        <Button className="mt-4" onClick={() => router.push('/collections')}>
-          컬렉션 목록으로 돌아가기
-        </Button>
       </div>
     )
   }
@@ -215,18 +197,17 @@ export default function CollectionPage() {
       {/* Explorer */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <ExplorerToolbar
-          currentPath={collectionId}
-          currentCollection={currentCollection}
+          currentPath={null}
+          currentCollection={null}
           collections={userCollections}
-          onNavigateToRoot={handleNavigateToRoot}
+          onNavigateToRoot={() => router.push('/collections')}
           onRefresh={async () => {
             // 현재 페이지 데이터 다시 로드
             setIsLoadingContents(true)
             try {
-              const [collectionsRes, contentsRes, collectionRes] = await Promise.all([
+              const [collectionsRes, contentsRes] = await Promise.all([
                 getCollections(user.id, sortBy, sortOrder),
-                getContentsByCollection(user.id, collectionId, sortBy, sortOrder, currentPage, PAGE_SIZE),
-                getCollection(collectionId),
+                getContentsByCollection(user.id, null, sortBy, sortOrder, currentPage, PAGE_SIZE),
               ])
 
               if (collectionsRes.success && collectionsRes.data) {
@@ -235,9 +216,6 @@ export default function CollectionPage() {
               if (contentsRes.success && contentsRes.data) {
                 setUserContents(contentsRes.data)
                 setTotalContents(contentsRes.totalCount)
-              }
-              if (collectionRes.success && collectionRes.data) {
-                setCurrentCollection(collectionRes.data)
               }
             } catch (err) {
               console.error('데이터 로드 오류:', err)
@@ -262,12 +240,12 @@ export default function CollectionPage() {
           <ContentExplorerView
             contents={filteredContents}
             collections={displayData.collections}
-            currentPath={collectionId}
+            currentPath={null}
             viewMode={viewMode}
             selectedIds={selectedContentIds}
             onSelectContent={setSelectedContents}
             onOpenContent={handleOpenContent}
-            onNavigateToCollection={() => {}} // 컬렉션 뷰에서는 더 이상 하위 탐색 없음
+            onNavigateToCollection={handleNavigateToCollection}
             isLoading={isLoadingContents}
           />
         </div>

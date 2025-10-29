@@ -6,6 +6,7 @@ import { ViewMode } from '@/lib/stores/explorerStore'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Image as ImageIcon, AlertCircle, FolderOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -23,6 +24,7 @@ interface ContentExplorerViewProps {
   onSelectContent: (ids: string[]) => void
   onOpenContent: (id: string) => void
   onNavigateToCollection: (id: string) => void
+  isLoading?: boolean
 }
 
 export function ContentExplorerView({
@@ -34,6 +36,7 @@ export function ContentExplorerView({
   onSelectContent,
   onOpenContent,
   onNavigateToCollection,
+  isLoading = false,
 }: ContentExplorerViewProps) {
   const getStatusColor = (content: Content) => {
     const status = getAnalysisStatus(content)
@@ -90,6 +93,53 @@ export function ContentExplorerView({
   // 컬렉션별 콘텐츠 개수 계산
   const getCollectionContentCount = (collectionId: string) => {
     return contents.filter((c) => c.collection_id === collectionId).length
+  }
+
+  // 로딩 중일 때 Skeleton 표시
+  if (isLoading) {
+    if (viewMode === 'grid') {
+      return (
+        <ScrollArea className="h-full">
+          <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="overflow-hidden">
+                <Skeleton className="aspect-video w-full" />
+                <div className="p-3 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+      )
+    } else {
+      return (
+        <ScrollArea className="h-full">
+          <div className="p-4">
+            <div className="divide-y rounded-lg border">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4">
+                  <Skeleton className="w-16 h-16 rounded" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </ScrollArea>
+      )
+    }
   }
 
   if (collections.length === 0 && contents.length === 0) {
