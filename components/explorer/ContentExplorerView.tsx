@@ -6,54 +6,13 @@ import { ViewMode } from '@/lib/stores/explorerStore'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Image, AlertCircle, FolderOpen } from 'lucide-react'
+import { Image as ImageIcon, AlertCircle, FolderOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import Link from 'next/link'
 import { getDetectionCount } from '@/lib/mock-data/contents'
-
-// Supabase Storage URL 생성 헬퍼 함수 (Mock 환경에서는 Unsplash 사용)
-function getFileUrl(filePath: string): string {
-  // 실제 환경에서는 Supabase Storage URL을 사용
-  // const { data } = supabase.storage.from('contents').getPublicUrl(filePath)
-  // return data.publicUrl
-
-  // Mock 환경: 파일명 기반으로 Unsplash 이미지 반환
-  const imageMap: Record<string, string> = {
-    'jeju_seongsan': 'photo-1519681393784-d120267933ba',
-    'busan_haeundae': 'photo-1506905925346-21bda4d32df4',
-    'gyeongju_bulguksa': 'photo-1478436127897-769e1b3f0f36',
-    'paris_eiffel': 'photo-1502602898657-3e91760cbb34',
-    'london_bigben': 'photo-1513635269975-59663e0ac1ad',
-    'newyork_liberty': 'photo-1485871981521-5b1fd3805eee',
-    'promo_banner': 'photo-1558655146-d09347e92766',
-    'launch_poster': 'photo-1561070791-2526d30994b5',
-    'sns_ad': 'photo-1572635196237-14b3f281503f',
-    'laptop_product': 'photo-1496181133206-80ce9b88a853',
-    'smartphone_white': 'photo-1511707171634-5f897ff02aa9',
-    'wireless_earbuds': 'photo-1590658268037-6bf12165a8df',
-    'smartwatch_black': 'photo-1523275335684-37898b6baf30',
-    'random_test': 'photo-1501594907352-04cda38ebc29',
-    'error_test': 'photo-1469854523086-cc02fe5d8800',
-    'branding_design_a': 'photo-1558655146-d09347e92766',
-    'poster_design': 'photo-1561070791-2526d30994b5',
-    'anniversary_event': 'photo-1511795409834-ef04bbd61622',
-    'product_launch': 'photo-1505373877841-8d25f7d46678',
-    'workshop_group': 'photo-1511578314322-379afb476865',
-  }
-
-  const fileKey = filePath.split('/')[1]?.split('_').slice(1).join('_').replace('.jpg', '').replace('.png', '') || ''
-  const imageId = imageMap[fileKey] || 'photo-1501594907352-04cda38ebc29'
-  return `https://images.unsplash.com/${imageId}`
-}
-
-// 파일 크기 계산 헬퍼 함수 (Mock 환경)
-function getFileSize(filePath: string): number {
-  // 실제 환경에서는 Storage metadata에서 가져옴
-  // Mock: 1MB ~ 3MB 랜덤
-  return Math.floor(Math.random() * 2097152) + 1048576
-}
+import Image from 'next/image'
 
 interface ContentExplorerViewProps {
   contents: Content[]
@@ -133,10 +92,10 @@ export function ContentExplorerView({
     return contents.filter((c) => c.collection_id === collectionId).length
   }
 
-  if (isRootView && collections.length === 0 && contents.length === 0) {
+  if (collections.length === 0 && contents.length === 0) {
     return (
       <div className="text-secondary-500 flex h-full flex-col items-center justify-center">
-        <Image className="text-secondary-300 mb-4 h-16 w-16" />
+        <ImageIcon className="text-secondary-300 mb-4 h-16 w-16" />
         <p className="text-lg font-medium">콘텐츠가 없습니다</p>
         <p className="text-secondary-400 mt-1 text-sm">콘텐츠를 업로드해보세요</p>
       </div>
@@ -155,7 +114,7 @@ export function ContentExplorerView({
                 className="hover:border-primary group cursor-pointer overflow-hidden transition-all"
                 onClick={() => onNavigateToCollection(collection.id)}
               >
-                <div className="flex flex-col items-center gap-3 p-6">
+                <div className="flex flex-col min-h-full justify-center items-center gap-3 p-6">
                   <FolderOpen className="text-primary h-16 w-16" />
                   <div className="text-center">
                     <h3 className="truncate font-semibold">{collection.name}</h3>
@@ -178,11 +137,15 @@ export function ContentExplorerView({
               onClick={(e) => handleContentClick(content.id, e)}
             >
               {/* Thumbnail */}
-              <div className="relative aspect-video overflow-hidden bg-secondary-100">
-                <img
-                  src={getFileUrl(content.file_path)}
+              <div className="relative aspect-video overflow-hidden bg-secondary">
+                <Image
+                  src={content.file_path}
                   alt={content.file_name}
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  className="transition-transform group-hover:scale-105"
+                  fill
+                  objectFit="contain"
+                  loading="lazy"
+                  unoptimized
                 />
                 {getDetectionCount(content.id) > 0 && (
                   <div className="absolute right-2 top-2">
@@ -257,11 +220,16 @@ export function ContentExplorerView({
               }}
             >
               {/* Thumbnail */}
-              <img
-                src={getFileUrl(content.file_path)}
-                alt={content.file_name}
-                className="h-16 w-16 flex-shrink-0 rounded object-cover"
-              />
+              <div className="relative w-16 h-16 overflow-hidden bg-secondary rounded">
+                <Image
+                  src={content.file_path}
+                  alt={content.file_name}
+                  fill
+                  objectFit="contain"
+                  loading="lazy"
+                  unoptimized
+                />
+              </div>
 
               {/* Info */}
               <div className="min-w-0 flex-1">
@@ -283,10 +251,7 @@ export function ContentExplorerView({
               {/* Meta */}
               <div className="flex-shrink-0 text-right">
                 <p className="text-secondary-500 text-sm">
-                  {format(new Date(content.created_at), 'yyyy.MM.dd', { locale: ko })}
-                </p>
-                <p className="text-secondary-400 text-xs">
-                  {(getFileSize(content.file_path) / (1024 * 1024)).toFixed(2)} MB
+                  {format(new Date(content.created_at), 'yyyy.MM.dd HH:mm', { locale: ko })}
                 </p>
               </div>
             </Link>

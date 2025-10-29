@@ -57,7 +57,15 @@ export async function uploadContent(
 
     // 진행률 업데이트 (Storage 업로드 완료 시점)
     if (onProgress) {
-      onProgress(50)
+      onProgress(33)
+    }
+
+    const { data } = await supabase.storage.from('contents').getPublicUrl(filePath);
+
+    const publicUrl = data.publicUrl;
+
+    if (onProgress) {
+      onProgress(66)
     }
 
     // 3. Contents 테이블에 메타데이터 저장
@@ -67,7 +75,7 @@ export async function uploadContent(
         user_id: params.userId,
         collection_id: params.collectionId, // NULL 가능
         file_name: params.file.name,
-        file_path: filePath,
+        file_path: publicUrl,
         is_analyzed: null, // 분석 대기
         message: null,
       })
@@ -102,6 +110,135 @@ export async function uploadContent(
     return {
       data: null,
       error: '업로드 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
+
+/**
+ * 사용자의 모든 콘텐츠를 조회합니다.
+ * @param userId - 사용자 ID
+ * @param sortBy - 정렬 기준 ('name' | 'date')
+ * @param sortOrder - 정렬 순서 ('asc' | 'desc')
+ * @returns ApiResponse<Content[]> - 콘텐츠 목록 또는 에러
+ */
+export async function getContents(
+  userId: string,
+  sortBy: 'name' | 'date' = 'date',
+  sortOrder: 'asc' | 'desc' = 'desc'
+): Promise<ApiResponse<Content[]>> {
+  try {
+    const column = sortBy === 'name' ? 'file_name' : 'created_at'
+    const ascending = sortOrder === 'asc'
+
+    const { data, error } = await supabase
+      .from('contents')
+      .select('*')
+      .eq('user_id', userId)
+      .order(column, { ascending })
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: data as Content[],
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('콘텐츠 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '콘텐츠를 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
+
+/**
+ * 특정 컬렉션(또는 미분류)의 콘텐츠를 조회합니다.
+ * @param userId - 사용자 ID
+ * @param collectionId - 컬렉션 ID (null이면 미분류 콘텐츠)
+ * @param sortBy - 정렬 기준 ('name' | 'date')
+ * @param sortOrder - 정렬 순서 ('asc' | 'desc')
+ * @returns ApiResponse<Content[]> - 콘텐츠 목록 또는 에러
+ */
+export async function getContentsByCollection(
+  userId: string,
+  collectionId: string | null,
+  sortBy: 'name' | 'date' = 'date',
+  sortOrder: 'asc' | 'desc' = 'desc'
+): Promise<ApiResponse<Content[]>> {
+  try {
+    const column = sortBy === 'name' ? 'file_name' : 'created_at'
+    const ascending = sortOrder === 'asc'
+
+    let query = supabase.from('contents').select('*').eq('user_id', userId)
+
+    // collectionId가 null이면 is null 조건, 아니면 eq 조건
+    if (collectionId) {
+      query = query.eq('collection_id', collectionId)
+    } else {
+      query = query.is('collection_id', null)
+    }
+
+    const { data, error } = await query.order(column, { ascending })
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: data as Content[],
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('콘텐츠 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '콘텐츠를 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
+
+/**
+ * 특정 콘텐츠를 조회합니다.
+ * @param id - 콘텐츠 ID
+ * @returns ApiResponse<Content> - 콘텐츠 또는 에러
+ */
+export async function getContent(id: string): Promise<ApiResponse<Content>> {
+  try {
+    const { data, error } = await supabase.from('contents').select('*').eq('id', id).single()
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: data as Content,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('콘텐츠 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '콘텐츠를 불러오는 중 오류가 발생했습니다.',
       success: false,
     }
   }

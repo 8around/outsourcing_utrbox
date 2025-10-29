@@ -2,53 +2,89 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { useContentStore } from '@/lib/stores/contentStore'
 import { useExplorerStore } from '@/lib/stores/explorerStore'
-import { mockContents, mockCollections, getDetectionCount } from '@/lib/mock-data'
+import { getCollections } from '@/lib/api/collections'
+import { getContents } from '@/lib/api/contents'
+import { getDetectionCount } from '@/lib/api/detections'
 import { StatsCards, ContentExplorerView, ExplorerToolbar } from '@/components/explorer'
 import { getAnalysisStatus } from '@/types/content'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { FullHeightContainer } from '@/components/layout'
+import { Content, Collection } from '@/types'
 
 export default function ExplorerPage() {
   const router = useRouter()
   const { user } = useAuthStore()
-  const { setContents, setCollections } = useContentStore()
+  const [userContents, setUserContents] = useState<Content[]>([])
+  const [userCollections, setUserCollections] = useState<Collection[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [totalDetections, setTotalDetections] = useState(0)
 
   const {
     selectedContentIds,
     viewMode,
     sortBy,
+    sortOrder,
     searchQuery,
     setSelectedContents,
     toggleViewMode,
     setSortBy,
+    toggleSortOrder,
     setSearchQuery,
   } = useExplorerStore()
 
-  // Load mock data
+  // Load data from Supabase
   useEffect(() => {
     const loadData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      if (!user) return
 
-      const userContents = mockContents.filter((c) => c.user_id === user?.id)
-      const userCollections = mockCollections.filter((c) => c.user_id === user?.id)
+      setIsLoading(true)
+      setError(null)
 
-      setContents(userContents)
-      setCollections(userCollections)
-      setIsLoading(false)
+      try {
+        const [collectionsRes, contentsRes] = await Promise.all([
+          getCollections(user.id, sortBy, sortOrder),
+          getContents(user.id, sortBy, sortOrder),
+        ])
+
+        if (collectionsRes.success && collectionsRes.data) {
+          setUserCollections(collectionsRes.data)
+        } else {
+          setError(collectionsRes.error || '컬렉션을 불러올 수 없습니다.')
+        }
+
+        if (contentsRes.success && contentsRes.data) {
+          setUserContents(contentsRes.data)
+
+          // 탐지 건수 계산
+          let detectionTotal = 0
+          for (const content of contentsRes.data) {
+            const detectionRes = await getDetectionCount(content.id)
+            if (detectionRes.success && detectionRes.data !== null) {
+              detectionTotal += detectionRes.data
+            }
+          }
+          setTotalDetections(detectionTotal)
+        } else {
+          setError(contentsRes.error || '콘텐츠를 불러올 수 없습니다.')
+        }
+      } catch (err) {
+        console.error('데이터 로드 오류:', err)
+        setError('데이터를 불러오는 중 오류가 발생했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     loadData()
-  }, [user, setContents, setCollections])
+  }, [user, sortBy, sortOrder])
 
-  // Get user data
-  const userContents = mockContents.filter((c) => c.user_id === user?.id)
-  const userCollections = mockCollections.filter((c) => c.user_id === user?.id)
+  // Calculate statistics
   const completedContents = userContents.filter((c) => getAnalysisStatus(c) === 'completed')
-  const totalDetections = userContents.reduce((sum, c) => sum + getDetectionCount(c.id), 0)
 
   // displayData: 루트 뷰 (모든 컬렉션 + 미분류 콘텐츠)
   const displayData = useMemo(() => {
@@ -58,7 +94,7 @@ export default function ExplorerPage() {
     }
   }, [userCollections, userContents])
 
-  // Filter and sort contents
+  // Filter contents (정렬은 Supabase 쿼리에서 이미 처리됨)
   const filteredContents = useMemo(() => {
     let filtered = displayData.contents
 
@@ -72,25 +108,8 @@ export default function ExplorerPage() {
       )
     }
 
-    // Sort
-    const sorted = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.file_name.localeCompare(b.file_name)
-        case 'date':
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        case 'size':
-          // Mock: 파일 경로 기반 해시로 정렬
-          return a.file_path.length - b.file_path.length
-        case 'detections':
-          return getDetectionCount(b.id) - getDetectionCount(a.id)
-        default:
-          return 0
-      }
-    })
-
-    return sorted
-  }, [displayData.contents, searchQuery, sortBy])
+    return filtered
+  }, [displayData.contents, searchQuery])
 
   const handleOpenContent = (id: string) => {
     router.push(`/contents/${id}`)
@@ -109,6 +128,18 @@ export default function ExplorerPage() {
           ))}
         </div>
         <Skeleton className="h-[600px]" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>데이터 로드 실패</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       </div>
     )
   }
@@ -133,15 +164,28 @@ export default function ExplorerPage() {
           collections={userCollections}
           onNavigateToRoot={() => router.push('/')}
           onRefresh={() => {
-            // 목록 갱신 (현재는 Mock 데이터이므로 페이지 새로고침)
+            // 데이터 다시 로드
             setIsLoading(true)
             const loadData = async () => {
-              await new Promise((resolve) => setTimeout(resolve, 500))
-              const userContents = mockContents.filter((c) => c.user_id === user?.id)
-              const userCollections = mockCollections.filter((c) => c.user_id === user?.id)
-              setContents(userContents)
-              setCollections(userCollections)
-              setIsLoading(false)
+              if (!user) return
+
+              try {
+                const [collectionsRes, contentsRes] = await Promise.all([
+                  getCollections(user.id, sortBy, sortOrder),
+                  getContents(user.id, sortBy, sortOrder),
+                ])
+
+                if (collectionsRes.success && collectionsRes.data) {
+                  setUserCollections(collectionsRes.data)
+                }
+                if (contentsRes.success && contentsRes.data) {
+                  setUserContents(contentsRes.data)
+                }
+              } catch (err) {
+                console.error('데이터 로드 오류:', err)
+              } finally {
+                setIsLoading(false)
+              }
             }
             loadData()
           }}
@@ -153,6 +197,8 @@ export default function ExplorerPage() {
           }}
           sortBy={sortBy}
           onSortChange={setSortBy}
+          sortOrder={sortOrder}
+          onSortOrderChange={toggleSortOrder}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />

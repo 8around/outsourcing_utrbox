@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ViewMode, SortBy } from '@/lib/stores/explorerStore'
+import { ViewMode, SortBy, SortOrder } from '@/lib/stores/explorerStore'
 import { Collection } from '@/types/collection'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,7 +19,7 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { Grid, List, Search, Upload, FolderPlus } from 'lucide-react'
+import { Grid, List, Search, Upload, FolderPlus, ArrowUpDown } from 'lucide-react'
 import { UploadModal } from './UploadModal'
 import { CreateCollectionModal } from './CreateCollectionModal'
 
@@ -33,6 +33,8 @@ interface ExplorerToolbarProps {
   onViewModeChange: (mode: ViewMode) => void
   sortBy: SortBy
   onSortChange: (sort: SortBy) => void
+  sortOrder: SortOrder
+  onSortOrderChange: () => void
   searchQuery: string
   onSearchChange: (query: string) => void
 }
@@ -47,6 +49,8 @@ export function ExplorerToolbar({
   onViewModeChange,
   sortBy,
   onSortChange,
+  sortOrder,
+  onSortOrderChange,
   searchQuery,
   onSearchChange,
 }: ExplorerToolbarProps) {
@@ -100,17 +104,26 @@ export function ExplorerToolbar({
         </div>
 
         {/* Sort */}
-        <Select value={sortBy} onValueChange={(value) => onSortChange(value as SortBy)}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="정렬" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="date">최신순</SelectItem>
-            <SelectItem value="name">이름순</SelectItem>
-            <SelectItem value="size">크기순</SelectItem>
-            <SelectItem value="detections">발견 건수순</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={sortBy} onValueChange={(value) => onSortChange(value as SortBy)}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="정렬" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">업로드순</SelectItem>
+              <SelectItem value="name">이름순</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={onSortOrderChange}
+            title={sortOrder === 'asc' ? '오름차순' : '내림차순'}
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        </div>
 
         {/* View Mode */}
         <div className="flex gap-1 rounded-lg border p-1">

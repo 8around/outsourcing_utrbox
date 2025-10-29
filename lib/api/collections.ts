@@ -61,3 +61,84 @@ export async function createCollection(
     }
   }
 }
+
+/**
+ * 사용자의 모든 컬렉션을 조회합니다.
+ * @param userId - 사용자 ID
+ * @param sortBy - 정렬 기준 ('name' | 'date')
+ * @param sortOrder - 정렬 순서 ('asc' | 'desc')
+ * @returns ApiResponse<Collection[]> - 컬렉션 목록 또는 에러
+ */
+export async function getCollections(
+  userId: string,
+  sortBy: 'name' | 'date' = 'date',
+  sortOrder: 'asc' | 'desc' = 'desc'
+): Promise<ApiResponse<Collection[]>> {
+  try {
+    const column = sortBy === 'name' ? 'name' : 'created_at'
+    const ascending = sortOrder === 'asc'
+
+    const { data, error } = await supabase
+      .from('collections')
+      .select('*')
+      .eq('user_id', userId)
+      .order(column, { ascending })
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: data as Collection[],
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('컬렉션 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '컬렉션을 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
+
+/**
+ * 특정 컬렉션을 조회합니다.
+ * @param id - 컬렉션 ID
+ * @returns ApiResponse<Collection> - 컬렉션 또는 에러
+ */
+export async function getCollection(id: string): Promise<ApiResponse<Collection>> {
+  try {
+    const { data, error } = await supabase
+      .from('collections')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: data as Collection,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('컬렉션 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '컬렉션을 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
