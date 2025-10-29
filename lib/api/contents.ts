@@ -339,3 +339,66 @@ export async function getCompletedAnalysisCount(userId: string): Promise<ApiResp
     }
   }
 }
+
+/**
+ * 콘텐츠를 삭제합니다 (Storage 파일 + DB 레코드).
+ * @param id - 콘텐츠 ID
+ * @returns ApiResponse<void> - 삭제 결과
+ */
+export async function deleteContent(id: string): Promise<ApiResponse<void>> {
+  try {
+    // 1. 콘텐츠 정보 조회 (file_path 필요)
+    const { data: content, error: fetchError } = await supabase
+      .from('contents')
+      .select('file_path')
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !content) {
+      return {
+        data: null,
+        error: fetchError?.message || '콘텐츠를 찾을 수 없습니다.',
+        success: false,
+      }
+    }
+
+    // 2. Storage에서 파일 삭제
+    // file_path가 전체 URL인 경우 경로만 추출
+    const filePath = content.file_path.includes('/')
+      ? content.file_path.split('/').slice(-3).join('/')
+      : content.file_path
+
+    const { error: storageError } = await supabase.storage
+      .from('contents')
+      .remove([filePath])
+
+    if (storageError) {
+      console.error('Storage 파일 삭제 실패:', storageError)
+      // Storage 삭제 실패해도 DB는 삭제 진행 (파일이 이미 없을 수 있음)
+    }
+
+    // 3. DB에서 레코드 삭제 (detected_contents는 CASCADE로 자동 삭제)
+    const { error: deleteError } = await supabase.from('contents').delete().eq('id', id)
+
+    if (deleteError) {
+      return {
+        data: null,
+        error: `콘텐츠 삭제 실패: ${deleteError.message}`,
+        success: false,
+      }
+    }
+
+    return {
+      data: null,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('콘텐츠 삭제 중 오류:', error)
+    return {
+      data: null,
+      error: '콘텐츠 삭제 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}

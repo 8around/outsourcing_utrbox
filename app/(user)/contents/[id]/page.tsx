@@ -6,7 +6,8 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { mockContentsApi } from '@/lib/api/mock'
+import { getContent, deleteContent } from '@/lib/api/contents'
+import { getDetections } from '@/lib/api/detections'
 import { Content, DetectedContent, getAnalysisStatus } from '@/types'
 import {
   ArrowLeft,
@@ -21,37 +22,6 @@ import { ImageViewer, ConfirmDialog } from '@/components/common'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { PageContainer } from '@/components/layout'
-
-// Supabase Storage URL 생성 헬퍼 함수 (Mock 환경에서는 Unsplash 사용)
-function getFileUrl(filePath: string): string {
-  const imageMap: Record<string, string> = {
-    'jeju_seongsan': 'photo-1519681393784-d120267933ba',
-    'busan_haeundae': 'photo-1506905925346-21bda4d32df4',
-    'gyeongju_bulguksa': 'photo-1478436127897-769e1b3f0f36',
-    'paris_eiffel': 'photo-1502602898657-3e91760cbb34',
-    'london_bigben': 'photo-1513635269975-59663e0ac1ad',
-    'newyork_liberty': 'photo-1485871981521-5b1fd3805eee',
-    'promo_banner': 'photo-1558655146-d09347e92766',
-    'launch_poster': 'photo-1561070791-2526d30994b5',
-    'sns_ad': 'photo-1572635196237-14b3f281503f',
-    'laptop_product': 'photo-1496181133206-80ce9b88a853',
-    'smartphone_white': 'photo-1511707171634-5f897ff02aa9',
-    'wireless_earbuds': 'photo-1590658268037-6bf12165a8df',
-    'smartwatch_black': 'photo-1523275335684-37898b6baf30',
-    'random_test': 'photo-1501594907352-04cda38ebc29',
-    'error_test': 'photo-1469854523086-cc02fe5d8800',
-    'branding_design_a': 'photo-1558655146-d09347e92766',
-    'poster_design': 'photo-1561070791-2526d30994b5',
-    'anniversary_event': 'photo-1511795409834-ef04bbd61622',
-    'product_launch': 'photo-1505373877841-8d25f7d46678',
-    'workshop_group': 'photo-1511578314322-379afb476865',
-  }
-
-  const fileKey = filePath.split('/')[1]?.split('_').slice(1).join('_').replace('.jpg', '').replace('.png', '') || ''
-  const imageId = imageMap[fileKey] || 'photo-1501594907352-04cda38ebc29'
-  return `https://images.unsplash.com/${imageId}`
-}
-
 
 export default function ContentDetailPage() {
   const params = useParams()
@@ -102,7 +72,7 @@ export default function ContentDetailPage() {
       const contentId = params.id as string
 
       // Load content
-      const contentResponse = await mockContentsApi.getContent(contentId)
+      const contentResponse = await getContent(contentId)
       if (!contentResponse.success) {
         toast({
           title: '오류',
@@ -117,7 +87,7 @@ export default function ContentDetailPage() {
 
       // Load detected contents if analysis is completed
       if (contentResponse.data && getAnalysisStatus(contentResponse.data) === 'completed') {
-        const detectedResponse = await mockContentsApi.getDetectedContents(contentId)
+        const detectedResponse = await getDetections(contentId)
         if (detectedResponse.success) {
           // 관리자가 '일치'로 리뷰한 콘텐츠만 필터링
           const matchedContents = (detectedResponse.data || []).filter(
@@ -137,7 +107,7 @@ export default function ContentDetailPage() {
     if (!content) return
 
     setIsDeleting(true)
-    const response = await mockContentsApi.deleteContent(content.id)
+    const response = await deleteContent(content.id)
 
     if (response.success) {
       toast({
@@ -215,7 +185,7 @@ export default function ContentDetailPage() {
               onClick={() => setShowImageViewer(true)}
             >
               <img
-                src={getFileUrl(content.file_path)}
+                src={content.file_path}
                 alt={content.file_name}
                 className="h-full w-full object-contain"
               />
@@ -310,7 +280,7 @@ export default function ContentDetailPage() {
                   alt="감지된 이미지"
                   className="h-full w-full object-contain"
                   onError={(e) => {
-                    e.currentTarget.src = getFileUrl(content.file_path)
+                    e.currentTarget.src = content.file_path
                   }}
                 />
               ) : (
@@ -485,7 +455,7 @@ export default function ContentDetailPage() {
 
       {/* Image Viewer */}
       <ImageViewer
-        src={getFileUrl(content.file_path)}
+        src={content.file_path}
         alt={content.file_name}
         open={showImageViewer}
         onClose={() => setShowImageViewer(false)}
