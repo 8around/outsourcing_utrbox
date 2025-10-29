@@ -142,3 +142,38 @@ export async function getCollection(id: string): Promise<ApiResponse<Collection>
     }
   }
 }
+
+/**
+ * 사용자의 컬렉션 개수를 조회합니다.
+ * @param userId - 사용자 ID
+ * @returns ApiResponse<number> - 컬렉션 개수 또는 에러
+ */
+export async function getCollectionsCount(userId: string): Promise<ApiResponse<number>> {
+  try {
+    const { count, error } = await supabase
+      .from('collections')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: count || 0,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('컬렉션 개수 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '컬렉션 개수를 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}

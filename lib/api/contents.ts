@@ -243,3 +243,74 @@ export async function getContent(id: string): Promise<ApiResponse<Content>> {
     }
   }
 }
+
+/**
+ * 사용자의 콘텐츠 개수를 조회합니다.
+ * @param userId - 사용자 ID
+ * @returns ApiResponse<number> - 콘텐츠 개수 또는 에러
+ */
+export async function getContentsCount(userId: string): Promise<ApiResponse<number>> {
+  try {
+    const { count, error } = await supabase
+      .from('contents')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: count || 0,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('콘텐츠 개수 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '콘텐츠 개수를 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
+
+/**
+ * 사용자의 분석 완료된 콘텐츠 개수를 조회합니다.
+ * @param userId - 사용자 ID
+ * @returns ApiResponse<number> - 분석 완료 콘텐츠 개수 또는 에러
+ */
+export async function getCompletedAnalysisCount(userId: string): Promise<ApiResponse<number>> {
+  try {
+    const { count, error } = await supabase
+      .from('contents')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_analyzed', true)
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: count || 0,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('분석 완료 콘텐츠 개수 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '분석 완료 콘텐츠 개수를 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}

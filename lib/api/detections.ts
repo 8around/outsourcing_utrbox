@@ -91,3 +91,40 @@ export async function getDetections(
     }
   }
 }
+
+/**
+ * 일치 판정받은 분석 완료 콘텐츠의 개수를 조회합니다.
+ * admin_review_status='match'인 detected_contents를 가진, is_analyzed=true인 contents의 개수를 반환합니다.
+ * @param userId - 사용자 ID
+ * @returns ApiResponse<number> - 일치 판정받은 콘텐츠 개수 또는 에러
+ */
+export async function getMatchedAnalyzedContentsCount(
+  userId: string
+): Promise<ApiResponse<number>> {
+  try {
+    const { data, error } = await supabase.rpc('get_matched_analyzed_contents_count', {
+      user_id_param: userId,
+    })
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: data || 0,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('일치 판정 콘텐츠 개수 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '일치 판정 콘텐츠 개수를 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}

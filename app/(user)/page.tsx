@@ -5,9 +5,7 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import { useExplorerStore } from '@/lib/stores/explorerStore'
 import { getCollections } from '@/lib/api/collections'
 import { getContents } from '@/lib/api/contents'
-import { getDetectionCount } from '@/lib/api/detections'
 import { StatsCards, ContentExplorerView, ExplorerToolbar } from '@/components/explorer'
-import { getAnalysisStatus } from '@/types/content'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
@@ -22,7 +20,6 @@ export default function ExplorerPage() {
   const [userCollections, setUserCollections] = useState<Collection[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [totalDetections, setTotalDetections] = useState(0)
 
   const {
     selectedContentIds,
@@ -59,16 +56,6 @@ export default function ExplorerPage() {
 
         if (contentsRes.success && contentsRes.data) {
           setUserContents(contentsRes.data)
-
-          // 탐지 건수 계산
-          let detectionTotal = 0
-          for (const content of contentsRes.data) {
-            const detectionRes = await getDetectionCount(content.id)
-            if (detectionRes.success && detectionRes.data !== null) {
-              detectionTotal += detectionRes.data
-            }
-          }
-          setTotalDetections(detectionTotal)
         } else {
           setError(contentsRes.error || '콘텐츠를 불러올 수 없습니다.')
         }
@@ -82,9 +69,6 @@ export default function ExplorerPage() {
 
     loadData()
   }, [user, sortBy, sortOrder])
-
-  // Calculate statistics
-  const completedContents = userContents.filter((c) => getAnalysisStatus(c) === 'completed')
 
   // displayData: 루트 뷰 (모든 컬렉션 + 미분류 콘텐츠)
   const displayData = useMemo(() => {
@@ -148,12 +132,7 @@ export default function ExplorerPage() {
     <FullHeightContainer>
       {/* Stats Cards */}
       <div className="mb-6">
-        <StatsCards
-          totalContents={userContents.length}
-          completedAnalysis={completedContents.length}
-          totalDetections={totalDetections}
-          totalCollections={userCollections.length}
-        />
+        <StatsCards />
       </div>
 
       {/* Explorer */}
