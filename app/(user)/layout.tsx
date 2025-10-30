@@ -19,7 +19,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="bg-secondary-50 flex min-h-0 flex-1 flex-col">
+      <main className="bg-secondary/50 flex min-h-0 flex-1 flex-col">
         {children}
       </main>
       <Footer />

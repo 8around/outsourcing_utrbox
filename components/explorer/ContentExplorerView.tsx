@@ -201,15 +201,15 @@ export function ContentExplorerView({
   return (
     <ScrollArea className="h-full">
       <div className="p-4">
-        <div className="divide-y rounded-lg border">
+        <div className="divide-y rounded-lg border overflow-hidden">
           {/* 콘텐츠 행 렌더링 */}
           {contents.map((content) => (
             <Link
               key={content.id}
               href={`/contents/${content.id}`}
               className={cn(
-                'hover:bg-secondary-50 flex items-center gap-4 p-4 transition-colors',
-                selectedIds.includes(content.id) && 'bg-primary-50'
+                'hover:bg-secondary/10 flex items-center gap-4 p-4 transition-colors bg-card',
+                selectedIds.includes(content.id) && 'bg-secondary/10'
               )}
               onClick={(e) => {
                 if (e.ctrlKey || e.metaKey || e.shiftKey) {
@@ -233,7 +233,7 @@ export function ContentExplorerView({
               {/* Info */}
               <div className="min-w-0 flex-1">
                 <h3 className="truncate font-medium">{content.file_name}</h3>
-                <p className="text-secondary-500 truncate text-sm">{content.message || ''}</p>
+                <p className="text-secondary/500 truncate text-sm">{content.message || ''}</p>
                 <div className="mt-1 flex items-center gap-2">
                   <Badge variant="secondary" className={getStatusColor(content)}>
                     {getStatusText(content)}
@@ -249,7 +249,7 @@ export function ContentExplorerView({
 
               {/* Meta */}
               <div className="flex-shrink-0 text-right">
-                <p className="text-secondary-500 text-sm">
+                <p className="text-secondary/500 text-sm">
                   {format(new Date(content.created_at), 'yyyy.MM.dd HH:mm', { locale: ko })}
                 </p>
               </div>

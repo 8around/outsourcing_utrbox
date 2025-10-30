@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -17,6 +18,7 @@ import { useToast } from '@/hooks/use-toast'
 export function Header() {
   const { user, logout } = useAuthStore()
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleLogout = async () => {
     try {
@@ -40,6 +42,8 @@ export function Header() {
 
       // 성공 시
       logout()
+      
+      router.replace('/login')
     } catch (error) {
       toast({
         variant: 'destructive',

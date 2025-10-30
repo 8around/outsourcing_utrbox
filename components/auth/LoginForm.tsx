@@ -92,7 +92,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="rounded-lg bg-white p-8 shadow-md">
+    <div className="rounded-lg border bg-white p-8 shadow-md">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField

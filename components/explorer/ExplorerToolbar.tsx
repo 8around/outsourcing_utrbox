@@ -37,7 +37,7 @@ export function ExplorerToolbar({
 
   return (
     <>
-      <div className="border-b bg-background">
+      <div className="rounded-xl border bg-background shadow">
         <div className="p-4">
           <div className="flex flex-wrap items-center gap-4">
             {/* Collection Select */}
