@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url))
     } else if (authPaths.some((path) => pathname.startsWith(path))) {
       // 이미 로그인한 사용자가 로그인/회원가입 페이지 접근 시 리다이렉트
-      return NextResponse.redirect(new URL('/', request.url))
+      return NextResponse.redirect(new URL('/collections', request.url))
     }
 
     // 관리자 경로 접근 시에만 Role 체크
@@ -41,7 +41,9 @@ export async function middleware(request: NextRequest) {
       const claims = data?.claims
 
       if (claims?.user_role !== 'admin') {
-        return NextResponse.redirect(new URL('/', request.url))
+        return NextResponse.redirect(new URL('/collections', request.url))
+      } else if (pathname === '/admin') {
+        return NextResponse.redirect(new URL('/admin/dashboard', request.url))
       }
     }
     return response

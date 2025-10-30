@@ -72,7 +72,12 @@ export function LoginForm() {
           title: '로그인 성공',
           description: `환영합니다, ${result.data.user.name}님!`,
         })
-        router.push('/collections')
+
+        if (result.data.user.role === 'member') {
+          router.push('/collections')
+        } else if (result.data.user.role === 'admin') {
+          router.push('/admin/dashboard')
+        }
       } else {
         toast({
           variant: 'destructive',
