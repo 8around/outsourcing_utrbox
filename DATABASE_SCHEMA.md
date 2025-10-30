@@ -46,6 +46,7 @@ CREATE TABLE public.users (
 
   -- Profile
   name TEXT NOT NULL,
+  email TEXT,  -- auth.users의 email 복사 (쿼리 성능 향상)
   organization TEXT,
 
   -- Authorization
@@ -60,6 +61,7 @@ CREATE TABLE public.users (
 -- Comments
 COMMENT ON TABLE public.users IS '사용자 프로필 정보 (인증은 auth.users 활용)';
 COMMENT ON COLUMN public.users.id IS 'auth.users.id 참조';
+COMMENT ON COLUMN public.users.email IS '사용자 이메일 (auth.users에서 복사)';
 COMMENT ON COLUMN public.users.is_approved IS 'NULL: 승인 대기, TRUE: 승인, FALSE: 거부';
 COMMENT ON COLUMN public.users.role IS 'member: 일반 사용자, admin: 관리자';
 ```
@@ -183,6 +185,7 @@ COMMENT ON COLUMN public.detected_contents.image_url IS '발견된 이미지 URL
 CREATE INDEX idx_users_role ON public.users(role);
 CREATE INDEX idx_users_is_approved ON public.users(is_approved);
 CREATE INDEX idx_users_created_at ON public.users(created_at DESC);
+CREATE INDEX idx_users_email ON public.users(email);  -- 이메일 검색 성능 향상
 ```
 
 ### 3.2 collections 테이블 인덱스
