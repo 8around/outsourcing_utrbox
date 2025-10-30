@@ -4,6 +4,14 @@
 import { create } from 'zustand'
 import { UserFilters, ContentFilters, ReviewFilters } from './types'
 
+// 초기값 정의
+const initialUserFilters: UserFilters = {
+  search: undefined,
+  is_approved: undefined, // 전체 상태
+  role: 'member', // 기본값: 일반 회원
+  page: 1,
+}
+
 interface AdminState {
   // 필터 상태
   userFilters: UserFilters
@@ -15,7 +23,8 @@ interface AdminState {
   selectedContentIds: string[]
 
   // 액션
-  setUserFilters: (filters: UserFilters) => void
+  setUserFilters: (filters: Partial<UserFilters>) => void
+  resetUserFilters: () => void
   setContentFilters: (filters: ContentFilters) => void
   setReviewFilters: (filters: ReviewFilters) => void
   toggleUserSelection: (userId: string) => void
@@ -25,14 +34,18 @@ interface AdminState {
 
 export const useAdminStore = create<AdminState>((set) => ({
   // 초기 상태
-  userFilters: {},
+  userFilters: initialUserFilters,
   contentFilters: {},
   reviewFilters: {},
   selectedUserIds: [],
   selectedContentIds: [],
 
   // 액션
-  setUserFilters: (filters) => set({ userFilters: filters }),
+  setUserFilters: (filters) =>
+    set((state) => ({
+      userFilters: { ...state.userFilters, ...filters },
+    })),
+  resetUserFilters: () => set({ userFilters: initialUserFilters }),
   setContentFilters: (filters) => set({ contentFilters: filters }),
   setReviewFilters: (filters) => set({ reviewFilters: filters }),
   toggleUserSelection: (userId) =>

@@ -88,9 +88,27 @@ export interface PendingUser {
 
 // 필터 상태
 export interface UserFilters {
-  status?: 'approved' | 'pending' | 'blocked' | null
-  role?: 'member' | 'admin' | null
   search?: string
+  is_approved?: boolean | null // undefined: 전체, null: 대기, true: 승인, false: 거부
+  role: 'member' | 'admin' // 필수로 변경, 기본값은 스토어에서 설정
+  page: number
+}
+
+// 페이지네이션 결과 타입
+export interface PaginatedUsers {
+  users: User[]
+  totalCount: number
+  pageCount: number
+  currentPage: number
+}
+
+// Server Action 파라미터 타입
+export interface GetUsersParams {
+  page: number
+  limit: number
+  search?: string
+  is_approved?: boolean | null
+  role: 'member' | 'admin'
 }
 
 export interface ContentFilters {

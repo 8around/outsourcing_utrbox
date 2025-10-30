@@ -1,8 +1,13 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { FileImage, UserPlus } from 'lucide-react'
+import { FileImage, UserPlus, ArrowRight } from 'lucide-react'
+import { useAdminStore } from '@/lib/admin/store'
 
 interface PendingContentItem {
   id: string
@@ -25,6 +30,8 @@ interface ActivityFeedProps {
 }
 
 export function ActivityFeed({ pendingContents, pendingUsers, maxItems = 10 }: ActivityFeedProps) {
+  const router = useRouter()
+  const { setUserFilters } = useAdminStore()
   const displayedContents = pendingContents.slice(0, maxItems)
   const displayedUsers = pendingUsers.slice(0, maxItems)
 
@@ -37,6 +44,18 @@ export function ActivityFeed({ pendingContents, pendingUsers, maxItems = 10 }: A
     } catch {
       return '알 수 없음'
     }
+  }
+
+  const handleViewAllUsers = () => {
+    // Zustand 스토어에 필터 설정 - is_approved: null (승인 대기)
+    setUserFilters({
+      is_approved: null,
+      role: 'member',
+      page: 1,
+      search: undefined,
+    })
+    // Users 페이지로 이동
+    router.push('/admin/users')
   }
 
   return (
@@ -78,11 +97,22 @@ export function ActivityFeed({ pendingContents, pendingUsers, maxItems = 10 }: A
 
       {/* 최근 가입 요청 */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <UserPlus className="h-5 w-5 text-green-600" />
             최근 가입 요청
           </CardTitle>
+          {displayedUsers.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleViewAllUsers}
+              className="gap-1 text-blue-600 hover:text-blue-700"
+            >
+              전체보기
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           {displayedUsers.length === 0 ? (

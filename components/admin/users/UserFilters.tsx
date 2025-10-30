@@ -18,21 +18,44 @@ interface UserFiltersProps {
 
 export function UserFilters({ filters, onFilterChange }: UserFiltersProps) {
   const handleSearchChange = (value: string) => {
-    onFilterChange({ ...filters, search: value || undefined })
+    onFilterChange({ ...filters, search: value || undefined, page: 1 })
   }
 
-  const handleStatusChange = (value: string) => {
+  const handleApprovalStatusChange = (value: string) => {
+    let isApproved: boolean | null | undefined
+
+    if (value === 'all') {
+      isApproved = undefined // 전체
+    } else if (value === 'pending') {
+      isApproved = null // 승인 대기
+    } else if (value === 'approved') {
+      isApproved = true // 승인됨
+    } else if (value === 'blocked') {
+      isApproved = false // 거부됨
+    }
+
     onFilterChange({
       ...filters,
-      status: value === 'all' ? undefined : (value as 'approved' | 'pending' | 'blocked'),
+      is_approved: isApproved,
+      page: 1, // 필터 변경 시 첫 페이지로
     })
   }
 
   const handleRoleChange = (value: string) => {
     onFilterChange({
       ...filters,
-      role: value === 'all' ? undefined : (value as 'member' | 'admin'),
+      role: value as 'member' | 'admin',
+      page: 1,
     })
+  }
+
+  // is_approved 값을 Select value로 변환
+  const getApprovalStatusValue = () => {
+    if (filters.is_approved === undefined) return 'all'
+    if (filters.is_approved === null) return 'pending'
+    if (filters.is_approved === true) return 'approved'
+    if (filters.is_approved === false) return 'blocked'
+    return 'all'
   }
 
   return (
@@ -44,23 +67,17 @@ export function UserFilters({ filters, onFilterChange }: UserFiltersProps) {
           placeholder="이름, 이메일, 소속 검색..."
           value={filters.search || ''}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="pl-10"
+          className="bg-white pl-10"
         />
       </div>
 
-      {/* 상태 필터 */}
+      {/* 승인 상태 필터 */}
       <Select
-        value={
-          filters.status === undefined
-            ? 'all'
-            : filters.status === null
-              ? 'pending'
-              : filters.status
-        }
-        onValueChange={handleStatusChange}
+        value={getApprovalStatusValue()}
+        onValueChange={handleApprovalStatusChange}
       >
-        <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="상태" />
+        <SelectTrigger className="bg-white w-[150px]">
+          <SelectValue placeholder="승인 상태" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">전체 상태</SelectItem>
@@ -70,13 +87,12 @@ export function UserFilters({ filters, onFilterChange }: UserFiltersProps) {
         </SelectContent>
       </Select>
 
-      {/* 역할 필터 */}
-      <Select value={filters.role ?? 'all'} onValueChange={handleRoleChange}>
-        <SelectTrigger className="w-[150px]">
+      {/* 역할 필터 - '전체 역할' 옵션 제거 */}
+      <Select value={filters.role} onValueChange={handleRoleChange}>
+        <SelectTrigger className="bg-white w-[150px]">
           <SelectValue placeholder="역할" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">전체 역할</SelectItem>
           <SelectItem value="member">일반 회원</SelectItem>
           <SelectItem value="admin">관리자</SelectItem>
         </SelectContent>

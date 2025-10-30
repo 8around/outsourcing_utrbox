@@ -52,10 +52,7 @@ export async function POST(request: NextRequest) {
           data: null,
           error: result.error,
         },
-        {
-          status: 401,
-          headers: response.headers,
-        }
+        { status: 401 }
       )
     }
 

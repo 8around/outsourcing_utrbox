@@ -171,10 +171,20 @@ components/
 │   │   ├── ImageCompareViewer.tsx  # 이미지 비교 뷰어
 │   │   └── ReviewPanel.tsx         # 검토 패널
 │   └── users/                # 회원 관리 컴포넌트
-│       ├── UserTable.tsx           # 회원 테이블
+│       ├── UserTable.tsx           # 회원 테이블 (레거시)
+│       ├── UserTableClient.tsx     # 회원 테이블 (TanStack Table, 실제 사용)
 │       ├── UserFilters.tsx         # 회원 필터
 │       ├── UserActionButtons.tsx   # 회원 액션 버튼
 │       └── UserDetailCard.tsx      # 회원 상세 카드
+├── explorer/                  # 탐색기 컴포넌트
+│   ├── ContentExplorerView.tsx  # 콘텐츠 탐색기 뷰
+│   ├── ExplorerToolbar.tsx      # 탐색기 툴바
+│   ├── Pagination.tsx           # 페이지네이션 (재사용)
+│   ├── CollectionSelect.tsx     # 컬렉션 선택
+│   ├── CreateCollectionModal.tsx # 컬렉션 생성 모달
+│   ├── UploadModal.tsx          # 업로드 모달
+│   ├── StatsCards.tsx           # 통계 카드
+│   └── index.ts                 # Export 파일
 ├── layout/                    # 레이아웃 컴포넌트
 │   ├── Header.tsx            # 헤더
 │   ├── Sidebar.tsx           # 사이드바
@@ -183,7 +193,6 @@ components/
 └── common/                    # 공통 컴포넌트
     ├── LoadingSpinner.tsx    # 로딩 스피너
     ├── EmptyState.tsx        # 빈 상태
-    ├── Pagination.tsx        # 페이지네이션
     ├── SearchInput.tsx       # 검색 입력
     ├── ConfirmDialog.tsx     # 확인 대화상자
     ├── ImageViewer.tsx       # 이미지 뷰어
@@ -204,6 +213,10 @@ lib/
 │   ├── auth.ts               # 인증 헬퍼 함수
 │   └── middleware.ts         # 미들웨어 헬퍼 함수
 ├── api/                       # API 클라이언트
+│   ├── collections.ts        # 컬렉션 API (BrowserClient)
+│   ├── contents.ts           # 콘텐츠 API (BrowserClient)
+│   ├── detections.ts         # 발견 API (BrowserClient)
+│   ├── users.ts              # 사용자 API (BrowserClient)
 │   └── mock/                 # Mock API 데이터
 │       ├── auth.ts           # 인증 Mock
 │       ├── contents.ts       # 콘텐츠 Mock
@@ -215,7 +228,8 @@ lib/
 │   └── store.ts              # 관리자 상태 관리
 ├── stores/                    # 전역 상태 관리
 │   ├── authStore.ts          # 인증 상태
-│   └── contentStore.ts       # 콘텐츠 상태
+│   ├── contentStore.ts       # 콘텐츠 상태
+│   └── explorerStore.ts      # 탐색기 상태
 ├── mock-data/                 # Mock 데이터
 │   ├── users.ts              # 사용자 Mock 데이터
 │   ├── contents.ts           # 콘텐츠 Mock 데이터

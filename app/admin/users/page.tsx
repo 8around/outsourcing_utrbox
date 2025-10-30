@@ -1,95 +1,132 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useAdminTitle } from '@/components/admin/layout/AdminContext'
 import { UserFilters } from '@/components/admin/users/UserFilters'
-import { UserTable } from '@/components/admin/users/UserTable'
-import { mockUsers } from '@/lib/admin/mock-data'
+import { UserTableClient } from '@/components/admin/users/UserTableClient'
 import { useAdminStore } from '@/lib/admin/store'
 import { useToast } from '@/hooks/use-toast'
+import { User } from '@/lib/admin/types'
+import {
+  getUsersWithPagination,
+  bulkApproveUsers,
+  bulkBlockUsers,
+} from '@/lib/api/users'
 
 export default function AdminUsersPage() {
   useAdminTitle('회원 관리')
   const { toast } = useToast()
-  const { userFilters, setUserFilters, selectedUserIds, toggleUserSelection, clearSelections } =
-    useAdminStore()
+  const { userFilters, setUserFilters } = useAdminStore()
+  const [users, setUsers] = useState<User[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [loading, setLoading] = useState(true)
 
-  // 필터링된 사용자 목록
-  const filteredUsers = useMemo(() => {
-    let result = [...mockUsers]
+  // 데이터 페칭
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const result = await getUsersWithPagination({
+          page: userFilters.page,
+          pageSize: 10,
+          search: userFilters.search,
+          is_approved: userFilters.is_approved,
+          role: userFilters.role,
+        })
 
-    // 검색 필터
-    if (userFilters.search) {
-      const searchLower = userFilters.search.toLowerCase()
-      result = result.filter(
-        (user) =>
-          user.name.toLowerCase().includes(searchLower) ||
-          user.email.toLowerCase().includes(searchLower) ||
-          user.organization?.toLowerCase().includes(searchLower)
-      )
-    }
-
-    // 상태 필터
-    if (userFilters.status !== undefined) {
-      if (userFilters.status === 'approved') {
-        result = result.filter((user) => user.is_approved === true)
-      } else if (userFilters.status === 'pending') {
-        result = result.filter((user) => user.is_approved === null)
-      } else if (userFilters.status === 'blocked') {
-        result = result.filter((user) => user.is_approved === false)
+        if (result.success && result.data) {
+          setUsers(result.data)
+          setTotalCount(result.totalCount)
+        } else {
+          toast({
+            title: '오류',
+            description: result.error || '사용자 목록을 불러오는데 실패했습니다.',
+            variant: 'destructive',
+          })
+        }
+      } catch (error) {
+        toast({
+          title: '오류',
+          description: '사용자 목록을 불러오는데 실패했습니다.',
+          variant: 'destructive',
+        })
+      } finally {
+        setLoading(false)
       }
     }
+    fetchData()
+  }, [userFilters, toast])
 
-    // 역할 필터
-    if (userFilters.role) {
-      result = result.filter((user) => user.role === userFilters.role)
+  const handlePageChange = (page: number) => {
+    setUserFilters({ page })
+  }
+
+  const handleBulkApprove = async (userIds: string[]) => {
+    try {
+      const result = await bulkApproveUsers(userIds)
+      if (result.success) {
+        toast({
+          title: '승인 완료',
+          description: `${userIds.length}명의 회원을 승인했습니다.`,
+        })
+        // 데이터 새로고침
+        setUserFilters({ ...userFilters })
+      } else {
+        toast({
+          title: '오류',
+          description: result.error || '일괄 승인에 실패했습니다.',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: '오류',
+        description: '일괄 승인에 실패했습니다.',
+        variant: 'destructive',
+      })
     }
-
-    return result
-  }, [userFilters])
-
-  const handleSelectionChange = (ids: string[]) => {
-    // Zustand 스토어 업데이트
-    clearSelections()
-    ids.forEach((id) => toggleUserSelection(id))
   }
 
-  const handleBulkApprove = (userIds: string[]) => {
-    // Mock 일괄 승인 - 실제로는 Supabase API 호출
-    console.log('Bulk approve users:', userIds)
-    toast({
-      title: '승인 완료',
-      description: `${userIds.length}명의 회원을 승인했습니다.`,
-    })
-    clearSelections()
-  }
-
-  const handleBulkBlock = (userIds: string[]) => {
-    // Mock 일괄 차단 - 실제로는 Supabase API 호출
-    console.log('Bulk block users:', userIds)
-    toast({
-      title: '차단 완료',
-      description: `${userIds.length}명의 회원을 차단했습니다.`,
-      variant: 'destructive',
-    })
-    clearSelections()
+  const handleBulkBlock = async (userIds: string[]) => {
+    try {
+      const result = await bulkBlockUsers(userIds)
+      if (result.success) {
+        toast({
+          title: '차단 완료',
+          description: `${userIds.length}명의 회원을 차단했습니다.`,
+          variant: 'destructive',
+        })
+        // 데이터 새로고침
+        setUserFilters({ ...userFilters })
+      } else {
+        toast({
+          title: '오류',
+          description: result.error || '일괄 차단에 실패했습니다.',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: '오류',
+        description: '일괄 차단에 실패했습니다.',
+        variant: 'destructive',
+      })
+    }
   }
 
   return (
     <div className="space-y-6">
-        {/* 필터 */}
-        <UserFilters filters={userFilters} onFilterChange={setUserFilters} />
-
-        {/* 결과 요약 */}
-        <div className="text-sm text-gray-600">
-          전체 {mockUsers.length}명 중 {filteredUsers.length}명
-        </div>
+      {/* 필터 */}
+      <UserFilters filters={userFilters} onFilterChange={setUserFilters} />
 
       {/* 회원 테이블 */}
-      <UserTable
-        users={filteredUsers}
-        selectedIds={selectedUserIds}
-        onSelectionChange={handleSelectionChange}
+      <UserTableClient
+        users={users}
+        totalCount={totalCount}
+        currentPage={userFilters.page}
+        pageSize={10}
+        loading={loading}
+        onPageChange={handlePageChange}
         onBulkApprove={handleBulkApprove}
         onBulkBlock={handleBulkBlock}
       />
