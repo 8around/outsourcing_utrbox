@@ -18,18 +18,15 @@ export async function middleware(request: NextRequest) {
   const { supabase, response } = createMiddlewareSupabase(request)
 
   try {
-    // 1) 세션 먼저 확인 (필요 시 토큰 갱신 트리거)
-    await supabase.auth.getSession()
-
-    // 2) 현재 사용자 확인
+    // Session만 확인 (가장 빠른 인증 체크)
     const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
 
     // 루트 경로 리디렉션
     if (pathname === '/') {
-      if (!user) {
+      if (!session) {
         return NextResponse.redirect(new URL('/login', request.url))
       }
       // 로그인한 사용자는 /collections로 리디렉션
@@ -37,7 +34,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // 로그인한 사용자가 인증 페이지에 접근하는 경우
-    if (user && (pathname === '/login' || pathname === '/signup')) {
+    if (session && (pathname === '/login' || pathname === '/signup')) {
       return NextResponse.redirect(new URL('/collections', request.url))
     }
 
@@ -46,32 +43,30 @@ export async function middleware(request: NextRequest) {
       return response
     }
 
-    if (userError || !user) {
-      // 사용자 정보를 가져올 수 없으면 로그인 페이지로 리다이렉트
+    if (sessionError || !session) {
+      // 세션이 없으면 로그인 페이지로 리다이렉트
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // 사용자 프로필 및 승인 상태 확인
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('is_approved, role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile) {
-      // 프로필이 없으면 로그인 페이지로 리다이렉트
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-
-    // 관리자 전용 경로 체크
+    // 관리자 경로 접근 시에만 프로필 체크
     if (adminPaths.some((path) => pathname.startsWith(path))) {
-      if (profile.role !== 'admin') {
+      // 관리자 페이지 접근 시에만 user와 profile 조회
+      const [userRes, profileRes] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from('users').select('role').eq('id', session.user.id).single(),
+      ])
+
+      const user = userRes.data.user
+      const profile = profileRes.data
+
+      if (!user || !profile || profile.role !== 'admin') {
         // 관리자가 아니면 /collections로 리디렉트
         return NextResponse.redirect(new URL('/collections', request.url))
       }
     }
 
-    // 모든 검증 통과
+    // 일반 경로는 세션만 확인하고 통과
+    // 프로필 체크는 클라이언트 레이아웃에서 처리
     return response
   } catch (error) {
     console.error('Middleware error:', error)

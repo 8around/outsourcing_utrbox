@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -131,15 +132,41 @@ export default function ContentDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-32" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Skeleton className="h-96" />
+      <PageContainer maxWidth="7xl">
+        <div className="space-y-6">
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-10 w-24" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-28" />
+              <Skeleton className="h-10 w-20" />
+            </div>
           </div>
-          <Skeleton className="h-96" />
+
+          {/* Content Skeleton */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* 왼쪽 컬럼: 원본 이미지 + 분석결과 */}
+            <div className="space-y-6">
+              <Card className="overflow-hidden">
+                <Skeleton className="aspect-video w-full" />
+              </Card>
+              <Card className="p-6">
+                <Skeleton className="h-64 w-full" />
+              </Card>
+            </div>
+
+            {/* 오른쪽 컬럼: 감지 이미지 + 발견내역 */}
+            <div className="space-y-6">
+              <Card className="overflow-hidden">
+                <Skeleton className="aspect-video w-full" />
+              </Card>
+              <Card className="p-6">
+                <Skeleton className="h-64 w-full" />
+              </Card>
+            </div>
+          </div>
         </div>
-      </div>
+      </PageContainer>
     )
   }
 
@@ -184,10 +211,13 @@ export default function ContentDetailPage() {
               className="bg-secondary-100 relative aspect-video cursor-pointer"
               onClick={() => setShowImageViewer(true)}
             >
-              <img
+              <Image
                 src={content.file_path}
                 alt={content.file_name}
-                className="h-full w-full object-contain"
+                fill
+                className="object-contain"
+                priority
+                unoptimized
               />
             </div>
           </Card>
@@ -275,13 +305,12 @@ export default function ContentDetailPage() {
           <Card className="overflow-hidden">
             <div className="bg-secondary-100 relative aspect-video flex items-center justify-center">
               {selectedDetection ? (
-                <img
+                <Image
                   src={selectedDetection.image_url}
                   alt="감지된 이미지"
-                  className="h-full w-full object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = content.file_path
-                  }}
+                  fill
+                  className="object-contain"
+                  unoptimized
                 />
               ) : (
                 <div className="text-center text-secondary-400 p-8">
