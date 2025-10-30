@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { AdminLayout } from '@/components/admin/layout/AdminLayout'
+import { useAdminTitle } from '@/components/admin/layout/AdminContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,7 @@ import Image from 'next/image'
 import { useToast } from '@/hooks/use-toast'
 
 export default function AdminContentDetailPage() {
+  useAdminTitle('콘텐츠 상세')
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
@@ -32,17 +33,15 @@ export default function AdminContentDetailPage() {
 
   if (!content) {
     return (
-      <AdminLayout title="콘텐츠 상세">
-        <div className="flex h-96 items-center justify-center">
-          <div className="text-center">
-            <p className="text-lg font-semibold text-gray-900">콘텐츠를 찾을 수 없습니다.</p>
-            <Button variant="outline" onClick={() => router.back()} className="mt-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              돌아가기
-            </Button>
-          </div>
+      <div className="flex h-96 items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-gray-900">콘텐츠를 찾을 수 없습니다.</p>
+          <Button variant="outline" onClick={() => router.back()} className="mt-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            돌아가기
+          </Button>
         </div>
-      </AdminLayout>
+      </div>
     )
   }
 
@@ -97,8 +96,7 @@ export default function AdminContentDetailPage() {
   }
 
   return (
-    <AdminLayout title="콘텐츠 상세">
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* 뒤로 가기 버튼 */}
         <Button variant="outline" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -293,6 +291,5 @@ export default function AdminContentDetailPage() {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
   )
 }

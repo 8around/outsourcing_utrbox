@@ -7,8 +7,8 @@
 ## 주요 파일 
 
 ## 임시 로그인 계정
-- Email: pulwind00@gmail.com
-- PW: Youngtest002!
+- Email: utrbox@utrbox.com
+- PW: Dnfxmfkqkrtm2@
 
 ## 대화
 - 사용자와 대화할떄는 무조건 한국말로

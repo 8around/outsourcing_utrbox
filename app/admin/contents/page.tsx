@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { AdminLayout } from '@/components/admin/layout/AdminLayout'
+import { useAdminTitle } from '@/components/admin/layout/AdminContext'
 import { ContentFilters } from '@/components/admin/contents/ContentFilters'
 import { ContentTable } from '@/components/admin/contents/ContentTable'
 import { mockContents } from '@/lib/admin/mock-data'
@@ -9,6 +9,7 @@ import { useAdminStore } from '@/lib/admin/store'
 import { useToast } from '@/hooks/use-toast'
 
 export default function AdminContentsPage() {
+  useAdminTitle('콘텐츠 관리')
   const { toast } = useToast()
   const {
     contentFilters,
@@ -64,25 +65,23 @@ export default function AdminContentsPage() {
   }
 
   return (
-    <AdminLayout title="콘텐츠 관리">
-      <div className="space-y-6">
-        {/* 필터 */}
-        <ContentFilters filters={contentFilters} onFilterChange={setContentFilters} />
+    <div className="space-y-6">
+      {/* 필터 */}
+      <ContentFilters filters={contentFilters} onFilterChange={setContentFilters} />
 
-        {/* 결과 요약 */}
-        <div className="text-sm text-gray-600">
-          전체 {mockContents.length}개 중 {filteredContents.length}개
-        </div>
-
-        {/* 콘텐츠 테이블 */}
-        <ContentTable
-          contents={filteredContents}
-          selectedIds={selectedContentIds}
-          onSelectionChange={handleSelectionChange}
-          onAnalyze={handleAnalyze}
-          onDelete={handleDelete}
-        />
+      {/* 결과 요약 */}
+      <div className="text-sm text-gray-600">
+        전체 {mockContents.length}개 중 {filteredContents.length}개
       </div>
-    </AdminLayout>
+
+      {/* 콘텐츠 테이블 */}
+      <ContentTable
+        contents={filteredContents}
+        selectedIds={selectedContentIds}
+        onSelectionChange={handleSelectionChange}
+        onAnalyze={handleAnalyze}
+        onDelete={handleDelete}
+      />
+    </div>
   )
 }

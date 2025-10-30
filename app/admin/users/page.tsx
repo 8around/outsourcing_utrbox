@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { AdminLayout } from '@/components/admin/layout/AdminLayout'
+import { useAdminTitle } from '@/components/admin/layout/AdminContext'
 import { UserFilters } from '@/components/admin/users/UserFilters'
 import { UserTable } from '@/components/admin/users/UserTable'
 import { mockUsers } from '@/lib/admin/mock-data'
@@ -9,6 +9,7 @@ import { useAdminStore } from '@/lib/admin/store'
 import { useToast } from '@/hooks/use-toast'
 
 export default function AdminUsersPage() {
+  useAdminTitle('회원 관리')
   const { toast } = useToast()
   const { userFilters, setUserFilters, selectedUserIds, toggleUserSelection, clearSelections } =
     useAdminStore()
@@ -75,8 +76,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <AdminLayout title="회원 관리">
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* 필터 */}
         <UserFilters filters={userFilters} onFilterChange={setUserFilters} />
 
@@ -85,15 +85,14 @@ export default function AdminUsersPage() {
           전체 {mockUsers.length}명 중 {filteredUsers.length}명
         </div>
 
-        {/* 회원 테이블 */}
-        <UserTable
-          users={filteredUsers}
-          selectedIds={selectedUserIds}
-          onSelectionChange={handleSelectionChange}
-          onBulkApprove={handleBulkApprove}
-          onBulkBlock={handleBulkBlock}
-        />
-      </div>
-    </AdminLayout>
+      {/* 회원 테이블 */}
+      <UserTable
+        users={filteredUsers}
+        selectedIds={selectedUserIds}
+        onSelectionChange={handleSelectionChange}
+        onBulkApprove={handleBulkApprove}
+        onBulkBlock={handleBulkBlock}
+      />
+    </div>
   )
 }
