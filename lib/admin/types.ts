@@ -112,6 +112,7 @@ export interface GetUsersParams {
 }
 
 export interface ContentFilters {
+  page: number
   user_id?: string
   is_analyzed?: boolean | null
   collection_id?: string

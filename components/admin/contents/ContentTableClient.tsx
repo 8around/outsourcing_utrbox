@@ -14,74 +14,66 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { User } from '@/lib/admin/types'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Content } from '@/lib/admin/types'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { Eye, CheckCircle, XCircle } from 'lucide-react'
+import { Eye, Trash2 } from 'lucide-react'
 import { Pagination } from '@/components/explorer/Pagination'
+import Image from 'next/image'
 
-interface UserTableClientProps {
-  users: User[]
+interface ContentTableClientProps {
+  contents: Content[]
   totalCount: number
   currentPage: number
   pageSize: number
   loading: boolean
   onPageChange: (page: number) => void
-  onBulkApprove: (userIds: string[]) => void
-  onBulkBlock: (userIds: string[]) => void
+  onBulkDelete: (contentIds: string[]) => void
 }
 
-export function UserTableClient({
-  users,
+export function ContentTableClient({
+  contents,
   totalCount,
   currentPage,
   pageSize,
   loading,
   onPageChange,
-  onBulkApprove,
-  onBulkBlock,
-}: UserTableClientProps) {
+  onBulkDelete,
+}: ContentTableClientProps) {
   const router = useRouter()
   const [rowSelection, setRowSelection] = useState({})
 
   const totalPages = Math.ceil(totalCount / pageSize)
 
-  const getStatusBadge = (isApproved: boolean | null) => {
-    if (isApproved === true) {
+  const getStatusBadge = (isAnalyzed: boolean | null) => {
+    if (isAnalyzed === true) {
       return (
-        <Badge className="truncate bg-green-100 text-green-700 hover:bg-green-100">승인됨</Badge>
+        <Badge className="truncate bg-green-100 text-green-700 hover:bg-green-100">
+          완료
+        </Badge>
       )
-    } else if (isApproved === null) {
+    } else if (isAnalyzed === null) {
       return (
         <Badge className="truncate bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-          대기중
+          대기
         </Badge>
       )
     } else {
       return (
-        <Badge variant="destructive" className="truncate bg-red-100 text-red-700 hover:bg-red-100">
-          거부됨
+        <Badge className="truncate bg-blue-100 text-blue-700 hover:bg-blue-100">
+          분석 중
         </Badge>
       )
     }
   }
 
-  const getRoleBadge = (role: string) => {
-    if (role === 'admin') {
-      return (
-        <Badge variant="default" className="truncate">
-          관리자
-        </Badge>
-      )
-    }
-    return (
-      <Badge variant="outline" className="truncate">
-        일반 회원
-      </Badge>
-    )
-  }
-
-  const columns: ColumnDef<User>[] = [
+  const columns: ColumnDef<Content>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -102,35 +94,78 @@ export function UserTableClient({
       enableHiding: false,
     },
     {
-      accessorKey: 'name',
-      header: () => <div className="truncate">이름</div>,
-      cell: ({ row }) => <div className="truncate font-medium">{row.getValue('name')}</div>,
-    },
-    {
-      accessorKey: 'email',
-      header: () => <div className="truncate">이메일</div>,
-      cell: ({ row }) => <div className="truncate text-gray-600">{row.getValue('email')}</div>,
-    },
-    {
-      accessorKey: 'organization',
-      header: () => <div className="truncate">소속</div>,
+      id: 'thumbnail',
+      header: () => <div className="truncate">썸네일</div>,
       cell: ({ row }) => (
-        <div className="truncate text-gray-600">{row.getValue('organization') || '-'}</div>
+        <div className="relative h-12 w-12 overflow-hidden rounded border">
+          <Image
+            src={row.original.file_path}
+            alt={row.original.file_name}
+            fill
+            className="object-cover"
+          />
+        </div>
       ),
     },
     {
-      accessorKey: 'is_approved',
-      header: () => <div className="truncate">상태</div>,
-      cell: ({ row }) => getStatusBadge(row.getValue('is_approved')),
+      accessorKey: 'file_name',
+      header: () => <div className="truncate">파일명</div>,
+      cell: ({ row }) => {
+        const fileName = row.getValue('file_name') as string
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="truncate font-medium max-w-[200px] cursor-help">
+                  {fileName}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-md">
+                <p>{fileName}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )
+      },
     },
     {
-      accessorKey: 'role',
-      header: () => <div className="truncate">역할</div>,
-      cell: ({ row }) => getRoleBadge(row.getValue('role')),
+      accessorKey: 'user_name',
+      header: () => <div className="truncate">업로더</div>,
+      cell: ({ row }) => (
+        <div className="truncate text-gray-600">{row.getValue('user_name') || '-'}</div>
+      ),
+    },
+    {
+      accessorKey: 'collection_name',
+      header: () => <div className="truncate">컬렉션</div>,
+      cell: ({ row }) => (
+        <div className="truncate text-gray-600">
+          {row.getValue('collection_name') || '미분류'}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'is_analyzed',
+      header: () => <div className="truncate">분석 상태</div>,
+      cell: ({ row }) => getStatusBadge(row.getValue('is_analyzed')),
+    },
+    {
+      accessorKey: 'detected_count',
+      header: () => <div className="truncate">발견 건수</div>,
+      cell: ({ row }) => {
+        const count = row.getValue('detected_count') as number
+        return count > 0 ? (
+          <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100">
+            {count}건
+          </Badge>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )
+      },
     },
     {
       accessorKey: 'created_at',
-      header: () => <div className="truncate">가입일</div>,
+      header: () => <div className="truncate">업로드일</div>,
       cell: ({ row }) => (
         <div className="truncate text-gray-600">
           {format(new Date(row.getValue('created_at')), 'PPP', { locale: ko })}
@@ -145,7 +180,7 @@ export function UserTableClient({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push(`/admin/users/${row.original.id}`)}
+            onClick={() => router.push(`/admin/contents/${row.original.id}`)}
             className="gap-1"
           >
             <Eye className="h-4 w-4" />
@@ -157,7 +192,7 @@ export function UserTableClient({
   ]
 
   const table = useReactTable({
-    data: users,
+    data: contents,
     columns,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
@@ -176,7 +211,7 @@ export function UserTableClient({
 
   return (
     <div className="space-y-4">
-      {/* 일괄 작업 버튼 (항상 렌더링) */}
+      {/* 일괄 작업 버튼 (항상 렌더링, AI 분석 제거) */}
       <div className="flex items-center justify-end gap-2">
         {selectedIds.length > 0 && (
           <span className="text-sm text-gray-500">{selectedIds.length} 선택됨</span>
@@ -186,26 +221,13 @@ export function UserTableClient({
           variant="outline"
           disabled={selectedIds.length === 0}
           onClick={() => {
-            onBulkApprove(selectedIds)
-            setRowSelection({})
-          }}
-          className="gap-1"
-        >
-          <CheckCircle className="h-4 w-4" />
-          일괄 승인
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={selectedIds.length === 0}
-          onClick={() => {
-            onBulkBlock(selectedIds)
+            onBulkDelete(selectedIds)
             setRowSelection({})
           }}
           className="gap-1 text-red-600 hover:text-red-700"
         >
-          <XCircle className="h-4 w-4" />
-          일괄 차단
+          <Trash2 className="h-4 w-4" />
+          일괄 삭제
         </Button>
       </div>
 
@@ -266,7 +288,7 @@ export function UserTableClient({
       {/* 페이지네이션 */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600">
-          전체 {totalCount}명 중 {users.length}명 표시
+          전체 {totalCount}개 중 {contents.length}개 표시
         </div>
         <Pagination
           currentPage={currentPage}

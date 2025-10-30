@@ -18,18 +18,18 @@ interface ContentFiltersProps {
 
 export function ContentFilters({ filters, onFilterChange }: ContentFiltersProps) {
   const handleSearchChange = (value: string) => {
-    onFilterChange({ ...filters, search: value || undefined })
+    onFilterChange({ ...filters, search: value || undefined, page: 1 })
   }
 
   const handleAnalysisStatusChange = (value: string) => {
     if (value === 'all') {
-      onFilterChange({ ...filters, is_analyzed: undefined })
+      onFilterChange({ ...filters, is_analyzed: undefined, page: 1 })
     } else if (value === 'pending') {
-      onFilterChange({ ...filters, is_analyzed: null })
+      onFilterChange({ ...filters, is_analyzed: null, page: 1 })
     } else if (value === 'analyzing') {
-      onFilterChange({ ...filters, is_analyzed: false })
+      onFilterChange({ ...filters, is_analyzed: false, page: 1 })
     } else if (value === 'completed') {
-      onFilterChange({ ...filters, is_analyzed: true })
+      onFilterChange({ ...filters, is_analyzed: true, page: 1 })
     }
   }
 
@@ -50,13 +50,13 @@ export function ContentFilters({ filters, onFilterChange }: ContentFiltersProps)
           placeholder="파일명 검색..."
           value={filters.search || ''}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="pl-10"
+          className="bg-white pl-10"
         />
       </div>
 
       {/* 분석 상태 필터 */}
       <Select value={getAnalysisStatusValue()} onValueChange={handleAnalysisStatusChange}>
-        <SelectTrigger className="w-[150px]">
+        <SelectTrigger className="bg-white w-[150px]">
           <SelectValue placeholder="분석 상태" />
         </SelectTrigger>
         <SelectContent>

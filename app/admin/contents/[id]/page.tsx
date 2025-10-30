@@ -13,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { AnalysisStatusBadge } from '@/components/admin/contents/AnalysisStatusBadge'
 import { mockContents, mockDetectedContents, getPlaceholderImageUrl } from '@/lib/admin/mock-data'
 import { ArrowLeft, Download, RefreshCw, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
@@ -73,6 +72,28 @@ export default function AdminContentDetailPage() {
         return <Badge variant="secondary">시각적 유사</Badge>
       default:
         return <Badge variant="outline">{type}</Badge>
+    }
+  }
+
+  const getAnalysisStatusBadge = (isAnalyzed: boolean | null, message?: string) => {
+    if (isAnalyzed === true) {
+      return (
+        <Badge className="truncate bg-green-100 text-green-700 hover:bg-green-100">
+          완료
+        </Badge>
+      )
+    } else if (isAnalyzed === null) {
+      return (
+        <Badge className="truncate bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+          대기
+        </Badge>
+      )
+    } else {
+      return (
+        <Badge className="truncate bg-blue-100 text-blue-700 hover:bg-blue-100">
+          분석 중
+        </Badge>
+      )
     }
   }
 
@@ -158,10 +179,7 @@ export default function AdminContentDetailPage() {
               <div>
                 <p className="text-sm font-medium text-gray-500">분석 상태</p>
                 <div className="mt-1">
-                  <AnalysisStatusBadge
-                    status={content.is_analyzed}
-                    message={content.message || undefined}
-                  />
+                  {getAnalysisStatusBadge(content.is_analyzed, content.message || undefined)}
                 </div>
               </div>
 

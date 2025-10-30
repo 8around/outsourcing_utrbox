@@ -402,3 +402,170 @@ export async function deleteContent(id: string): Promise<ApiResponse<void>> {
     }
   }
 }
+
+/**
+ * 관리자용 콘텐츠 목록 조회 (페이지네이션, 검색, 필터링 포함)
+ * JOIN: users, collections
+ * COUNT: detected_contents
+ * @param params - 조회 파라미터 (page, pageSize, is_analyzed, search)
+ * @returns PaginatedApiResponse<Content[]> - 콘텐츠 목록 및 전체 개수 또는 에러
+ */
+export async function getContentsWithPagination(params: {
+  page?: number
+  pageSize?: number
+  is_analyzed?: boolean | null
+  search?: string
+} = {}): Promise<PaginatedApiResponse<Content[]>> {
+  try {
+    const { page = 1, pageSize = 10, is_analyzed, search } = params
+
+    // 1. 기본 쿼리 (count: 'exact'로 전체 개수도 함께 조회)
+    let query = supabase
+      .from('contents')
+      .select(
+        `
+        *,
+        users!inner(name),
+        collections(name)
+      `,
+        { count: 'exact' }
+      )
+
+    // 2. is_analyzed 필터 적용
+    if (is_analyzed === null) {
+      // 대기: is_analyzed IS NULL
+      query = query.is('is_analyzed', null)
+    } else if (is_analyzed === true) {
+      // 완료: is_analyzed = true
+      query = query.eq('is_analyzed', true)
+    } else if (is_analyzed === false) {
+      // 분석 중: is_analyzed = false
+      query = query.eq('is_analyzed', false)
+    }
+    // is_analyzed가 undefined이면 조건 추가 안 함 (전체)
+
+    // 3. 검색 필터 적용 (파일명만 - Supabase 제약)
+    // 참고: JOIN된 테이블의 컬럼은 .or() 구문에서 직접 검색 불가
+    // 업로더명/컬렉션명 검색이 필요한 경우 PostgreSQL 함수(RPC)를 사용해야 함
+    if (search && search.trim() !== '') {
+      const searchPattern = `%${search.trim()}%`
+      query = query.ilike('file_name', searchPattern)
+    }
+
+    // 4. 정렬: 최신순
+    query = query.order('created_at', { ascending: false })
+
+    // 5. 페이지네이션 적용
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+    query = query.range(from, to)
+
+    const { data, error, count } = await query
+
+    if (error) {
+      console.error('콘텐츠 조회 중 오류:', error)
+      return {
+        data: null,
+        totalCount: 0,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    // 6. detected_count 계산 (각 content마다 별도 쿼리)
+    const contentsWithCount = await Promise.all(
+      (data || []).map(async (content) => {
+        const { count: detectedCount } = await supabase
+          .from('detected_contents')
+          .select('*', { count: 'exact', head: true })
+          .eq('content_id', content.id)
+
+        return {
+          ...content,
+          user_name: content.users?.name,
+          collection_name: content.collections?.name,
+          detected_count: detectedCount || 0,
+        }
+      })
+    )
+
+    return {
+      data: contentsWithCount as Content[],
+      totalCount: count || 0,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('콘텐츠 조회 중 오류:', error)
+    return {
+      data: null,
+      totalCount: 0,
+      error: '콘텐츠를 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
+
+/**
+ * 콘텐츠 일괄 삭제
+ * @param contentIds - 삭제할 콘텐츠 ID 배열
+ * @returns ApiResponse<null> - 성공 또는 에러
+ */
+export async function bulkDeleteContents(contentIds: string[]): Promise<ApiResponse<null>> {
+  try {
+    // 1. 각 콘텐츠의 file_path 조회
+    const { data: contents, error: fetchError } = await supabase
+      .from('contents')
+      .select('id, file_path')
+      .in('id', contentIds)
+
+    if (fetchError) {
+      return {
+        data: null,
+        error: fetchError.message,
+        success: false,
+      }
+    }
+
+    // 2. Storage에서 파일 삭제
+    const filePaths = (contents || []).map((c) => {
+      // file_path가 전체 URL인 경우 경로만 추출
+      return c.file_path.includes('/')
+        ? c.file_path.split('/').slice(-3).join('/')
+        : c.file_path
+    })
+
+    if (filePaths.length > 0) {
+      const { error: storageError } = await supabase.storage.from('contents').remove(filePaths)
+
+      if (storageError) {
+        console.error('Storage 파일 삭제 실패:', storageError)
+        // Storage 삭제 실패해도 DB는 삭제 진행
+      }
+    }
+
+    // 3. DB에서 레코드 삭제 (detected_contents는 CASCADE로 자동 삭제)
+    const { error: deleteError } = await supabase.from('contents').delete().in('id', contentIds)
+
+    if (deleteError) {
+      return {
+        data: null,
+        error: `콘텐츠 삭제 실패: ${deleteError.message}`,
+        success: false,
+      }
+    }
+
+    return {
+      data: null,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('일괄 삭제 중 오류:', error)
+    return {
+      data: null,
+      error: '일괄 삭제 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}

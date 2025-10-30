@@ -12,33 +12,36 @@ const initialUserFilters: UserFilters = {
   page: 1,
 }
 
+const initialContentFilters: ContentFilters = {
+  page: 1,
+  search: undefined,
+  is_analyzed: undefined,
+}
+
 interface AdminState {
   // 필터 상태
   userFilters: UserFilters
   contentFilters: ContentFilters
   reviewFilters: ReviewFilters
 
-  // 선택 상태
+  // 선택 상태 (사용자만 유지, 콘텐츠는 제거)
   selectedUserIds: string[]
-  selectedContentIds: string[]
 
   // 액션
   setUserFilters: (filters: Partial<UserFilters>) => void
   resetUserFilters: () => void
-  setContentFilters: (filters: ContentFilters) => void
+  setContentFilters: (filters: Partial<ContentFilters>) => void
   setReviewFilters: (filters: ReviewFilters) => void
   toggleUserSelection: (userId: string) => void
-  toggleContentSelection: (contentId: string) => void
-  clearSelections: () => void
+  clearUserSelections: () => void
 }
 
 export const useAdminStore = create<AdminState>((set) => ({
   // 초기 상태
   userFilters: initialUserFilters,
-  contentFilters: {},
+  contentFilters: initialContentFilters,
   reviewFilters: {},
   selectedUserIds: [],
-  selectedContentIds: [],
 
   // 액션
   setUserFilters: (filters) =>
@@ -46,7 +49,10 @@ export const useAdminStore = create<AdminState>((set) => ({
       userFilters: { ...state.userFilters, ...filters },
     })),
   resetUserFilters: () => set({ userFilters: initialUserFilters }),
-  setContentFilters: (filters) => set({ contentFilters: filters }),
+  setContentFilters: (filters) =>
+    set((state) => ({
+      contentFilters: { ...state.contentFilters, ...filters },
+    })),
   setReviewFilters: (filters) => set({ reviewFilters: filters }),
   toggleUserSelection: (userId) =>
     set((state) => ({
@@ -54,11 +60,5 @@ export const useAdminStore = create<AdminState>((set) => ({
         ? state.selectedUserIds.filter((id) => id !== userId)
         : [...state.selectedUserIds, userId],
     })),
-  toggleContentSelection: (contentId) =>
-    set((state) => ({
-      selectedContentIds: state.selectedContentIds.includes(contentId)
-        ? state.selectedContentIds.filter((id) => id !== contentId)
-        : [...state.selectedContentIds, contentId],
-    })),
-  clearSelections: () => set({ selectedUserIds: [], selectedContentIds: [] }),
+  clearUserSelections: () => set({ selectedUserIds: [] }),
 }))
