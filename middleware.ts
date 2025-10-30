@@ -9,7 +9,7 @@ const protectedPaths = ['/', '/collections', '/contents']
 const adminPaths = ['/admin']
 
 // 인증이 필요 없는 공개 경로
-const publicPaths = ['/login', '/signup', '/reset-password']
+const authPaths = ['/login', '/signup', '/reset-password']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -21,56 +21,31 @@ export async function middleware(request: NextRequest) {
     // Session만 확인 (가장 빠른 인증 체크)
     const {
       data: { session },
-      error: sessionError,
     } = await supabase.auth.getSession()
 
-    // 루트 경로 리디렉션
-    if (pathname === '/') {
-      if (!session) {
-        return NextResponse.redirect(new URL('/login', request.url))
+    if (!session?.access_token) {
+      if (authPaths.some((path) => pathname.startsWith(path))) {
+        return response
       }
-      // 로그인한 사용자는 /collections로 리디렉션
-      return NextResponse.redirect(new URL('/collections', request.url))
-    }
 
-    // 로그인한 사용자가 인증 페이지에 접근하는 경우
-    if (session && (pathname === '/login' || pathname === '/signup')) {
-      return NextResponse.redirect(new URL('/collections', request.url))
-    }
-
-    // 공개 경로는 통과
-    if (publicPaths.some((path) => pathname === path)) {
-      return response
-    }
-
-    if (sessionError || !session) {
-      // 세션이 없으면 로그인 페이지로 리다이렉트
+      // 세션이 없으면 로그인 페이지로 리다이렉트 (lib/supabase/auth.ts의 signInUser에서 is_approved falsy한 경우 세션 삭제)
       return NextResponse.redirect(new URL('/login', request.url))
+    } else if (authPaths.some((path) => pathname.startsWith(path))) {
+      // 이미 로그인한 사용자가 로그인/회원가입 페이지 접근 시 리다이렉트
+      return NextResponse.redirect(new URL('/', request.url))
     }
 
-    // 관리자 경로 접근 시에만 프로필 체크
+    // 관리자 경로 접근 시에만 Role 체크
     if (adminPaths.some((path) => pathname.startsWith(path))) {
-      // 관리자 페이지 접근 시에만 user와 profile 조회
-      const [userRes, profileRes] = await Promise.all([
-        supabase.auth.getUser(),
-        supabase.from('users').select('role').eq('id', session.user.id).single(),
-      ])
+      const { data } = await supabase.auth.getClaims()
+      const claims = data?.claims
 
-      const user = userRes.data.user
-      const profile = profileRes.data
-
-      if (!user || !profile || profile.role !== 'admin') {
-        // 관리자가 아니면 /collections로 리디렉트
-        return NextResponse.redirect(new URL('/collections', request.url))
+      if (claims?.user_role !== 'admin') {
+        return NextResponse.redirect(new URL('/', request.url))
       }
     }
-
-    // 일반 경로는 세션만 확인하고 통과
-    // 프로필 체크는 클라이언트 레이아웃에서 처리
     return response
   } catch (error) {
-    console.error('Middleware error:', error)
-    // 오류 발생 시 로그인 페이지로 리다이렉트
     return NextResponse.redirect(new URL('/login', request.url))
   }
 }

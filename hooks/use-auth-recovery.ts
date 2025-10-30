@@ -12,31 +12,32 @@ export function useAuthRecovery() {
   useEffect(() => {
     if (attempted.current) return
     if (typeof window === 'undefined') return
+
     const missing = localStorage.getItem('auth-storage') === null
     if (!missing) return
 
     attempted.current = true
+
     setRecovering(true)
     ;(async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
+      const { data, error } = await supabase.auth.getClaims()
+      const claims = data?.claims
+
+      if (error || !claims) {
         setRecovering(false)
+
         return
       }
-      const { data: profile } = await supabase.from('users').select('*').eq('id', user.id).single()
 
-      if (profile) {
-        useAuthStore.getState().login({
-          id: user.id,
-          email: user.email || '',
-          name: profile.name,
-          organization: profile.organization || '',
-          role: profile.role as UserRole,
-          isApproved: profile.is_approved,
-        })
-      }
+      useAuthStore.getState().login({
+        id: claims.sub,
+        email: claims.email as string,
+        name: claims.name as string,
+        organization: claims.organization || null,
+        role: claims.user_role as UserRole,
+        isApproved: claims.is_approved,
+      })
+
       setRecovering(false)
     })()
   }, [])

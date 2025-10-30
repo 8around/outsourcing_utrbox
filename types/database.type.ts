@@ -185,6 +185,7 @@ export type Database = {
       users: {
         Row: {
           created_at: string | null
+          email: string | null
           id: string
           is_approved: boolean | null
           name: string
@@ -194,6 +195,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           id: string
           is_approved?: boolean | null
           name: string
@@ -203,6 +205,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           id?: string
           is_approved?: boolean | null
           name?: string
@@ -217,12 +220,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       get_matched_analyzed_contents_count: {
         Args: { user_id_param: string }
         Returns: number
       }
-      is_admin: { Args: never; Returns: boolean }
-      is_approved_user: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

@@ -1,8 +1,20 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Tables, Database } from '@/types/database.type'
 import { formatApiError } from '../utils/errors'
+import { User, UserRole } from '@/types'
 
 export type UserProfile = Tables<'users'>
+
+/**
+ * Custom Access Token Hook이 추가하는 JWT Claims 타입
+ */
+export interface CustomJWTClaims {
+  email: string
+  user_role: string
+  is_approved: boolean | null
+  name: string
+  organization: string | null
+}
 
 /**
  * 현재 사용자의 프로필 정보 조회
@@ -143,16 +155,7 @@ export async function signInUser(
   }
 ): Promise<{
   success: boolean
-  data: {
-    user: {
-      id: string
-      email: string | undefined
-      name: string | null
-      organization: string | null
-      role: string | null
-      isApproved: boolean
-    }
-  } | null
+  data: { user: User } | null
   error: string | null
 }> {
   try {
@@ -164,7 +167,7 @@ export async function signInUser(
 
     if (authError) {
       const error = formatApiError(authError)
-      
+
       return error
     }
 
@@ -176,26 +179,51 @@ export async function signInUser(
       }
     }
 
-    // 2. 사용자 프로필 및 승인 상태 확인
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', authData.user.id)
-      .single()
-
-    if (profileError || !profile) {
+    // 2. JWT claims에서 사용자 정보 확인 (Custom Access Token Hook 사용)
+    // Custom Access Token Hook이 JWT claims 최상위에 role, is_approved, name, organization을 추가함
+    const session = authData.session
+    if (!session?.access_token) {
       await supabase.auth.signOut()
       return {
         success: false,
         data: null,
-        error: '사용자 정보를 찾을 수 없습니다.',
+        error: '세션 정보를 찾을 수 없습니다.',
+      }
+    }
+
+    const { data: claimsData, error: AuthError } = await supabase.auth.getClaims()
+    const claims = claimsData?.claims
+  
+    if (AuthError || !claims) {
+      await supabase.auth.signOut()
+
+      return {
+        success: false,
+        data: null,
+        error: AuthError?.message || 'JWT 토큰을 해석할 수 없습니다.',
+      }
+    }
+
+    // JWT claims에서 사용자 정보 추출
+    const userRole = claims.user_role
+    const userIsApproved = claims.is_approved
+    const userName = claims.name
+    const userOrganization = claims.organization
+
+    // 필수 정보 확인
+    if (!userRole || !userName || !userOrganization) {
+      await supabase.auth.signOut()
+      return {
+        success: false,
+        data: null,
+        error: '사용자 정보가 올바르게 설정되지 않았습니다. 관리자에게 문의해주세요.',
       }
     }
 
     // 3. 승인 상태 확인
-    if (profile.is_approved !== true) {
+    if (!userIsApproved) {
       const message =
-        profile.is_approved === null
+        userIsApproved === undefined
           ? '관리자 승인 대기 중입니다. 승인 후 로그인이 가능합니다.'
           : '관리자 승인 거절되었습니다. 관리자에게 문의해주세요.'
 
@@ -212,11 +240,11 @@ export async function signInUser(
       data: {
         user: {
           id: authData.user.id,
-          email: authData.user.email,
-          name: profile.name,
-          organization: profile.organization,
-          role: profile.role,
-          isApproved: profile.is_approved,
+          email: authData.user.email as string,
+          name: userName as string,
+          organization: userOrganization as string,
+          role: userRole as UserRole,
+          isApproved: userIsApproved,
         },
       },
       error: null,

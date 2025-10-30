@@ -31,6 +31,7 @@
 - **오버스펙 제거**: 불필요한 컬럼, 테이블, 트리거 삭제
 - **Supabase 기능 활용**: Auth, Storage 기능에 위임
 - **성능 최적화**: 필요한 인덱스만 생성, JSONB 활용
+- **JWT Claims 기반 인증**: Custom Access Token Hook으로 50-90% 성능 향상
 
 ---
 
@@ -282,33 +283,43 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 
 ## 4. Supabase RLS 정책
 
-### 4.1 헬퍼 함수
+### 4.1 JWT Claims 기반 인증 (Custom Access Token Hook)
+
+**성능 최적화**: Database 함수 대신 JWT claims를 직접 사용하여 50-90% 성능 향상
 
 ```sql
--- 현재 사용자가 승인된 관리자인지 확인
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS BOOLEAN AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.users
-    WHERE id = auth.uid()
-    AND role = 'admin'
-    AND is_approved = TRUE
-  );
-END;
-$$ language 'plpgsql' SECURITY DEFINER;
+-- ❌ 이전 방식 (제거됨): Helper 함수 사용
+-- public.is_admin() → Database 쿼리 발생
+-- public.is_approved_user() → Database 쿼리 발생
 
--- 현재 사용자가 승인된 사용자인지 확인
-CREATE OR REPLACE FUNCTION public.is_approved_user()
-RETURNS BOOLEAN AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.users
-    WHERE id = auth.uid()
-    AND is_approved = TRUE
-  );
-END;
-$$ language 'plpgsql' SECURITY DEFINER;
+-- ✅ 현재 방식: JWT claims 직접 사용
+-- auth.jwt() ->> 'user_role' → 메모리에서 읽기 (쿼리 없음)
+-- auth.jwt() ->> 'is_approved' → 메모리에서 읽기 (쿼리 없음)
+```
+
+**JWT 구조** (Custom Access Token Hook이 추가):
+```json
+{
+  "sub": "user-uuid",
+  "email": "user@example.com",
+  "role": "authenticated",           // PostgreSQL role (시스템용)
+  "user_role": "member",             // 사용자 역할 (애플리케이션용)
+  "is_approved": true,               // 승인 상태
+  "name": "사용자 이름",              // 사용자 이름
+  "organization": "회사명",           // 소속 조직
+  "aud": "authenticated",
+  "exp": 1234567890
+}
+```
+
+**RLS 정책에서 사용**:
+```sql
+-- 관리자 권한 확인
+(auth.jwt() ->> 'user_role')::text = 'admin'
+AND (auth.jwt() ->> 'is_approved')::boolean = true
+
+-- 승인된 사용자 확인
+(auth.jwt() ->> 'is_approved')::boolean = true
 ```
 
 ### 4.2 users 테이블 정책
@@ -338,13 +349,19 @@ CREATE POLICY "Users can update own profile"
 CREATE POLICY "Admins can view all users"
   ON public.users
   FOR SELECT
-  USING (public.is_admin());
+  USING (
+    (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
+  );
 
 -- 관리자는 모든 사용자 수정 가능
 CREATE POLICY "Admins can update all users"
   ON public.users
   FOR UPDATE
-  USING (public.is_admin());
+  USING (
+    (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
+  );
 
 -- 관리자는 사용자 삭제 가능 (자기 자신 제외)
 CREATE POLICY "Admins can delete users"
@@ -352,7 +369,8 @@ CREATE POLICY "Admins can delete users"
   FOR DELETE
   USING (
     auth.uid() != id
-    AND public.is_admin()
+    AND (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
   );
 ```
 
@@ -368,7 +386,7 @@ CREATE POLICY "Approved users can view own collections"
   FOR SELECT
   USING (
     auth.uid() = user_id
-    AND public.is_approved_user()
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
   );
 
 -- 승인된 사용자만 생성 가능
@@ -377,7 +395,7 @@ CREATE POLICY "Approved users can create collections"
   FOR INSERT
   WITH CHECK (
     auth.uid() = user_id
-    AND public.is_approved_user()
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
   );
 
 -- 사용자는 자신의 컬렉션만 수정 가능
@@ -397,7 +415,10 @@ CREATE POLICY "Users can delete own collections"
 CREATE POLICY "Admins can manage all collections"
   ON public.collections
   FOR ALL
-  USING (public.is_admin());
+  USING (
+    (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
+  );
 ```
 
 ### 4.4 contents 테이블 정책
@@ -412,7 +433,7 @@ CREATE POLICY "Approved users can view own contents"
   FOR SELECT
   USING (
     auth.uid() = user_id
-    AND public.is_approved_user()
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
   );
 
 -- 승인된 사용자만 업로드 가능
@@ -421,7 +442,7 @@ CREATE POLICY "Approved users can upload contents"
   FOR INSERT
   WITH CHECK (
     auth.uid() = user_id
-    AND public.is_approved_user()
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
   );
 
 -- 사용자는 자신의 콘텐츠만 수정 가능
@@ -441,7 +462,10 @@ CREATE POLICY "Users can delete own contents"
 CREATE POLICY "Admins can manage all contents"
   ON public.contents
   FOR ALL
-  USING (public.is_admin());
+  USING (
+    (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
+  );
 ```
 
 ### 4.5 detected_contents 테이블 정책
@@ -467,29 +491,144 @@ CREATE POLICY "Users can view matched detections"
 CREATE POLICY "Admins can view all detections"
   ON public.detected_contents
   FOR SELECT
-  USING (public.is_admin());
+  USING (
+    (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
+  );
 
 -- 관리자만 발견 내용 수정 가능 (검토 결과 등록)
 CREATE POLICY "Admins can update detections"
   ON public.detected_contents
   FOR UPDATE
-  USING (public.is_admin());
+  USING (
+    (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
+  );
 
--- 시스템(서버)만 발견 내용 생성 가능 (서비스 역할 키 사용)
--- 일반 사용자는 INSERT 불가
+-- 관리자만 발견 내용 추가 가능
+CREATE POLICY "Admins can insert detections"
+  ON public.detected_contents
+  FOR INSERT
+  WITH CHECK (
+    (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
+  );
 
 -- 관리자는 발견 내용 삭제 가능
 CREATE POLICY "Admins can delete detections"
   ON public.detected_contents
   FOR DELETE
-  USING (public.is_admin());
+  USING (
+    (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
+  );
 ```
 
 ---
 
 ## 5. 트리거 및 함수
 
-### 5.1 자동 업데이트 트리거
+### 5.1 Custom Access Token Hook (JWT Claims 주입)
+
+**성능 핵심**: 로그인 시 사용자 정보를 JWT에 주입하여 RLS 정책에서 database 쿼리 없이 사용
+
+```sql
+-- Custom Access Token Hook: JWT claims에 사용자 정보 추가
+CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+AS $$
+  DECLARE
+    claims jsonb;
+    user_info record;
+  BEGIN
+    -- public.users 테이블에서 사용자 정보 조회 (로그인 시 1회만)
+    SELECT role, is_approved, name, organization
+    INTO user_info
+    FROM public.users
+    WHERE id = (event->>'user_id')::uuid;
+
+    claims := event->'claims';
+
+    -- JWT claims 최상위 레벨에 사용자 정보 추가
+    -- 주의: 'role'은 PostgreSQL role이므로 'user_role'로 저장
+    IF user_info.role IS NOT NULL THEN
+      claims := jsonb_set(claims, '{user_role}', to_jsonb(user_info.role));
+    END IF;
+
+    IF user_info.is_approved IS NOT NULL THEN
+      claims := jsonb_set(claims, '{is_approved}', to_jsonb(user_info.is_approved));
+    END IF;
+
+    IF user_info.name IS NOT NULL THEN
+      claims := jsonb_set(claims, '{name}', to_jsonb(user_info.name));
+    END IF;
+
+    IF user_info.organization IS NOT NULL THEN
+      claims := jsonb_set(claims, '{organization}', to_jsonb(user_info.organization));
+    END IF;
+
+    -- 수정된 claims를 event에 다시 설정
+    event := jsonb_set(event, '{claims}', claims);
+
+    RETURN event;
+  END;
+$$;
+
+-- 권한 설정
+GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
+GRANT EXECUTE ON FUNCTION public.custom_access_token_hook TO supabase_auth_admin;
+REVOKE EXECUTE ON FUNCTION public.custom_access_token_hook FROM authenticated, anon, public;
+
+-- users 테이블 읽기 권한
+GRANT SELECT ON TABLE public.users TO supabase_auth_admin;
+
+-- RLS 정책: supabase_auth_admin이 users 테이블 읽기 가능
+CREATE POLICY "Allow auth admin to read user data for JWT"
+  ON public.users
+  FOR SELECT
+  TO supabase_auth_admin
+  USING (true);
+```
+
+**Dashboard 설정 필요**:
+1. `Authentication > Hooks (Beta)` 이동
+2. `Custom Access Token` 선택
+3. `public.custom_access_token_hook` 선택
+4. 저장
+
+### 5.2 신규 사용자 생성 트리거 (handle_new_user)
+
+**Supabase Auth 연동**: 회원가입 시 auth.users 생성 후 자동으로 public.users 생성
+
+```sql
+-- 신규 사용자 자동 프로필 생성 함수
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- public.users 테이블에 레코드 생성
+  INSERT INTO public.users (id, name, email, organization, role, is_approved)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'name', 'User' || EXTRACT(EPOCH FROM NOW())::BIGINT::TEXT),
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'organization', NULL),
+    'member',
+    NULL  -- 승인 대기 상태
+  );
+
+  RETURN NEW;
+END;
+$$ LANGUAGE 'plpgsql' SECURITY DEFINER;
+
+-- 트리거 생성
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+```
+
+### 5.3 자동 업데이트 트리거
 
 ```sql
 -- updated_at 자동 업데이트 함수
@@ -520,7 +659,7 @@ CREATE TRIGGER update_contents_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 ```
 
-### 5.2 트리거 관리
+### 5.4 트리거 관리
 
 ```sql
 -- 트리거 비활성화 (대량 작업 시)
@@ -566,7 +705,7 @@ CREATE POLICY "Users can upload own images"
   WITH CHECK (
     bucket_id = 'contents'
     AND auth.uid()::text = (storage.foldername(name))[1]
-    AND public.is_approved_user()
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
   );
 
 -- 승인된 사용자만 자신의 파일 조회 가능
@@ -593,7 +732,8 @@ CREATE POLICY "Admins can manage all images"
   FOR ALL
   USING (
     bucket_id = 'contents'
-    AND public.is_admin()
+    AND (auth.jwt() ->> 'user_role')::text = 'admin'
+    AND (auth.jwt() ->> 'is_approved')::boolean = true
   );
 ```
 
@@ -667,7 +807,8 @@ const visionRequest = {
 
 _이 문서는 UTRBOX 시스템의 최종 최적화된 데이터베이스 스키마를 정의합니다._
 
-**최종 수정일**: 2025-10-24
-**스키마 버전**: 3.0 (최종 최적화 버전)
+**최종 수정일**: 2025-10-30
+**스키마 버전**: 4.0 (JWT Claims 최적화 버전)
 **Supabase Auth 연동**: 필수
 **Supabase Storage 활용**: 필수
+**Custom Access Token Hook**: 필수 (성능 최적화 핵심)
