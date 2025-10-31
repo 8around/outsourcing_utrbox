@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, FileImage, ClipboardCheck, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, FileImage, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -29,12 +29,7 @@ const menuItems = [
     title: '콘텐츠 관리',
     href: '/admin/contents',
     icon: FileImage,
-  },
-  {
-    title: '비교 검토',
-    href: '/admin/review',
-    icon: ClipboardCheck,
-  },
+  }
 ]
 
 export function AdminSidebar() {

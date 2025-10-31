@@ -4,7 +4,6 @@ import { useAdminTitle } from '@/components/admin/layout/AdminContext'
 import { StatsCard } from '@/components/admin/dashboard/StatsCard'
 import { ActivityFeed } from '@/components/admin/dashboard/ActivityFeed'
 import { FileImage, Clock, CheckCircle2, Users, Activity } from 'lucide-react'
-import { mockDashboardStats, mockPendingContents, mockPendingUsers } from '@/lib/admin/mock-data'
 
 export default function AdminDashboardPage() {
   useAdminTitle('대시보드')
@@ -15,43 +14,40 @@ export default function AdminDashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <StatsCard
             title="총 콘텐츠"
-            value={mockDashboardStats.total_contents}
+            value={0}
             icon={<FileImage className="h-5 w-5" />}
-            change="+12%"
-            trend="up"
+            unit="건"
           />
           <StatsCard
             title="대기중"
-            value={mockDashboardStats.pending_contents}
+            value={0}
             icon={<Clock className="h-5 w-5" />}
-            change="+3"
-            trend="up"
+            unit="건"
           />
           <StatsCard
             title="분석중"
-            value={mockDashboardStats.analyzing_contents}
+            value={0}
             icon={<Activity className="h-5 w-5" />}
+            unit="건"
           />
           <StatsCard
             title="분석완료"
-            value={mockDashboardStats.completed_contents}
+            value={0}
             icon={<CheckCircle2 className="h-5 w-5" />}
-            change="+8"
-            trend="up"
+            unit="건"
           />
           <StatsCard
             title="회원수"
-            value={mockDashboardStats.total_users}
+            value={0}
             icon={<Users className="h-5 w-5" />}
-            change="+2"
-            trend="up"
+            unit="명"
           />
         </div>
 
       {/* 실시간 활동 피드 */}
       <ActivityFeed
-        pendingContents={mockPendingContents}
-        pendingUsers={mockPendingUsers}
+        pendingContents={[]}
+        pendingUsers={[]}
         maxItems={10}
       />
     </div>

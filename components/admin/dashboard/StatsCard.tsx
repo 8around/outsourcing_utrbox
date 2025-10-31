@@ -9,9 +9,10 @@ interface StatsCardProps {
   icon: ReactNode
   change?: string
   trend?: 'up' | 'down'
+  unit?: string
 }
 
-export function StatsCard({ title, value, icon, change, trend }: StatsCardProps) {
+export function StatsCard({ title, value, icon, change, trend, unit }: StatsCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -19,7 +20,10 @@ export function StatsCard({ title, value, icon, change, trend }: StatsCardProps)
         <div className="text-gray-400">{icon}</div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
+        <div className="text-2xl font-bold text-gray-900">
+          {value}
+          {unit && <span className="ml-1 text-lg text-gray-600">{unit}</span>}
+        </div>
         {change && (
           <div className="mt-1 flex items-center text-xs">
             {trend === 'up' && <ArrowUp className="mr-1 h-3 w-3 text-green-500" />}
