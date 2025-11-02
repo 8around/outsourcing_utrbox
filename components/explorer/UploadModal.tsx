@@ -88,6 +88,8 @@ export function UploadModal({
     accept: {
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/png': ['.png'],
+      'image/webp': ['.webp'],
+      'image/gif': ['.gif'],
     },
     maxSize: 10 * 1024 * 1024, // 10MB
     multiple: true,
@@ -192,7 +194,7 @@ export function UploadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>콘텐츠 업로드</DialogTitle>
           <DialogDescription>JPG, PNG 파일을 업로드하세요 (최대 10MB)</DialogDescription>
@@ -253,20 +255,20 @@ export function UploadModal({
                   <Card key={index} className="p-4">
                     <div className="flex gap-4">
                       {/* Preview */}
-                      <div className="relative h-32 w-32 flex-shrink-0 bg-secondary rounded-xl">
+                      <div className="relative h-32 w-32 flex-shrink-0 rounded-xl bg-secondary">
                         <img
                           src={item.file.preview}
                           alt={item.title}
                           className="h-full w-full rounded object-contain"
                         />
                         {item.status === 'success' && (
-                          <div className="bg-success/20 absolute inset-0 flex items-center justify-center rounded">
-                            <CheckCircle2 className="text-success h-8 w-8" />
+                          <div className="absolute inset-0 flex items-center justify-center rounded bg-success/20">
+                            <CheckCircle2 className="h-8 w-8 text-success" />
                           </div>
                         )}
                         {item.status === 'error' && (
-                          <div className="bg-error/20 absolute inset-0 flex items-center justify-center rounded">
-                            <AlertCircle className="text-error h-8 w-8" />
+                          <div className="absolute inset-0 flex items-center justify-center rounded bg-error/20">
+                            <AlertCircle className="h-8 w-8 text-error" />
                           </div>
                         )}
                       </div>
@@ -337,12 +339,12 @@ export function UploadModal({
 
                         {/* Error */}
                         {item.status === 'error' && (
-                          <p className="text-error text-sm">{item.error}</p>
+                          <p className="text-sm text-error">{item.error}</p>
                         )}
 
                         {/* Success */}
                         {item.status === 'success' && (
-                          <p className="text-success text-sm">업로드 완료!</p>
+                          <p className="text-sm text-success">업로드 완료!</p>
                         )}
                       </div>
 

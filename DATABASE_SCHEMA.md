@@ -691,7 +691,7 @@ ORDER BY event_object_table, trigger_name;
 const { data, error } = await supabase.storage.createBucket('contents', {
   public: false,  // Private 버킷 (RLS 기반 접근 제어)
   fileSizeLimit: 10485760,  // 10MB
-  allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp']
+  allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 });
 ```
 
@@ -799,9 +799,10 @@ const visionRequest = {
 - `image/jpeg` (JPG, JPEG)
 - `image/png` (PNG)
 - `image/webp` (WEBP)
+- `image/gif` (GIF)
 
 **Google Vision API 지원 형식:**
-- JPEG, PNG, WEBP (publicUrl로 직접 요청 가능)
+- JPEG, PNG, WEBP, GIF (publicUrl로 직접 요청 가능)
 
 ---
 
