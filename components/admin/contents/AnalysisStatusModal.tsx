@@ -76,7 +76,7 @@ export function AnalysisStatusModal({
     switch (statusValue) {
       case 'null':
         return (
-          <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">대기</Badge>
+          <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">대기 중</Badge>
         )
       case 'false':
         return (
@@ -84,7 +84,7 @@ export function AnalysisStatusModal({
         )
       case 'true':
         return (
-          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">완료</Badge>
+          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">분석 완료</Badge>
         )
       default:
         return null
@@ -110,7 +110,7 @@ export function AnalysisStatusModal({
                 <SelectItem value="null">
                   <div className="flex items-center gap-2">
                     {getStatusBadge('null')}
-                    <span>대기</span>
+                    <span>대기 중</span>
                   </div>
                 </SelectItem>
                 <SelectItem value="false">
@@ -122,7 +122,7 @@ export function AnalysisStatusModal({
                 <SelectItem value="true">
                   <div className="flex items-center gap-2">
                     {getStatusBadge('true')}
-                    <span>완료</span>
+                    <span>분석 완료 (별도 메시지 전달 가능)</span>
                   </div>
                 </SelectItem>
               </SelectContent>

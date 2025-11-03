@@ -140,9 +140,9 @@ export default function AdminContentDetailPage() {
 
   const getAnalysisStatusBadge = (isAnalyzed: boolean | null) => {
     if (isAnalyzed === true) {
-      return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">완료</Badge>
+      return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">분석 완료</Badge>
     } else if (isAnalyzed === null) {
-      return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">대기</Badge>
+      return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">대기 중</Badge>
     } else {
       return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">분석 중</Badge>
     }
@@ -179,43 +179,48 @@ export default function AdminContentDetailPage() {
       </Button>
 
       {/* 파일 정보 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>파일 정보</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <p className="text-sm font-medium text-gray-500">업로더명</p>
-              <p className="text-base text-gray-900">{content.user_name || '-'}</p>
-            </div>
-
-            <div>
-              <p className="text-sm font-medium text-gray-500">파일명</p>
-              <p className="text-base font-semibold text-gray-900">{content.file_name}</p>
-            </div>
-
-            <div>
-              <p className="text-sm font-medium text-gray-500">분석 상태</p>
-              <div className="mt-1 flex items-center gap-2">
-                {getAnalysisStatusBadge(content.is_analyzed)}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setAnalysisStatusModalOpen(true)}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
+      <div className="grid gap-6 sm:grid-cols-2">
+        {/* 좌측 카드 - 파일 정보 */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-500">파일명</p>
+                <p className="truncate text-base font-semibold text-gray-900">{content.file_name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">업로더명</p>
+                <p className="text-base text-gray-900">{content.user_name || '-'}</p>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div>
-              <p className="text-sm font-medium text-gray-500">추가 메시지</p>
-              <p className="text-base text-gray-900">{content.message || '-'}</p>
+        {/* 우측 카드 - 분석 정보 */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-500">분석 상태</p>
+                <div className="mt-1 flex items-center gap-2">
+                  {getAnalysisStatusBadge(content.is_analyzed)}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAnalysisStatusModalOpen(true)}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">추가 메시지</p>
+                <p className="truncate text-base text-gray-900">{content.message || '-'}</p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* 원본 이미지 / 발견 이미지 */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -310,7 +315,7 @@ export default function AdminContentDetailPage() {
           {content.label_data && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>레이블 검출 결과</CardTitle>
+                <CardTitle>라벨 검출 결과</CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
