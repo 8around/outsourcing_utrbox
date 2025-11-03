@@ -12,12 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import { ChevronDown, ChevronRight, Eye, ExternalLink } from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { ChevronDown, ChevronRight, Circle, CheckCircle2 } from 'lucide-react'
 
 interface DetectedContent {
   id: string
@@ -41,15 +37,15 @@ interface DetectionTableProps {
 export function DetectionTable({
   detections,
   selectedDetection,
-  onDetectionClick
+  onDetectionClick,
 }: DetectionTableProps) {
   // Collapsible 상태 관리 - 기본으로 완전 일치 섹션만 열림
   const [openSections, setOpenSections] = useState<string[]>(['full'])
 
   // 섹션 토글 함수
   const toggleSection = (type: string) => {
-    setOpenSections(prev =>
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    setOpenSections((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     )
   }
 
@@ -59,33 +55,29 @@ export function DetectionTable({
       type: 'full',
       label: '완전 일치',
       badgeClass: 'bg-red-100 text-red-700 hover:bg-red-100',
-      detections: detections.filter(d => d.detection_type === 'full')
+      detections: detections.filter((d) => d.detection_type === 'full'),
     },
     {
       type: 'partial',
       label: '부분 일치',
       badgeClass: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100',
-      detections: detections.filter(d => d.detection_type === 'partial')
+      detections: detections.filter((d) => d.detection_type === 'partial'),
     },
     {
       type: 'similar',
       label: '시각적 유사',
       badgeClass: 'bg-gray-100 text-gray-700 hover:bg-gray-100',
-      detections: detections.filter(d => d.detection_type === 'similar')
-    }
+      detections: detections.filter((d) => d.detection_type === 'similar'),
+    },
   ]
 
   const getDetectionTypeBadge = (type: string, badgeClass: string) => {
     const labels = {
       full: '완전 일치',
       partial: '부분 일치',
-      similar: '시각적 유사'
+      similar: '시각적 유사',
     }
-    return (
-      <Badge className={badgeClass}>
-        {labels[type as keyof typeof labels] || type}
-      </Badge>
-    )
+    return <Badge className={badgeClass}>{labels[type as keyof typeof labels] || type}</Badge>
   }
 
   const getReviewStatusBadge = (status: string | null) => {
@@ -110,11 +102,17 @@ export function DetectionTable({
 
   return (
     <div className="space-y-4">
-      {detectionGroups.map(group => {
+      {detectionGroups.map((group) => {
         const isOpen = openSections.includes(group.type)
 
         // 해당 타입의 검출이 없으면 섹션을 렌더링하지 않음
         if (group.detections.length === 0) return null
+
+        const pendingCount = group.detections.filter(
+          (d) => (d.admin_review_status || 'pending') === 'pending'
+        ).length
+
+        const completedCount = group.detections.length - pendingCount
 
         return (
           <Collapsible
@@ -123,7 +121,7 @@ export function DetectionTable({
             onOpenChange={() => toggleSection(group.type)}
           >
             <CollapsibleTrigger asChild>
-              <div className="flex items-center justify-between cursor-pointer rounded-lg border bg-gray-50 px-4 py-3 hover:bg-gray-100 transition">
+              <div className="flex cursor-pointer items-center justify-between rounded-lg border bg-gray-50 px-4 py-3 transition hover:bg-gray-100">
                 <div className="flex items-center gap-3">
                   {isOpen ? (
                     <ChevronDown className="h-5 w-5 text-gray-500" />
@@ -131,11 +129,19 @@ export function DetectionTable({
                     <ChevronRight className="h-5 w-5 text-gray-500" />
                   )}
                   <span className="font-semibold text-gray-900">{group.label}</span>
-                  <Badge variant="outline" className="ml-2">
-                    {group.detections.length}건
-                  </Badge>
                 </div>
-                {getDetectionTypeBadge(group.type, group.badgeClass)}
+                <div>
+                  {pendingCount > 0 && (
+                    <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                      {pendingCount}건 대기중
+                    </Badge>
+                  )}
+                  {completedCount > 0 && (
+                    <Badge variant="outline" className="ml-2">
+                      {completedCount}건 검토 완료
+                    </Badge>
+                  )}
+                </div>
               </div>
             </CollapsibleTrigger>
 
@@ -144,57 +150,51 @@ export function DetectionTable({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>발견 이미지</TableHead>
-                      <TableHead>페이지 제목</TableHead>
-                      <TableHead>검출 유형</TableHead>
-                      <TableHead>검토 상태</TableHead>
-                      <TableHead className="text-right">작업</TableHead>
+                      <TableHead className="whitespace-nowrap">발견 이미지</TableHead>
+                      <TableHead className="whitespace-nowrap">페이지 제목</TableHead>
+                      <TableHead className="whitespace-nowrap text-right">검토 상태</TableHead>
+                      <TableHead className="whitespace-nowrap text-right">작업</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {group.detections.map(detection => (
+                    {group.detections.map((detection) => (
                       <TableRow
                         key={detection.id}
-                        className={`hover:bg-gray-50 transition ${
+                        className={`transition hover:bg-gray-50 ${
                           selectedDetection?.id === detection.id ? 'bg-blue-50' : ''
                         }`}
                       >
                         <TableCell>
                           <div className="relative h-12 w-12 overflow-hidden rounded border">
                             <Image
+                              referrerPolicy="no-referrer"
                               src={detection.image_url}
-                              alt="Detected"
+                              alt="출력불가"
                               fill
                               className="object-cover"
                               unoptimized
                             />
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div>
-                            <a
-                              href={detection.source_url || '#'}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-medium text-blue-600 hover:underline flex items-center gap-1"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <span className="truncate max-w-xs">
-                                {detection.page_title || '(제목 없음)'}
-                              </span>
-                              <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                            </a>
+                        <TableCell className="min-w-0 max-w-xs">
+                          <div className="flex w-full min-w-0 flex-col">
+                            <span className="min-w-0 truncate font-medium text-gray-900">
+                              {detection.page_title || '(제목 없음)'}
+                            </span>
                             {detection.source_url && (
-                              <p className="max-w-xs truncate text-xs text-gray-500 mt-1">
+                              <a
+                                href={detection.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-1 min-w-0 truncate text-xs text-blue-600 hover:underline"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 {detection.source_url}
-                              </p>
+                              </a>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {getDetectionTypeBadge(group.type, group.badgeClass)}
-                        </TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">
                           {getReviewStatusBadge(detection.admin_review_status)}
                         </TableCell>
                         <TableCell className="text-right">
@@ -204,8 +204,12 @@ export function DetectionTable({
                             onClick={() => onDetectionClick(detection)}
                             className="gap-1"
                           >
-                            <Eye className="h-4 w-4" />
-                            보기
+                            {selectedDetection?.id === detection.id ? (
+                              <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                            ) : (
+                              <Circle className="h-4 w-4 text-gray-400" />
+                            )}
+                            비교
                           </Button>
                         </TableCell>
                       </TableRow>

@@ -5,10 +5,18 @@ import { useAdminTitle } from '@/components/admin/layout/AdminContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Download, RefreshCw, Settings, FileImage } from 'lucide-react'
+import {
+  ArrowLeft,
+  Download,
+  RefreshCw,
+  Settings,
+  FileImage,
+  ExternalLink,
+  AlertCircle,
+} from 'lucide-react'
 import Image from 'next/image'
 import { useToast } from '@/hooks/use-toast'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { AnalysisStatusModal } from '@/components/admin/contents/AnalysisStatusModal'
 import { ReviewStatusModal } from '@/components/admin/contents/ReviewStatusModal'
@@ -53,6 +61,10 @@ export default function AdminContentDetailPage() {
   const [detections, setDetections] = useState<DetectedContent[]>([])
   const [selectedDetection, setSelectedDetection] = useState<DetectedContent | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [imageError, setImageError] = useState(false)
+
+  // 발견 이미지 카드로 스크롤하기 위한 ref
+  const detectedImageCardRef = useRef<HTMLDivElement>(null)
 
   // 모달 상태
   const [analysisStatusModalOpen, setAnalysisStatusModalOpen] = useState(false)
@@ -65,6 +77,21 @@ export default function AdminContentDetailPage() {
     fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentId])
+
+  // selectedDetection 변경 시 이미지 에러 상태 초기화
+  useEffect(() => {
+    setImageError(false)
+  }, [selectedDetection])
+
+  // 비교 버튼 클릭 시 발견 이미지로 스크롤
+  const handleDetectionClick = useCallback((detection: DetectedContent) => {
+    setSelectedDetection(detection)
+
+    // 약간의 지연 후 스크롤
+    detectedImageCardRef.current?.scrollIntoView({
+      behavior: 'smooth',
+    })
+  }, [])
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -99,8 +126,16 @@ export default function AdminContentDetailPage() {
 
       setContent({
         ...contentData,
-        user_name: contentData.users && typeof contentData.users === 'object' && 'name' in contentData.users ? contentData.users.name : null,
-        collection_name: contentData.collections && typeof contentData.collections === 'object' && 'name' in contentData.collections ? contentData.collections.name : null
+        user_name:
+          contentData.users && typeof contentData.users === 'object' && 'name' in contentData.users
+            ? contentData.users.name
+            : null,
+        collection_name:
+          contentData.collections &&
+          typeof contentData.collections === 'object' &&
+          'name' in contentData.collections
+            ? contentData.collections.name
+            : null,
       } as Content)
 
       // detected_contents 조회
@@ -118,7 +153,7 @@ export default function AdminContentDetailPage() {
       toast({
         title: '데이터 조회 실패',
         description: '콘텐츠 데이터를 불러올 수 없습니다.',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
@@ -175,7 +210,9 @@ export default function AdminContentDetailPage() {
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium text-gray-500">파일명</p>
-                <p className="truncate text-base font-semibold text-gray-900">{content.file_name}</p>
+                <p className="truncate text-base font-semibold text-gray-900">
+                  {content.file_name}
+                </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">업로더명</p>
@@ -237,30 +274,67 @@ export default function AdminContentDetailPage() {
         </Card>
 
         {/* 발견 이미지 */}
-        <Card>
+        <Card ref={detectedImageCardRef}>
           <CardHeader>
             <CardTitle>발견 이미지</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-50">
               {selectedDetection ? (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <Image
-                    referrerPolicy="no-referrer"
-                    src={selectedDetection.image_url}
-                    alt="발견된 이미지"
-                    fill
-                    className="object-contain"
-                    unoptimized
-                  />
-                </>
+                !imageError ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <Image
+                      referrerPolicy="no-referrer"
+                      src={selectedDetection.image_url}
+                      alt="발견된 이미지"
+                      fill
+                      className="object-contain"
+                      unoptimized
+                      onError={() => setImageError(true)}
+                    />
+                  </>
+                ) : (
+                  <div className="flex h-full items-center justify-center p-8 text-center">
+                    <div>
+                      <AlertCircle className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                      <p className="font-medium">이미지를 출력할 수 없습니다</p>
+                      <p className="mt-1 text-sm">직접 링크에 접속하여 확인하세요</p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-4"
+                          onClick={() =>
+                            window.open(
+                              selectedDetection.image_url,
+                              '_blank',
+                              'noopener,noreferrer'
+                            )
+                          }
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          원본 이미지 링크
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-4"
+                          onClick={() => window.open(selectedDetection.source_url!, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          페이지 방문
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )
               ) : (
-                <div className="flex items-center justify-center h-full text-center p-8">
+                <div className="flex h-full items-center justify-center p-8 text-center">
                   <div>
-                    <FileImage className="mx-auto mb-3 h-12 w-12" />
+                    <FileImage className="mx-auto mb-3 h-12 w-12 text-gray-400" />
                     <p className="font-medium">선택된 이미지가 없습니다</p>
-                    <p className="text-sm mt-1">발견내역을 클릭하여 이미지를 확인하세요</p>
+                    <p className="mt-1 text-sm">발견내역을 클릭하여 이미지를 확인하세요</p>
                   </div>
                 </div>
               )}
@@ -272,7 +346,7 @@ export default function AdminContentDetailPage() {
                 onClick={() => setReviewStatusModalOpen(true)}
                 disabled={!selectedDetection}
               >
-                {selectedDetection?.admin_review_status === 'pending' ? '판정' : '판정 수정'}
+                {selectedDetection?.admin_review_status === 'pending' ? '검토' : '검토 수정'}
               </Button>
             </div>
           </CardContent>
@@ -284,7 +358,7 @@ export default function AdminContentDetailPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>이미지 검출 결과 ({detections.length}건)</CardTitle>
           <Button onClick={() => setAIAnalysisModalOpen(true)} variant="outline" size="sm">
-            {content.is_analyzed === null ? 'AI 분석 요청' : 'AI 분석 추가요청'}
+            {content.is_analyzed === null ? 'AI 분석 요청' : 'AI 분석 추가 요청'}
           </Button>
         </CardHeader>
         <CardContent>
@@ -294,7 +368,7 @@ export default function AdminContentDetailPage() {
             <DetectionTable
               detections={detections}
               selectedDetection={selectedDetection}
-              onDetectionClick={setSelectedDetection}
+              onDetectionClick={handleDetectionClick}
             />
           )}
         </CardContent>
@@ -322,7 +396,10 @@ export default function AdminContentDetailPage() {
               <CardContent>
                 <div className="space-y-2">
                   {content.label_data.labels?.map((label, idx) => (
-                    <div key={idx} className="flex items-center justify-between rounded-lg border p-3">
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
                       <span className="font-medium">{label.description}</span>
                       <Badge variant="outline">{(label.score * 100).toFixed(0)}%</Badge>
                     </div>
@@ -354,7 +431,7 @@ export default function AdminContentDetailPage() {
                     {content.text_data.words?.map((word, idx) => (
                       <span
                         key={idx}
-                        className="inline-block rounded bg-white border px-2 py-1 text-sm text-gray-900"
+                        className="inline-block rounded border bg-white px-2 py-1 text-sm text-gray-900"
                       >
                         {word}
                       </span>
