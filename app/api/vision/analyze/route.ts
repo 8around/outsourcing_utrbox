@@ -73,13 +73,6 @@ export async function POST(request: Request) {
       analysisResult = await analyzeImage(publicUrl, features)
     } catch (visionError) {
       // 네트워크 에러 등 예외 처리
-      await supabase
-        .from('contents')
-        .update({
-          is_analyzed: false,
-        })
-        .eq('id', contentId)
-
       return NextResponse.json(
         {
           message: '이미지 분석 요청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
@@ -91,14 +84,6 @@ export async function POST(request: Request) {
     // 5. Vision API 에러 응답 처리
     if (!analysisResult.success || !analysisResult.response) {
       const errorInfo = analysisResult.error!
-
-      await supabase
-        .from('contents')
-        .update({
-          is_analyzed: false,
-          message: `Vision API 오류 (코드 ${errorInfo.code}): ${errorInfo.message}`,
-        })
-        .eq('id', contentId)
 
       return NextResponse.json(
         {

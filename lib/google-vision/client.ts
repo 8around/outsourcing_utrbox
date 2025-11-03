@@ -383,6 +383,7 @@ export async function extractDetectedContents(
     if (page.fullMatchingImages && page.fullMatchingImages.length > 0) {
       for (const img of page.fullMatchingImages) {
         const isValid = await isWebImageUrl(img.url)
+
         if (isValid && img.url) {
           newDetections.push({
             content_id: contentId,
@@ -392,7 +393,8 @@ export async function extractDetectedContents(
             detection_type: 'full',
             admin_review_status: 'pending',
           })
-          continue // 하나의 페이지당 하나의 이미지만 저장
+
+          break // 하나의 페이지당 하나의 이미지만 저장
         }
       }
     }

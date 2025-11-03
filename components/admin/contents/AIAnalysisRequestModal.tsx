@@ -30,7 +30,7 @@ export function AIAnalysisRequestModal({
 }: AIAnalysisRequestModalProps) {
   const { toast } = useToast()
   const [enableLabel, setEnableLabel] = useState(true)
-  const [enableText, setEnableText] = useState(false)
+  const [enableText, setEnableText] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleRequest = async () => {
