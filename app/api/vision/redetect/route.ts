@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
-import { analyzeImage, extractLabelData, extractTextData } from '@/lib/google-vision/client'
+import {
+  analyzeImage,
+  extractLabelData,
+  extractTextData,
+  type VisionAnalysisResult,
+} from '@/lib/google-vision/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,66 +61,81 @@ export async function POST(request: Request) {
     const publicUrl = content.file_path
 
     // 3. Vision API 호출 (해당 feature만)
-    let visionResponse
+    let analysisResult: VisionAnalysisResult
     try {
-      visionResponse = await analyzeImage(publicUrl, [featureType])
+      analysisResult = await analyzeImage(publicUrl, [featureType])
     } catch (visionError) {
+      // 네트워크 에러 등 예외 처리
       return NextResponse.json(
         {
-          error: visionError instanceof Error ? visionError.message : 'Vision API 호출 실패'
+          message: '이미지 재검출 요청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
         },
         { status: 500 }
       )
     }
 
-    // 4. 결과 덮어쓰기
-    if (featureType === 'label') {
-      const labelData = extractLabelData(visionResponse)
+    // 4. Vision API 에러 응답 처리
+    if (!analysisResult.success || !analysisResult.response) {
+      const errorInfo = analysisResult.error!
 
-      if (!labelData) {
-        return NextResponse.json(
-          { error: '라벨 검출 결과가 없습니다.' },
-          { status: 404 }
-        )
-      }
+      return NextResponse.json(
+        {
+          message: errorInfo.message,
+          errorCode: errorInfo.code,
+        },
+        { status: 400 }
+      )
+    }
+
+    const visionResponse = analysisResult.response
+
+    // 5. 결과 덮어쓰기 (0개여도 성공 처리)
+    if (featureType === 'label') {
+      const labelData = extractLabelData(visionResponse) || { labels: [] }
 
       await supabase.from('contents').update({ label_data: labelData }).eq('id', contentId)
 
+      const labelCount = labelData.labels.length
+      const successMessage = `라벨 재검출 완료: ${labelCount}개`
+
       return NextResponse.json({
         success: true,
-        message: '라벨 재검출이 완료되었습니다.',
+        message: successMessage,
         data: {
-          labels: labelData.labels
-        }
+          labelCount,
+          labels: labelData.labels,
+        },
       })
     } else if (featureType === 'text') {
-      const textData = extractTextData(visionResponse)
-
-      if (!textData) {
-        return NextResponse.json(
-          { error: '텍스트 검출 결과가 없습니다.' },
-          { status: 404 }
-        )
-      }
+      const textData = extractTextData(visionResponse) || { text: '', words: [] }
 
       await supabase.from('contents').update({ text_data: textData }).eq('id', contentId)
 
+      const textWordCount = textData.words.length
+      const successMessage = `텍스트 재검출 완료: ${textWordCount}개 단어`
+
       return NextResponse.json({
         success: true,
-        message: '텍스트 재검출이 완료되었습니다.',
+        message: successMessage,
         data: {
+          textWordCount,
           text: textData.text,
-          words: textData.words
-        }
+          words: textData.words,
+        },
       })
     }
 
-    return NextResponse.json({ error: '알 수 없는 에러가 발생했습니다.' }, { status: 500 })
+    return NextResponse.json(
+      {
+        message: '서버 오류가 발생했습니다. 관리자에게 문의해주세요.',
+      },
+      { status: 500 }
+    )
   } catch (error) {
     console.error('Vision API redetect 에러:', error)
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : '알 수 없는 에러가 발생했습니다.'
+        message: '서버 오류가 발생했습니다. 관리자에게 문의해주세요.',
       },
       { status: 500 }
     )

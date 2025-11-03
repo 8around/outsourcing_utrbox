@@ -7,6 +7,7 @@ import {
   extractTextData,
   extractDetectedContents,
   type VisionFeatureType,
+  type VisionAnalysisResult,
 } from '@/lib/google-vision/client'
 
 export const dynamic = 'force-dynamic'
@@ -67,45 +68,62 @@ export async function POST(request: Request) {
     }
 
     // 4. Vision API 호출
-    let visionResponse
+    let analysisResult: VisionAnalysisResult
     try {
-      visionResponse = await analyzeImage(publicUrl, features)
+      analysisResult = await analyzeImage(publicUrl, features)
     } catch (visionError) {
-      // Vision API 호출 실패 시 에러 메시지 저장
+      // 네트워크 에러 등 예외 처리
       await supabase
         .from('contents')
         .update({
           is_analyzed: false,
-          message:
-            visionError instanceof Error ? visionError.message : 'Vision API 호출 중 에러 발생',
         })
         .eq('id', contentId)
 
       return NextResponse.json(
         {
-          error: visionError instanceof Error ? visionError.message : 'Vision API 호출 실패',
+          message: '이미지 분석 요청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
         },
         { status: 500 }
       )
     }
 
-    // 5. 응답 데이터 처리 및 저장
-    const updates: { label_data?: Json; text_data?: Json } = {}
+    // 5. Vision API 에러 응답 처리
+    if (!analysisResult.success || !analysisResult.response) {
+      const errorInfo = analysisResult.error!
 
-    // LABEL_DETECTION 처리
-    if (features.includes('label')) {
-      const labelData = extractLabelData(visionResponse)
-      if (labelData) {
-        updates.label_data = labelData
-      }
+      await supabase
+        .from('contents')
+        .update({
+          is_analyzed: false,
+          message: `Vision API 오류 (코드 ${errorInfo.code}): ${errorInfo.message}`,
+        })
+        .eq('id', contentId)
+
+      return NextResponse.json(
+        {
+          message: errorInfo.message,
+          errorCode: errorInfo.code,
+        },
+        { status: 400 }
+      )
     }
 
-    // TEXT_DETECTION 처리
+    const visionResponse = analysisResult.response
+
+    // 6. 응답 데이터 처리 및 저장
+    const updates: { label_data?: Json; text_data?: Json } = {}
+
+    // LABEL_DETECTION 처리 (0개여도 저장)
+    if (features.includes('label')) {
+      const labelData = extractLabelData(visionResponse)
+      updates.label_data = labelData || { labels: [] }
+    }
+
+    // TEXT_DETECTION 처리 (0개여도 저장)
     if (features.includes('text')) {
       const textData = extractTextData(visionResponse)
-      if (textData) {
-        updates.text_data = textData
-      }
+      updates.text_data = textData || { text: '', words: [] }
     }
 
     // contents 테이블 업데이트
@@ -113,7 +131,7 @@ export async function POST(request: Request) {
       await supabase.from('contents').update(updates).eq('id', contentId)
     }
 
-    // 6. WEB_DETECTION 처리
+    // 7. WEB_DETECTION 처리
     let detectedContentsCount = 0
 
     if (features.includes('web')) {
@@ -145,7 +163,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 7. 성공 응답 (is_analyzed는 관리자가 수동으로 완료 상태로 변경)
+    // 8. 성공 응답 구성
     const labelCount =
       updates.label_data &&
       typeof updates.label_data === 'object' &&
@@ -154,12 +172,40 @@ export async function POST(request: Request) {
         ? updates.label_data.labels.length
         : 0
 
+    const textWordCount =
+      updates.text_data &&
+      typeof updates.text_data === 'object' &&
+      'words' in updates.text_data &&
+      Array.isArray(updates.text_data.words)
+        ? updates.text_data.words.length
+        : 0
+
+    // 9. 결과 개수 메시지 생성 (요청한 기능에 대한 검출 결과, 0개도 포함)
+    const resultMessages: string[] = []
+
+    if (features.includes('web')) {
+      resultMessages.push(`이미지 ${detectedContentsCount}개`)
+    }
+
+    if (features.includes('label')) {
+      resultMessages.push(`라벨 ${labelCount}개`)
+    }
+
+    if (features.includes('text')) {
+      resultMessages.push(`텍스트 ${textWordCount}개 단어`)
+    }
+
+    const successMessage =
+      resultMessages.length > 0
+        ? `[이미지 분석 완료]\n${resultMessages.join(', ')}`
+        : '이미지 분석이 완료되었습니다.'
+
     return NextResponse.json({
       success: true,
-      message: '이미지 분석이 완료되었습니다.',
+      message: successMessage,
       data: {
         labelCount,
-        textDetected: !!updates.text_data,
+        textWordCount,
         detectedContentsCount,
       },
     })
@@ -167,7 +213,7 @@ export async function POST(request: Request) {
     console.error('Vision API analyze 에러:', error)
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : '알 수 없는 에러가 발생했습니다.',
+        message: '서버 오류가 발생했습니다. 관리자에게 문의해주세요.',
       },
       { status: 500 }
     )

@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog'
+import { useToast } from '@/hooks/use-toast'
 
 interface RedetectionModalProps {
   isOpen: boolean
@@ -25,6 +26,7 @@ export function RedetectionModal({
   featureType,
   onSuccess
 }: RedetectionModalProps) {
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
 
   const featureLabel = featureType === 'label' ? '라벨' : '텍스트'
@@ -44,15 +46,33 @@ export function RedetectionModal({
         })
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error(`${featureLabel} 재검출에 실패했습니다.`)
+        // 에러 응답 처리
+        toast({
+          variant: 'destructive',
+          title: '재검출 실패',
+          description: data.message || `${featureLabel} 재검출에 실패했습니다.`
+        })
+        return
       }
+
+      // 성공 응답 처리
+      toast({
+        title: '재검출 성공',
+        description: data.message || `${featureLabel} 재검출이 완료되었습니다.`
+      })
 
       onSuccess()
       onClose()
     } catch (error) {
       console.error(`${featureLabel} 재검출 에러:`, error)
-      alert(error instanceof Error ? error.message : `${featureLabel} 재검출에 실패했습니다.`)
+      toast({
+        variant: 'destructive',
+        title: '요청 오류',
+        description: error instanceof Error ? error.message : `${featureLabel} 재검출 중 오류가 발생했습니다.`
+      })
     } finally {
       setIsLoading(false)
     }

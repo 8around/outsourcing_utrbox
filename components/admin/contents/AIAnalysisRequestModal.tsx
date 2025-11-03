@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useToast } from '@/hooks/use-toast'
 
 interface AIAnalysisRequestModalProps {
   isOpen: boolean
@@ -27,6 +28,7 @@ export function AIAnalysisRequestModal({
   isFirstRequest,
   onSuccess
 }: AIAnalysisRequestModalProps) {
+  const { toast } = useToast()
   const [enableLabel, setEnableLabel] = useState(true)
   const [enableText, setEnableText] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -57,15 +59,33 @@ export function AIAnalysisRequestModal({
         })
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error('AI 분석 요청에 실패했습니다.')
+        // 에러 응답 처리
+        toast({
+          variant: 'destructive',
+          title: '분석 요청 실패',
+          description: data.message || 'AI 분석 요청에 실패했습니다.'
+        })
+        return
       }
+
+      // 성공 응답 처리
+      toast({
+        title: '분석 요청 성공',
+        description: data.message || '이미지 분석이 완료되었습니다.'
+      })
 
       onSuccess()
       onClose()
     } catch (error) {
       console.error('AI 분석 요청 에러:', error)
-      alert(error instanceof Error ? error.message : 'AI 분석 요청에 실패했습니다.')
+      toast({
+        variant: 'destructive',
+        title: '요청 오류',
+        description: error instanceof Error ? error.message : 'AI 분석 요청 중 오류가 발생했습니다.'
+      })
     } finally {
       setIsLoading(false)
     }

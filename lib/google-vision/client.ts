@@ -10,7 +10,16 @@ const VISION_API_ENDPOINT = 'https://vision.googleapis.com/v1/images:annotate'
 export type VisionFeatureType = 'label' | 'text' | 'web'
 
 /**
- * Vision API 응답 타입 (간략화)
+ * Vision API 에러 객체 타입
+ */
+export interface VisionApiError {
+  code: number
+  message: string
+  details?: Array<unknown>
+}
+
+/**
+ * Vision API 응답 타입
  */
 export interface VisionApiResponse {
   labelAnnotations?: Array<{
@@ -35,6 +44,42 @@ export interface VisionApiResponse {
       }>
     }>
   }
+  error?: VisionApiError
+}
+
+/**
+ * Vision API 분석 결과 타입
+ */
+export interface VisionAnalysisResult {
+  success: boolean
+  response?: VisionApiResponse
+  error?: {
+    code: number
+    message: string
+  }
+}
+
+/**
+ * Vision API 에러 코드를 사용자 친화적 메시지로 변환
+ * @param errorCode - Vision API 에러 코드
+ * @returns 사용자에게 표시할 메시지
+ */
+export function getVisionErrorMessage(errorCode: number): string {
+  const errorMessages: Record<number, string> = {
+    2: '요청 중 오류가 발생했습니다. 다시 시도해주세요.',
+    3: '손상되었거나 지원되지 않는 포맷의 이미지입니다. (지원되지 않는 포맷의 이미지를 파일명의 확장자만 변경하는 경우에도 요청이 불가합니다.)',
+    4: '요청 시간이 초과되었습니다. 다시 시도해주세요.',
+    7: 'Google Vision API 크레딧이 부족하거나 설정이 잘못되었습니다.',
+    8: '요청 중 오류가 발생했습니다. 다시 시도해주세요.',
+    10: '요청 중 오류가 발생했습니다. 다시 시도해주세요.',
+    12: '지원되지 않는 API를 사용하고 있습니다. 관리자에게 문의해주세요.',
+    13: 'Google Vision API 서버가 응답하지 않습니다. 잠시 후 다시 시도해주세요.',
+    14: 'Google Vision API 서버가 응답하지 않습니다. 잠시 후 다시 시도해주세요.',
+    15: '요청 중 오류가 발생했습니다. 다시 시도해주세요.',
+    16: 'Google Vision API 크레딧이 부족하거나 설정이 잘못되었습니다.',
+  }
+
+  return errorMessages[errorCode] || `알 수 없는 오류가 발생했습니다. (코드: ${errorCode})`
 }
 
 /**
@@ -155,12 +200,12 @@ function sniffImageMime(b: Uint8Array): string | undefined {
  * Vision API를 호출하는 함수
  * @param imageUrl - 분석할 이미지의 Public URL
  * @param features - 요청할 Vision API 기능 목록
- * @returns Vision API 응답
+ * @returns Vision API 분석 결과
  */
 export async function analyzeImage(
   imageUrl: string,
   features: VisionFeatureType[]
-): Promise<VisionApiResponse> {
+): Promise<VisionAnalysisResult> {
   const apiKey = process.env.GOOGLE_VISION_API_KEY
 
   if (!apiKey) {
@@ -216,19 +261,42 @@ export async function analyzeImage(
       body: JSON.stringify(requestBody),
     })
 
+    // HTTP 레벨 에러 체크
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`Vision API 호출 실패: ${response.status} - ${JSON.stringify(errorData)}`)
+      const errorText = await response.text()
+      throw new Error(`Vision API HTTP 오류: ${response.status} - ${errorText}`)
     }
 
+    // 응답 파싱 (한 번만!)
     const data = await response.json()
 
-    if (data.responses && data.responses[0]) {
-      return data.responses[0]
+    if (!data.responses || !data.responses[0]) {
+      throw new Error('Vision API 응답에 결과가 없습니다.')
     }
 
-    throw new Error('Vision API 응답에 결과가 없습니다.')
+    const annotateResponse: VisionApiResponse = data.responses[0]
+
+    // Vision API 레벨 에러 체크
+    if (annotateResponse.error) {
+      const { code } = annotateResponse.error
+      const message = getVisionErrorMessage(code)
+
+      return {
+        success: false,
+        error: {
+          code,
+          message,
+        },
+      }
+    }
+
+    // 성공 응답
+    return {
+      success: true,
+      response: annotateResponse,
+    }
   } catch (error) {
+    // 네트워크 에러, 파싱 에러 등
     if (error instanceof Error) {
       throw new Error(`Vision API 호출 중 에러 발생: ${error.message}`)
     }
