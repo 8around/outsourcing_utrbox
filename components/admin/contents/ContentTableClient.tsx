@@ -14,16 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Content } from '@/lib/admin/types'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { Eye, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { Pagination } from '@/components/explorer/Pagination'
 import Image from 'next/image'
 
@@ -53,23 +48,13 @@ export function ContentTableClient({
 
   const getStatusBadge = (isAnalyzed: boolean | null) => {
     if (isAnalyzed === true) {
-      return (
-        <Badge className="truncate bg-green-100 text-green-700 hover:bg-green-100">
-          완료
-        </Badge>
-      )
+      return <Badge className="truncate bg-green-100 text-green-700 hover:bg-green-100">완료</Badge>
     } else if (isAnalyzed === null) {
       return (
-        <Badge className="truncate bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-          대기
-        </Badge>
+        <Badge className="truncate bg-yellow-100 text-yellow-700 hover:bg-yellow-100">대기</Badge>
       )
     } else {
-      return (
-        <Badge className="truncate bg-blue-100 text-blue-700 hover:bg-blue-100">
-          분석 중
-        </Badge>
-      )
+      return <Badge className="truncate bg-blue-100 text-blue-700 hover:bg-blue-100">분석 중</Badge>
     }
   }
 
@@ -116,7 +101,10 @@ export function ContentTableClient({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="truncate font-medium max-w-[200px] cursor-help">
+                <div
+                  className="min-w-0 max-w-[150px] cursor-pointer truncate font-medium text-gray-600 hover:underline"
+                  onClick={() => router.push(`/admin/contents/${row.original.id}`)}
+                >
                   {fileName}
                 </div>
               </TooltipTrigger>
@@ -135,57 +123,46 @@ export function ContentTableClient({
         <div className="truncate text-gray-600">{row.getValue('user_name') || '-'}</div>
       ),
     },
+    // {
+    //   accessorKey: 'collection_name',
+    //   header: () => <div className="truncate">컬렉션</div>,
+    //   cell: ({ row }) => (
+    //     <div className="truncate text-gray-600">{row.getValue('collection_name') || '미분류'}</div>
+    //   ),
+    // },
     {
-      accessorKey: 'collection_name',
-      header: () => <div className="truncate">컬렉션</div>,
+      accessorKey: 'is_analyzed',
+      header: () => <div className="truncate text-center">분석 상태</div>,
       cell: ({ row }) => (
-        <div className="truncate text-gray-600">
-          {row.getValue('collection_name') || '미분류'}
+        <div className="text-center">
+          {getStatusBadge(row.getValue('is_analyzed'))}
         </div>
       ),
     },
     {
-      accessorKey: 'is_analyzed',
-      header: () => <div className="truncate">분석 상태</div>,
-      cell: ({ row }) => getStatusBadge(row.getValue('is_analyzed')),
-    },
-    {
       accessorKey: 'detected_count',
-      header: () => <div className="truncate">발견 건수</div>,
+      header: () => <div className="truncate text-center">발견 건수</div>,
       cell: ({ row }) => {
         const count = row.getValue('detected_count') as number
-        return count > 0 ? (
-          <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100">
-            {count}건
-          </Badge>
-        ) : (
-          <span className="text-gray-400">-</span>
+        return (
+          <div className="text-center">
+            {count > 0 ? (
+              <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100">
+                {count}건
+              </Badge>
+            ) : (
+              <span className="text-gray-400">-</span>
+            )}
+          </div>
         )
       },
     },
     {
       accessorKey: 'created_at',
-      header: () => <div className="truncate">업로드일</div>,
+      header: () => <div className="truncate text-right">업로드일</div>,
       cell: ({ row }) => (
-        <div className="truncate text-gray-600">
-          {format(new Date(row.getValue('created_at')), 'PPP', { locale: ko })}
-        </div>
-      ),
-    },
-    {
-      id: 'actions',
-      header: () => <div className="text-right">작업</div>,
-      cell: ({ row }) => (
-        <div className="text-right">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push(`/admin/contents/${row.original.id}`)}
-            className="gap-1"
-          >
-            <Eye className="h-4 w-4" />
-            상세
-          </Button>
+        <div className="truncate text-right text-gray-600">
+          {format(new Date(row.getValue('created_at')), 'PPP HH:mm', { locale: ko })}
         </div>
       ),
     },
