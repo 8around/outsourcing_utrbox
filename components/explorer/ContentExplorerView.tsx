@@ -40,13 +40,13 @@ export function ContentExplorerView({
       case 'completed':
         return 'bg-success/10 text-success'
       case 'analyzing':
-        return 'bg-primary/10 text-primary'
+        return 'bg-blue-100 text-blue-700'
       case 'pending':
         return 'bg-warning/10 text-warning'
       case 'failed':
         return 'bg-error/10 text-error'
       default:
-        return 'bg-secondary-100 text-secondary-600'
+        return 'bg-primary/10 text-primary'
     }
   }
 
@@ -155,7 +155,7 @@ export function ContentExplorerView({
               onClick={(e) => handleContentClick(content.id, e)}
             >
               {/* Thumbnail */}
-              <div className="relative aspect-video overflow-hidden bg-secondary">
+              <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
                 <Image
                   src={content.file_path}
                   alt={content.file_name}
@@ -186,7 +186,7 @@ export function ContentExplorerView({
                     {getStatusText(content)}
                   </Badge>
                   <span className="text-secondary-400 text-xs">
-                    {format(new Date(content.created_at), 'MM.dd', { locale: ko })}
+                    {format(new Date(content.created_at), 'yyyy.MM.dd HH:mm', { locale: ko })}
                   </span>
                 </div>
               </div>
@@ -250,7 +250,7 @@ export function ContentExplorerView({
               {/* Meta */}
               <div className="flex-shrink-0 text-right">
                 <p className="text-secondary/500 text-sm">
-                  {format(new Date(content.created_at), 'yyyy.MM.dd HH:mm', { locale: ko })}
+                  {format(new Date(content.created_at), 'PPP HH:mm', { locale: ko })}
                 </p>
               </div>
             </Link>

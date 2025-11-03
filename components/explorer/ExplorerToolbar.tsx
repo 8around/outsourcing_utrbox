@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Grid, List, Search, Upload, ArrowUpDown, RefreshCw } from 'lucide-react'
+import { Grid, List, Search, Upload, SortAsc, SortDesc, RefreshCw } from 'lucide-react'
 import { UploadModal } from './UploadModal'
 import { CollectionSelect } from './CollectionSelect'
 
@@ -85,7 +85,7 @@ export function ExplorerToolbar({
                 onClick={toggleSortOrder}
                 title={sortOrder === 'asc' ? '오름차순' : '내림차순'}
               >
-                <ArrowUpDown className="h-4 w-4" />
+                {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
               </Button>
             </div>
 
