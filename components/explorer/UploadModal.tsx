@@ -71,7 +71,7 @@ export function UploadModal({
 
         return {
           file: fileWithPreview,
-          title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+          title: file.name, // Remove extension
           collectionId: defaultCollectionId,
           status: 'pending' as const,
           progress: 0,
@@ -150,15 +150,15 @@ export function UploadModal({
     if (pendingItems.length === 0) return
 
     // Validate all items
-    const invalidItems = uploadItems.filter((item) => !item.title.trim())
-    if (invalidItems.length > 0) {
-      toast({
-        title: '입력 오류',
-        description: '모든 콘텐츠의 제목을 입력해주세요',
-        variant: 'destructive',
-      })
-      return
-    }
+    // const invalidItems = uploadItems.filter((item) => !item.title.trim())
+    // if (invalidItems.length > 0) {
+    //   toast({
+    //     title: '입력 오류',
+    //     description: '모든 콘텐츠의 파일명을 입력해주세요',
+    //     variant: 'destructive',
+    //   })
+    //   return
+    // }
 
     setIsUploading(true)
 
@@ -277,13 +277,12 @@ export function UploadModal({
                       <div className="flex-1 space-y-4">
                         <div className="grid gap-4 sm:grid-cols-2">
                           <div>
-                            <Label htmlFor={`title-${index}`}>제목 *</Label>
+                            <Label htmlFor={`title-${index}`}>파일명</Label>
                             <Input
                               id={`title-${index}`}
-                              value={item.title}
                               onChange={(e) => updateItem(index, { title: e.target.value })}
                               disabled={item.status === 'uploading' || item.status === 'success'}
-                              placeholder="콘텐츠 제목"
+                              placeholder={item.file.name}
                             />
                           </div>
                           <div>

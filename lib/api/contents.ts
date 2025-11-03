@@ -81,7 +81,7 @@ export async function uploadContent(
       .insert({
         user_id: params.userId,
         collection_id: params.collectionId, // NULL 가능
-        file_name: params.file.name,
+        file_name: params.title || params.file.name,
         file_path: publicUrl,
         is_analyzed: null, // 분석 대기
         message: null,
