@@ -99,16 +99,22 @@ export async function POST(request: Request) {
     // 6. 응답 데이터 처리 및 저장
     const updates: { label_data?: Json; text_data?: Json } = {}
 
-    // LABEL_DETECTION 처리 (0개여도 저장)
+    // LABEL_DETECTION 처리
     if (features.includes('label')) {
       const labelData = extractLabelData(visionResponse)
-      updates.label_data = labelData || { labels: [] }
+
+      if (labelData) {
+        updates.label_data = labelData
+      }
     }
 
-    // TEXT_DETECTION 처리 (0개여도 저장)
+    // TEXT_DETECTION 처리
     if (features.includes('text')) {
       const textData = extractTextData(visionResponse)
-      updates.text_data = textData || { text: '', words: [] }
+
+      if (textData) {
+        updates.text_data = textData
+      }
     }
 
     // contents 테이블 업데이트

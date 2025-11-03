@@ -91,37 +91,32 @@ export async function POST(request: Request) {
 
     // 5. 결과 덮어쓰기 (0개여도 성공 처리)
     if (featureType === 'label') {
-      const labelData = extractLabelData(visionResponse) || { labels: [] }
+      const labelData = extractLabelData(visionResponse)
 
-      await supabase.from('contents').update({ label_data: labelData }).eq('id', contentId)
+      if (!labelData) {
+        await supabase.from('contents').update({ label_data: labelData }).eq('id', contentId)
+      }
 
-      const labelCount = labelData.labels.length
+      const labelCount = labelData?.labels.length || 0
       const successMessage = `라벨 재검출 완료: ${labelCount}개`
 
       return NextResponse.json({
         success: true,
         message: successMessage,
-        data: {
-          labelCount,
-          labels: labelData.labels,
-        },
       })
     } else if (featureType === 'text') {
-      const textData = extractTextData(visionResponse) || { text: '', words: [] }
+      const textData = extractTextData(visionResponse)
 
-      await supabase.from('contents').update({ text_data: textData }).eq('id', contentId)
+      if (!textData) {
+        await supabase.from('contents').update({ text_data: textData }).eq('id', contentId)
+      }
 
-      const textWordCount = textData.words.length
+      const textWordCount = textData?.words.length || 0
       const successMessage = `텍스트 재검출 완료: ${textWordCount}개 단어`
 
       return NextResponse.json({
         success: true,
         message: successMessage,
-        data: {
-          textWordCount,
-          text: textData.text,
-          words: textData.words,
-        },
       })
     }
 
