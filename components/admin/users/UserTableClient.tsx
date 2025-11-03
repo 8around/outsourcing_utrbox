@@ -49,17 +49,17 @@ export function UserTableClient({
   const getStatusBadge = (isApproved: boolean | null) => {
     if (isApproved === true) {
       return (
-        <Badge className="truncate bg-green-100 text-green-700 hover:bg-green-100">승인됨</Badge>
+        <Badge className="truncate bg-success/10 text-success pointer-events-none">승인됨</Badge>
       )
     } else if (isApproved === null) {
       return (
-        <Badge className="truncate bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+        <Badge className="truncate bg-yellow-100 text-yellow-700 pointer-events-none">
           대기중
         </Badge>
       )
     } else {
       return (
-        <Badge variant="destructive" className="truncate bg-red-100 text-red-700 hover:bg-red-100">
+        <Badge className="truncate bg-error/10 text-error pointer-events-none">
           거부됨
         </Badge>
       )

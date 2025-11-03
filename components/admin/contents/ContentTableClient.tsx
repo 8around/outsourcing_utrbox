@@ -48,13 +48,13 @@ export function ContentTableClient({
 
   const getStatusBadge = (isAnalyzed: boolean | null) => {
     if (isAnalyzed === true) {
-      return <Badge className="truncate bg-green-100 text-green-700 hover:bg-green-100">완료</Badge>
+      return <Badge className="truncate bg-success/10 text-success pointer-events-none">분석 완료</Badge>
     } else if (isAnalyzed === null) {
       return (
-        <Badge className="truncate bg-yellow-100 text-yellow-700 hover:bg-yellow-100">대기</Badge>
+        <Badge className="truncate bg-yellow-100 text-yellow-700 pointer-events-none">대기 중</Badge>
       )
     } else {
-      return <Badge className="truncate bg-blue-100 text-blue-700 hover:bg-blue-100">분석 중</Badge>
+      return <Badge className="truncate bg-blue-100 text-blue-700 pointer-events-none">분석 중</Badge>
     }
   }
 
@@ -80,7 +80,7 @@ export function ContentTableClient({
     },
     {
       id: 'thumbnail',
-      header: () => <div className="truncate">썸네일</div>,
+      header: () => <div className="truncate">이미지</div>,
       cell: ({ row }) => (
         <div className="relative h-12 w-12 overflow-hidden rounded border">
           <Image
@@ -116,13 +116,6 @@ export function ContentTableClient({
         )
       },
     },
-    {
-      accessorKey: 'user_name',
-      header: () => <div className="truncate">업로더</div>,
-      cell: ({ row }) => (
-        <div className="truncate text-gray-600">{row.getValue('user_name') || '-'}</div>
-      ),
-    },
     // {
     //   accessorKey: 'collection_name',
     //   header: () => <div className="truncate">컬렉션</div>,
@@ -134,9 +127,7 @@ export function ContentTableClient({
       accessorKey: 'is_analyzed',
       header: () => <div className="truncate text-center">분석 상태</div>,
       cell: ({ row }) => (
-        <div className="text-center">
-          {getStatusBadge(row.getValue('is_analyzed'))}
-        </div>
+        <div className="text-center">{getStatusBadge(row.getValue('is_analyzed'))}</div>
       ),
     },
     {
@@ -156,6 +147,13 @@ export function ContentTableClient({
           </div>
         )
       },
+    },
+    {
+      accessorKey: 'user_name',
+      header: () => <div className="truncate text-right">업로더</div>,
+      cell: ({ row }) => (
+        <div className="truncate text-right text-gray-600">{row.getValue('user_name') || '-'}</div>
+      ),
     },
     {
       accessorKey: 'created_at',

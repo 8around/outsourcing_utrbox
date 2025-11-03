@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -28,7 +28,7 @@ export function ReviewStatusModal({
   onClose,
   detectionId,
   currentStatus,
-  onUpdate
+  onUpdate,
 }: ReviewStatusModalProps) {
   const [selectedStatus, setSelectedStatus] = useState<ReviewStatus>(
     (currentStatus || 'pending') as ReviewStatus
@@ -41,29 +41,29 @@ export function ReviewStatusModal({
     badge: React.ReactNode
   }> = [
     {
-      value: 'pending',
-      label: '대기',
-      badge: <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">대기</Badge>
-    },
-    {
       value: 'match',
       label: '일치',
       badge: (
-        <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100">
+        <Badge className="bg-error/10 text-error pointer-events-none">
           일치
         </Badge>
-      )
+      ),
     },
     {
       value: 'no_match',
       label: '불일치',
-      badge: <Badge className="bg-green-100 text-green-700 hover:bg-green-100">불일치</Badge>
+      badge: <Badge className="bg-success/10 text-success pointer-events-none">불일치</Badge>,
     },
     {
       value: 'cannot_compare',
       label: '비교 불가',
-      badge: <Badge variant="secondary">비교 불가</Badge>
-    }
+      badge: <Badge className="bg-gray-100 text-gray-700 pointer-events-none">비교 불가</Badge>,
+    },
+    {
+      value: 'pending',
+      label: '대기',
+      badge: <Badge className="bg-yellow-100 text-yellow-700 pointer-events-none">대기</Badge>,
+    },
   ]
 
   const handleSave = async () => {
@@ -73,11 +73,11 @@ export function ReviewStatusModal({
       const response = await fetch(`/api/detected-contents/${detectionId}/review`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          admin_review_status: selectedStatus
-        })
+          admin_review_status: selectedStatus,
+        }),
       })
 
       if (!response.ok) {
@@ -104,7 +104,10 @@ export function ReviewStatusModal({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>판정 상태</Label>
-            <RadioGroup value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as ReviewStatus)}>
+            <RadioGroup
+              value={selectedStatus}
+              onValueChange={(v) => setSelectedStatus(v as ReviewStatus)}
+            >
               <div className="space-y-3">
                 {statuses.map((status) => (
                   <div key={status.value} className="flex items-center space-x-3">

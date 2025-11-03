@@ -81,11 +81,11 @@ export function AnalysisStatusModal({
   const getStatusBadge = (statusValue: string) => {
     switch (statusValue) {
       case 'null':
-        return <Badge className="bg-yellow-100 text-yellow-700">대기 중</Badge>
+        return <Badge className="bg-yellow-100 text-yellow-700 pointer-events-none">대기 중</Badge>
       case 'false':
-        return <Badge className="bg-blue-100 text-blue-700">분석 중</Badge>
+        return <Badge className="bg-blue-100 text-blue-700 pointer-events-none">분석 중</Badge>
       case 'true':
-        return <Badge className="bg-green-100 text-green-700">분석 완료</Badge>
+        return <Badge className="bg-success/10 text-success pointer-events-none">분석 완료</Badge>
       default:
         return null
     }
