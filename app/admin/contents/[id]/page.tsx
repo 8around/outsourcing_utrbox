@@ -346,7 +346,11 @@ export default function AdminContentDetailPage() {
                 onClick={() => setReviewStatusModalOpen(true)}
                 disabled={!selectedDetection}
               >
-                {selectedDetection?.admin_review_status === 'pending' ? '검토' : '검토 수정'}
+                {selectedDetection === null
+                  ? '검토'
+                  : selectedDetection.admin_review_status === 'pending'
+                    ? '검토'
+                    : '검토 수정'}
               </Button>
             </div>
           </CardContent>
@@ -363,7 +367,7 @@ export default function AdminContentDetailPage() {
         </CardHeader>
         <CardContent>
           {detections.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500">발견된 이미지가 없습니다.</p>
+            <p className="py-8 text-center text-sm text-gray-500">검출된 이미지가 없습니다.</p>
           ) : (
             <DetectionTable
               detections={detections}
@@ -374,75 +378,81 @@ export default function AdminContentDetailPage() {
         </CardContent>
       </Card>
 
-      {/* 레이블/텍스트 검출 결과 */}
-      {content.is_analyzed !== null && (content.label_data || content.text_data) && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* 레이블 검출 결과 */}
-          {content.label_data && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>라벨 검출 결과</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setRedetectType('label')
-                    setRedetectionModalOpen(true)
-                  }}
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {content.label_data.labels?.map((label, idx) => (
-                    <div
+      {/* 라벨/텍스트 검출 결과 */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* 라벨 검출 결과 */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>라벨 검출 결과 ({content.label_data?.labels?.length || 0}개)</CardTitle>
+            {content.is_analyzed !== null && !content.is_analyzed && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setRedetectType('label')
+                  setRedetectionModalOpen(true)
+                }}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent>
+            {content.label_data?.labels && content.label_data.labels.length > 0 ? (
+              <div className="space-y-2">
+                {content.label_data.labels.map((label, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
+                    <span className="font-medium">{label.description}</span>
+                    <Badge variant="outline">{(label.score * 100).toFixed(0)}%</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="py-8 text-center text-sm text-gray-500">검출된 라벨이 없습니다.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 텍스트 검출 결과 */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>텍스트 검출 결과 ({content.text_data?.words?.length || 0}개)</CardTitle>
+            {content.is_analyzed !== null && !content.is_analyzed && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setRedetectType('text')
+                  setRedetectionModalOpen(true)
+                }}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent>
+            {content.text_data?.words && content.text_data.words.length > 0 ? (
+              <div className="rounded-lg border bg-gray-50 p-4">
+                <div className="flex flex-wrap gap-2">
+                  {content.text_data.words.map((word, idx) => (
+                    <span
                       key={idx}
-                      className="flex items-center justify-between rounded-lg border p-3"
+                      className="inline-block rounded border bg-white px-2 py-1 text-sm text-gray-900"
                     >
-                      <span className="font-medium">{label.description}</span>
-                      <Badge variant="outline">{(label.score * 100).toFixed(0)}%</Badge>
-                    </div>
+                      {word}
+                    </span>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* 텍스트 검출 결과 */}
-          {content.text_data && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>텍스트 검출 결과</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setRedetectType('text')
-                    setRedetectionModalOpen(true)
-                  }}
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-lg border bg-gray-50 p-4">
-                  <div className="flex flex-wrap gap-2">
-                    {content.text_data.words?.map((word, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-block rounded border bg-white px-2 py-1 text-sm text-gray-900"
-                      >
-                        {word}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
+              </div>
+            ) : (
+              <p className="py-8 text-center text-sm text-gray-500">검출된 텍스트가 없습니다.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* 모달들 */}
       <AnalysisStatusModal

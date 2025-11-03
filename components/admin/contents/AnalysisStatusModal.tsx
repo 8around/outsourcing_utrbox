@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,9 +16,10 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { toast } from '@/hooks/use-toast'
 
 interface AnalysisStatusModalProps {
   isOpen: boolean
@@ -35,7 +36,7 @@ export function AnalysisStatusModal({
   contentId,
   currentStatus,
   currentMessage,
-  onUpdate
+  onUpdate,
 }: AnalysisStatusModalProps) {
   const [status, setStatus] = useState<string>(
     currentStatus === null ? 'null' : currentStatus === true ? 'true' : 'false'
@@ -50,12 +51,12 @@ export function AnalysisStatusModal({
       const response = await fetch(`/api/contents/${contentId}/status`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           is_analyzed: status === 'null' ? null : status === 'true',
-          message: message || null
-        })
+          message: message || null,
+        }),
       })
 
       if (!response.ok) {
@@ -66,7 +67,12 @@ export function AnalysisStatusModal({
       onClose()
     } catch (error) {
       console.error('상태 업데이트 에러:', error)
-      alert(error instanceof Error ? error.message : '상태 업데이트에 실패했습니다.')
+
+      toast({
+        title: '상태 업데이트 에러',
+        description: error instanceof Error ? error.message : '상태 업데이트에 실패했습니다.',
+        variant: 'destructive',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -75,17 +81,11 @@ export function AnalysisStatusModal({
   const getStatusBadge = (statusValue: string) => {
     switch (statusValue) {
       case 'null':
-        return (
-          <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">대기 중</Badge>
-        )
+        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">대기 중</Badge>
       case 'false':
-        return (
-          <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">분석 중</Badge>
-        )
+        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">분석 중</Badge>
       case 'true':
-        return (
-          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">분석 완료</Badge>
-        )
+        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">분석 완료</Badge>
       default:
         return null
     }
@@ -107,7 +107,7 @@ export function AnalysisStatusModal({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="null">
+                <SelectItem value="null" disabled={currentStatus !== null}>
                   <div className="flex items-center gap-2">
                     {getStatusBadge('null')}
                     <span>대기 중</span>
