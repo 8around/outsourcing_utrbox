@@ -60,22 +60,11 @@ export default function AdminContentDetailPage() {
   const [aiAnalysisModalOpen, setAIAnalysisModalOpen] = useState(false)
   const [redetectionModalOpen, setRedetectionModalOpen] = useState(false)
   const [redetectType, setRedetectType] = useState<'label' | 'text'>('label')
-  const [currentUserId, setCurrentUserId] = useState<string>('')
 
   useEffect(() => {
     fetchData()
-    fetchCurrentUser()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contentId])
-
-  const fetchCurrentUser = async () => {
-    const {
-      data: { session }
-    } = await supabase.auth.getSession()
-    if (session) {
-      setCurrentUserId(session.user.id)
-    }
-  }
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -223,14 +212,14 @@ export default function AdminContentDetailPage() {
       </div>
 
       {/* 원본 이미지 / 발견 이미지 */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* 원본 이미지 */}
         <Card>
           <CardHeader>
             <CardTitle>원본 이미지</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-gray-100">
+            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-100">
               <Image
                 src={content.file_path}
                 alt={content.file_name}
@@ -253,14 +242,17 @@ export default function AdminContentDetailPage() {
             <CardTitle>발견 이미지</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-gray-50">
+            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-50">
               {selectedDetection ? (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
+                    referrerPolicy="no-referrer"
                     src={selectedDetection.image_url}
                     alt="발견된 이미지"
-                    className="h-full w-full object-contain"
+                    fill
+                    className="object-contain"
+                    unoptimized
                   />
                 </>
               ) : (
@@ -391,7 +383,6 @@ export default function AdminContentDetailPage() {
           onClose={() => setReviewStatusModalOpen(false)}
           detectionId={selectedDetection.id}
           currentStatus={selectedDetection.admin_review_status}
-          reviewedBy={currentUserId}
           onUpdate={fetchData}
         />
       )}

@@ -29,9 +29,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     // 요청 바디 파싱
     const body = await request.json()
-    const { admin_review_status, reviewed_by } = body as {
+    const { admin_review_status } = body as {
       admin_review_status: 'pending' | 'match' | 'no_match' | 'cannot_compare'
-      reviewed_by: string
     }
 
     if (!admin_review_status) {
@@ -45,10 +44,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       )
     }
 
-    if (!reviewed_by) {
-      return NextResponse.json({ error: 'reviewed_by가 필요합니다.' }, { status: 400 })
-    }
-
     // detected_contents 존재 확인
     const { data: detection, error: detectionError } = await supabase
       .from('detected_contents')
@@ -60,12 +55,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: '발견 콘텐츠를 찾을 수 없습니다.' }, { status: 404 })
     }
 
-    // 판정 상태 업데이트
+    // 판정 상태 업데이트 (세션의 사용자 ID 사용)
     const { error: updateError } = await supabase
       .from('detected_contents')
       .update({
         admin_review_status,
-        reviewed_by,
+        reviewed_by: session.user.id,
         reviewed_at: new Date().toISOString()
       })
       .eq('id', id)

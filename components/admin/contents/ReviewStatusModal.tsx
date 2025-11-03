@@ -18,7 +18,6 @@ interface ReviewStatusModalProps {
   onClose: () => void
   detectionId: string
   currentStatus: string | null
-  reviewedBy: string
   onUpdate: () => void
 }
 
@@ -29,7 +28,6 @@ export function ReviewStatusModal({
   onClose,
   detectionId,
   currentStatus,
-  reviewedBy,
   onUpdate
 }: ReviewStatusModalProps) {
   const [selectedStatus, setSelectedStatus] = useState<ReviewStatus>(
@@ -78,8 +76,7 @@ export function ReviewStatusModal({
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          admin_review_status: selectedStatus,
-          reviewed_by: reviewedBy
+          admin_review_status: selectedStatus
         })
       })
 
