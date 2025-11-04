@@ -1,18 +1,20 @@
 import { ReactNode } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowUp, ArrowDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface StatsCardProps {
   title: string
-  value: number | string
+  value?: number | string
   icon: ReactNode
   change?: string
   trend?: 'up' | 'down'
   unit?: string
+  isLoading?: boolean
 }
 
-export function StatsCard({ title, value, icon, change, trend, unit }: StatsCardProps) {
+export function StatsCard({ title, value, icon, change, trend, unit, isLoading = false }: StatsCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -20,11 +22,15 @@ export function StatsCard({ title, value, icon, change, trend, unit }: StatsCard
         <div className="text-gray-400">{icon}</div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-gray-900">
-          {value}
-          {unit && <span className="ml-1 text-lg text-gray-600">{unit}</span>}
-        </div>
-        {change && (
+        {isLoading ? (
+          <Skeleton className="h-8 w-20" />
+        ) : (
+          <div className="text-2xl font-bold text-gray-900">
+            {value ?? 0}
+            {unit && <span className="ml-1 text-lg text-gray-600">{unit}</span>}
+          </div>
+        )}
+        {change && !isLoading && (
           <div className="mt-1 flex items-center text-xs">
             {trend === 'up' && <ArrowUp className="mr-1 h-3 w-3 text-green-500" />}
             {trend === 'down' && <ArrowDown className="mr-1 h-3 w-3 text-red-500" />}

@@ -196,14 +196,14 @@ export default function AdminUserDetailPage() {
     }
   }
 
-  // 이벤트 핸들러: 차단
+  // 이벤트 핸들러: 거부
   const handleBlock = async () => {
     try {
       const result = await updateUserApproval(userId, false)
       if (result.success) {
         toast({
-          title: '차단 완료',
-          description: `${user?.name}님의 계정을 차단했습니다.`,
+          title: '거부 완료',
+          description: `${user?.name}님의 계정을 거부했습니다.`,
           variant: 'destructive',
         })
         const userResult = await getUser(userId)
@@ -213,14 +213,14 @@ export default function AdminUserDetailPage() {
       } else {
         toast({
           title: '오류',
-          description: result.error || '차단에 실패했습니다.',
+          description: result.error || '거부에 실패했습니다.',
           variant: 'destructive',
         })
       }
     } catch (error) {
       toast({
         title: '오류',
-        description: '차단에 실패했습니다.',
+        description: '거부에 실패했습니다.',
         variant: 'destructive',
       })
     }

@@ -44,7 +44,7 @@ export function UserActionButtons({
         <CardTitle>계정 관리</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* 승인/차단 버튼 */}
+        {/* 승인/거부 버튼 */}
         <div className="grid grid-cols-2 gap-3">
           <Button
             onClick={handleApprove}
@@ -67,13 +67,13 @@ export function UserActionButtons({
                     className="w-full gap-2"
                   >
                     <XCircle className="h-4 w-4" />
-                    {user.is_approved === false ? '차단됨' : '차단'}
+                    {user.is_approved === false ? '거부됨' : '거부'}
                   </Button>
                 </span>
               </TooltipTrigger>
               {isSelf && (
                 <TooltipContent>
-                  <p>자신의 계정은 차단할 수 없습니다</p>
+                  <p>자신의 계정은 거부할 수 없습니다</p>
                 </TooltipContent>
               )}
             </Tooltip>
