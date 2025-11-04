@@ -17,38 +17,14 @@ import {
 import Image from 'next/image'
 import { useToast } from '@/hooks/use-toast'
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { getContentDetail } from '@/lib/api/contents'
+import { getDetections } from '@/lib/api/detections'
+import { ContentDetail, DetectedContent } from '@/types'
 import { AnalysisStatusModal } from '@/components/admin/contents/AnalysisStatusModal'
 import { ReviewStatusModal } from '@/components/admin/contents/ReviewStatusModal'
 import { AIAnalysisRequestModal } from '@/components/admin/contents/AIAnalysisRequestModal'
 import { RedetectionModal } from '@/components/admin/contents/RedetectionModal'
 import { DetectionTable } from '@/components/admin/contents/DetectionTable'
-
-type Content = {
-  id: string
-  file_name: string
-  file_path: string
-  is_analyzed: boolean | null
-  message: string | null
-  label_data: { labels?: { description: string; score: number }[] } | null
-  text_data: { text?: string; words?: string[] } | null
-  created_at: string
-  user_name: string | null
-  collection_name: string | null
-}
-
-type DetectedContent = {
-  id: string
-  content_id: string
-  source_url: string | null
-  image_url: string
-  page_title: string | null
-  detection_type: string
-  admin_review_status: string | null
-  created_at: string | null
-  reviewed_at: string | null
-  reviewed_by: string | null
-}
 
 export default function AdminContentDetailPage() {
   useAdminTitle('콘텐츠 상세')
@@ -57,7 +33,7 @@ export default function AdminContentDetailPage() {
   const { toast } = useToast()
   const contentId = params.id as string
 
-  const [content, setContent] = useState<Content | null>(null)
+  const [content, setContent] = useState<ContentDetail | null>(null)
   const [detections, setDetections] = useState<DetectedContent[]>([])
   const [selectedDetection, setSelectedDetection] = useState<DetectedContent | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -97,62 +73,24 @@ export default function AdminContentDetailPage() {
     setIsLoading(true)
 
     try {
-      // contents 조회
-      const { data: contentData, error: contentError } = await supabase
-        .from('contents')
-        .select(
-          `
-          id,
-          file_name,
-          file_path,
-          is_analyzed,
-          message,
-          label_data,
-          text_data,
-          created_at,
-          users!contents_user_id_fkey(name),
-          collections(name)
-        `
-        )
-        .eq('id', contentId)
-        .single()
-
-      if (contentError) throw contentError
-
-      if (!contentData) {
-        setContent(null)
-        return
+      // 콘텐츠 상세 조회 (API 함수 사용)
+      const contentResult = await getContentDetail(contentId)
+      if (!contentResult.success || !contentResult.data) {
+        throw new Error(contentResult.error || '콘텐츠를 찾을 수 없습니다.')
       }
+      setContent(contentResult.data)
 
-      setContent({
-        ...contentData,
-        user_name:
-          contentData.users && typeof contentData.users === 'object' && 'name' in contentData.users
-            ? contentData.users.name
-            : null,
-        collection_name:
-          contentData.collections &&
-          typeof contentData.collections === 'object' &&
-          'name' in contentData.collections
-            ? contentData.collections.name
-            : null,
-      } as Content)
-
-      // detected_contents 조회
-      const { data: detectionsData, error: detectionsError } = await supabase
-        .from('detected_contents')
-        .select('*')
-        .eq('content_id', contentId)
-        .order('created_at', { ascending: false })
-
-      if (detectionsError) throw detectionsError
-
-      setDetections(detectionsData || [])
+      // 탐지 결과 조회 (API 함수 사용)
+      const detectionsResult = await getDetections(contentId)
+      if (!detectionsResult.success) {
+        throw new Error(detectionsResult.error || '탐지 결과를 불러올 수 없습니다.')
+      }
+      setDetections(detectionsResult.data || [])
     } catch (error) {
       console.error('데이터 조회 에러:', error)
       toast({
         title: '데이터 조회 실패',
-        description: '콘텐츠 데이터를 불러올 수 없습니다.',
+        description: error instanceof Error ? error.message : '콘텐츠 데이터를 불러올 수 없습니다.',
         variant: 'destructive',
       })
     } finally {

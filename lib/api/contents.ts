@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
-import { Content } from '@/types'
+import { Content, ContentDetail } from '@/types'
 
 interface UploadContentParams {
   file: File
@@ -685,6 +685,79 @@ export async function bulkDeleteContents(contentIds: string[]): Promise<ApiRespo
     return {
       data: null,
       error: '일괄 삭제 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
+
+/**
+ * 관리자용 콘텐츠 상세 정보를 조회합니다 (users, collections JOIN 포함).
+ * @param id - 콘텐츠 ID
+ * @returns ApiResponse<ContentDetail> - 콘텐츠 상세 정보 또는 에러
+ */
+export async function getContentDetail(id: string): Promise<ApiResponse<ContentDetail>> {
+  try {
+    const { data, error } = await supabase
+      .from('contents')
+      .select(
+        `
+        *,
+        users!contents_user_id_fkey(name),
+        collections(name)
+      `
+      )
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    if (!data) {
+      return {
+        data: null,
+        error: '콘텐츠를 찾을 수 없습니다.',
+        success: false,
+      }
+    }
+
+    // JOIN 결과를 ContentDetail 형식으로 변환
+    const contentDetail: ContentDetail = {
+      id: data.id,
+      user_id: data.user_id,
+      collection_id: data.collection_id,
+      file_name: data.file_name,
+      file_path: data.file_path,
+      is_analyzed: data.is_analyzed,
+      message: data.message,
+      label_data: data.label_data as ContentDetail['label_data'],
+      text_data: data.text_data as ContentDetail['text_data'],
+      created_at: data.created_at as string,
+      updated_at: data.updated_at as string,
+      user_name:
+        data.users && typeof data.users === 'object' && 'name' in data.users
+          ? (data.users.name as string)
+          : null,
+      collection_name:
+        data.collections && typeof data.collections === 'object' && 'name' in data.collections
+          ? (data.collections.name as string)
+          : null,
+    }
+
+    return {
+      data: contentDetail,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('콘텐츠 상세 조회 중 오류:', error)
+    return {
+      data: null,
+      error: '콘텐츠를 불러오는 중 오류가 발생했습니다.',
       success: false,
     }
   }

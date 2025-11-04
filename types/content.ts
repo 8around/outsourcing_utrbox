@@ -1,6 +1,20 @@
 // Content type definitions
 // DB 스키마와 일치하는 타입 정의
 
+// Google Vision API LABEL_DETECTION 결과 타입
+export interface LabelData {
+  labels?: Array<{
+    description: string
+    score: number
+  }>
+}
+
+// Google Vision API TEXT_DETECTION 결과 타입
+export interface TextData {
+  text?: string
+  words?: string[]
+}
+
 export interface Content {
   id: string
   user_id: string
@@ -13,6 +27,15 @@ export interface Content {
   text_data: Record<string, unknown> | null // Google Vision TEXT_DETECTION 결과
   created_at: string
   updated_at: string
+}
+
+// 관리자 상세 페이지용 확장 타입 (users, collections JOIN 포함)
+export interface ContentDetail extends Omit<Content, 'label_data' | 'text_data'> {
+  label_data: LabelData | null
+  text_data: TextData | null
+  user_name?: string | null
+  collection_name?: string | null
+  detected_count?: number
 }
 
 // UI에서 사용할 헬퍼 타입

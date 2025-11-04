@@ -14,19 +14,7 @@ import {
 } from '@/components/ui/table'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ChevronDown, ChevronRight, Circle, CheckCircle2 } from 'lucide-react'
-
-interface DetectedContent {
-  id: string
-  content_id: string
-  source_url: string | null
-  image_url: string
-  page_title: string | null
-  detection_type: string
-  admin_review_status: string | null
-  created_at: string | null
-  reviewed_at: string | null
-  reviewed_by: string | null
-}
+import { DetectedContent } from '@/types'
 
 interface DetectionTableProps {
   detections: DetectedContent[]
