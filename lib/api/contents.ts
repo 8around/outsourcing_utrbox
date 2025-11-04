@@ -67,9 +67,9 @@ export async function uploadContent(
       onProgress(33)
     }
 
-    const { data } = await supabase.storage.from('contents').getPublicUrl(filePath);
+    const { data } = await supabase.storage.from('contents').getPublicUrl(filePath)
 
-    const publicUrl = data.publicUrl;
+    const publicUrl = data.publicUrl
 
     if (onProgress) {
       onProgress(66)
@@ -183,20 +183,24 @@ export async function getContentsByCollection(
   sortBy: 'name' | 'date' = 'date',
   sortOrder: 'asc' | 'desc' = 'desc',
   page?: number,
-  pageSize: number = 12
+  pageSize: number = 12,
+  searchQuery?: string
 ): Promise<PaginatedApiResponse<Content[]>> {
   try {
     const column = sortBy === 'name' ? 'file_name' : 'created_at'
     const ascending = sortOrder === 'asc'
 
-    let query = supabase
-      .from('contents')
-      .select('*', { count: 'exact' })
-      .eq('user_id', userId)
+    let query = supabase.from('contents').select('*', { count: 'exact' }).eq('user_id', userId)
 
     // collectionId가 null이면 is null 조건, 아니면 eq 조건
     if (collectionId) {
       query = query.eq('collection_id', collectionId)
+    }
+
+    // 검색어 필터링 (데이터베이스 레벨)
+    if (searchQuery && searchQuery.trim()) {
+      const search = `%${searchQuery.trim()}%`
+      query = query.or(`file_name.ilike.${search},message.ilike.${search}`)
     }
 
     // 정렬 적용
@@ -368,9 +372,7 @@ export async function deleteContent(id: string): Promise<ApiResponse<void>> {
       ? content.file_path.split('/').slice(-3).join('/')
       : content.file_path
 
-    const { error: storageError } = await supabase.storage
-      .from('contents')
-      .remove([filePath])
+    const { error: storageError } = await supabase.storage.from('contents').remove([filePath])
 
     if (storageError) {
       console.error('Storage 파일 삭제 실패:', storageError)
@@ -410,26 +412,26 @@ export async function deleteContent(id: string): Promise<ApiResponse<void>> {
  * @param params - 조회 파라미터 (page, pageSize, is_analyzed, search)
  * @returns PaginatedApiResponse<Content[]> - 콘텐츠 목록 및 전체 개수 또는 에러
  */
-export async function getContentsWithPagination(params: {
-  page?: number
-  pageSize?: number
-  is_analyzed?: boolean | null
-  search?: string
-} = {}): Promise<PaginatedApiResponse<Content[]>> {
+export async function getContentsWithPagination(
+  params: {
+    page?: number
+    pageSize?: number
+    is_analyzed?: boolean | null
+    search?: string
+  } = {}
+): Promise<PaginatedApiResponse<Content[]>> {
   try {
     const { page = 1, pageSize = 10, is_analyzed, search } = params
 
     // 1. 기본 쿼리 (count: 'exact'로 전체 개수도 함께 조회)
-    let query = supabase
-      .from('contents')
-      .select(
-        `
+    let query = supabase.from('contents').select(
+      `
         *,
         users!inner(name),
         collections(name)
       `,
-        { count: 'exact' }
-      )
+      { count: 'exact' }
+    )
 
     // 2. is_analyzed 필터 적용
     if (is_analyzed === null) {
@@ -650,9 +652,7 @@ export async function bulkDeleteContents(contentIds: string[]): Promise<ApiRespo
     // 2. Storage에서 파일 삭제
     const filePaths = (contents || []).map((c) => {
       // file_path가 전체 URL인 경우 경로만 추출
-      return c.file_path.includes('/')
-        ? c.file_path.split('/').slice(-3).join('/')
-        : c.file_path
+      return c.file_path.includes('/') ? c.file_path.split('/').slice(-3).join('/') : c.file_path
     })
 
     if (filePaths.length > 0) {

@@ -23,7 +23,13 @@ export default function ExplorerPage() {
 
   const PAGE_SIZE = 12
 
-  const { selectedContentIds, viewMode, sortBy, sortOrder, searchQuery, setSelectedContents } = useExplorerStore()
+  const { selectedContentIds, viewMode, sortBy, sortOrder, searchQuery, setSelectedContents } =
+    useExplorerStore()
+
+  // 검색어 또는 정렬 변경 시 페이지를 1로 리셋
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, sortBy, sortOrder])
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -34,7 +40,15 @@ export default function ExplorerPage() {
       setError(null)
 
       try {
-        const contentsRes = await getContentsByCollection(user.id, null, sortBy, sortOrder, 1, PAGE_SIZE)
+        const contentsRes = await getContentsByCollection(
+          user.id,
+          null,
+          sortBy,
+          sortOrder,
+          1,
+          PAGE_SIZE,
+          searchQuery
+        )
 
         if (contentsRes.success && contentsRes.data) {
           setUserContents(contentsRes.data)
@@ -51,7 +65,7 @@ export default function ExplorerPage() {
     }
 
     loadInitialData()
-  }, [user, sortBy, sortOrder])
+  }, [user, sortBy, sortOrder, searchQuery])
 
   // 페이지 변경 시 콘텐츠만 다시 로드
   useEffect(() => {
@@ -62,7 +76,15 @@ export default function ExplorerPage() {
       setError(null)
 
       try {
-        const contentsRes = await getContentsByCollection(user.id, null, sortBy, sortOrder, currentPage, PAGE_SIZE)
+        const contentsRes = await getContentsByCollection(
+          user.id,
+          null,
+          sortBy,
+          sortOrder,
+          currentPage,
+          PAGE_SIZE,
+          searchQuery
+        )
 
         if (contentsRes.success && contentsRes.data) {
           setUserContents(contentsRes.data)
@@ -88,7 +110,15 @@ export default function ExplorerPage() {
 
       setIsLoadingContents(true)
       try {
-        const contentsRes = await getContentsByCollection(user.id, null, sortBy, sortOrder, currentPage, PAGE_SIZE)
+        const contentsRes = await getContentsByCollection(
+          user.id,
+          null,
+          sortBy,
+          sortOrder,
+          currentPage,
+          PAGE_SIZE,
+          searchQuery
+        )
 
         if (contentsRes.success && contentsRes.data) {
           setUserContents(contentsRes.data)
@@ -103,7 +133,7 @@ export default function ExplorerPage() {
 
     window.addEventListener('refresh-explorer-contents', handleRefreshEvent)
     return () => window.removeEventListener('refresh-explorer-contents', handleRefreshEvent)
-  }, [user, sortBy, sortOrder, currentPage])
+  }, [user, sortBy, sortOrder, currentPage, searchQuery])
 
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
@@ -117,23 +147,6 @@ export default function ExplorerPage() {
       contents: userContents,
     }
   }, [userContents])
-
-  // 클라이언트 사이드 검색 (서버 pagination 후)
-  const filteredContents = useMemo(() => {
-    let filtered = displayData.contents
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (c) =>
-          c.file_name.toLowerCase().includes(query) ||
-          (c.message && c.message.toLowerCase().includes(query))
-      )
-    }
-
-    return filtered
-  }, [displayData.contents, searchQuery])
 
   // 페이지 총 개수 계산
   const totalPages = Math.ceil(totalContents / PAGE_SIZE)
@@ -158,7 +171,7 @@ export default function ExplorerPage() {
     <FullHeightContainer>
       <div className="flex flex-1 flex-col overflow-hidden">
         <ContentExplorerView
-          contents={filteredContents}
+          contents={displayData.contents}
           collections={displayData.collections}
           viewMode={viewMode}
           selectedIds={selectedContentIds}
