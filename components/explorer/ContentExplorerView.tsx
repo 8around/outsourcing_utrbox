@@ -1,24 +1,21 @@
 'use client'
 
 import { Content, getAnalysisStatus } from '@/types/content'
-import { Collection } from '@/types/collection'
-import { ViewMode } from '@/lib/stores/explorerStore'
+import { useExplorerStore } from '@/lib/stores/explorerStore'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Image as ImageIcon, AlertCircle } from 'lucide-react'
+import { Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import Link from 'next/link'
-import { getDetectionCount } from '@/lib/mock-data/contents'
 import Image from 'next/image'
 
 interface ContentExplorerViewProps {
   contents: Content[]
-  collections: Collection[]
-  viewMode: ViewMode
+  viewMode: 'grid' | 'list'
   selectedIds: string[]
   onSelectContent: (ids: string[]) => void
   onOpenContent: (id: string) => void
@@ -27,26 +24,26 @@ interface ContentExplorerViewProps {
 
 export function ContentExplorerView({
   contents,
-  collections,
   viewMode,
   selectedIds,
   onSelectContent,
   onOpenContent,
   isLoading = false,
 }: ContentExplorerViewProps) {
+  const { collections } = useExplorerStore()
   const getStatusColor = (content: Content) => {
     const status = getAnalysisStatus(content)
     switch (status) {
       case 'completed':
-        return 'bg-success/10 text-success'
+        return 'bg-success/10 text-success pointer-events-none'
       case 'analyzing':
-        return 'bg-blue-100 text-blue-700'
+        return 'bg-blue-100 text-blue-700 pointer-events-none'
       case 'pending':
-        return 'bg-warning/10 text-warning'
+        return 'bg-yellow-100 text-yellow-700 pointer-events-none'
       case 'failed':
-        return 'bg-error/10 text-error'
+        return 'bg-error/10 text-error pointer-events-none'
       default:
-        return 'bg-primary/10 text-primary'
+        return 'bg-primary/10 text-primary pointer-events-none'
     }
   }
 
@@ -64,6 +61,13 @@ export function ContentExplorerView({
       default:
         return status
     }
+  }
+
+  const getCollectionName = (collectionId: string | null): string | null => {
+    if (!collectionId) return null
+    const collection = collections.find((c) => c.id === collectionId)
+
+    return collection?.name || null
   }
 
   const handleContentClick = (id: string, event: React.MouseEvent) => {
@@ -92,7 +96,7 @@ export function ContentExplorerView({
             {[...Array(4)].map((_, i) => (
               <Card key={i} className="overflow-hidden">
                 <Skeleton className="aspect-video w-full" />
-                <div className="p-3 space-y-2">
+                <div className="space-y-2 p-3">
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-3 w-1/2" />
                   <div className="flex items-center justify-between">
@@ -112,7 +116,7 @@ export function ContentExplorerView({
             <div className="divide-y rounded-lg border">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="flex items-center gap-4 p-4">
-                  <Skeleton className="w-16 h-16 rounded" />
+                  <Skeleton className="h-16 w-16 rounded" />
                   <div className="min-w-0 flex-1 space-y-2">
                     <Skeleton className="h-4 w-1/3" />
                     <Skeleton className="h-3 w-1/2" />
@@ -149,8 +153,8 @@ export function ContentExplorerView({
             <Card
               key={content.id}
               className={cn(
-                'hover:border-primary group cursor-pointer overflow-hidden transition-all',
-                selectedIds.includes(content.id) && 'border-primary ring-primary ring-2'
+                'group cursor-pointer overflow-hidden transition-all hover:border-primary',
+                selectedIds.includes(content.id) && 'border-primary ring-2 ring-primary'
               )}
               onClick={(e) => handleContentClick(content.id, e)}
             >
@@ -165,11 +169,10 @@ export function ContentExplorerView({
                   loading="lazy"
                   unoptimized
                 />
-                {getDetectionCount(content.id) > 0 && (
+                {getCollectionName(content.collection_id) && (
                   <div className="absolute right-2 top-2">
-                    <Badge variant="destructive" className="gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      {getDetectionCount(content.id)}
+                    <Badge variant="outline" className="text-xs">
+                      {getCollectionName(content.collection_id)}
                     </Badge>
                   </div>
                 )}
@@ -178,13 +181,21 @@ export function ContentExplorerView({
               {/* Info */}
               <div className="p-3">
                 <h3 className="truncate font-medium">{content.file_name}</h3>
-                <p className="text-secondary-500 mt-1 truncate text-sm">
-                  {content.message || ''}
-                </p>
+                <p className="text-secondary-500 mt-1 truncate text-sm">{content.message || ''}</p>
                 <div className="mt-2 flex items-center justify-between">
-                  <Badge variant="secondary" className={getStatusColor(content)}>
-                    {getStatusText(content)}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getStatusColor(content)}>{getStatusText(content)}</Badge>
+                    {content.is_analyzed &&
+                      ((content.detected_count || 0) > 0 ? (
+                        <Badge className="pointer-events-none bg-error/10 text-error">
+                          {content.detected_count}건
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="pointer-events-none">
+                          0건
+                        </Badge>
+                      ))}
+                  </div>
                   <span className="text-secondary-400 text-xs">
                     {format(new Date(content.created_at), 'yyyy.MM.dd HH:mm', { locale: ko })}
                   </span>
@@ -201,15 +212,15 @@ export function ContentExplorerView({
   return (
     <ScrollArea className="h-full">
       <div className="p-4">
-        <div className="divide-y rounded-lg border overflow-hidden">
+        <div className="divide-y overflow-hidden rounded-lg border">
           {/* 콘텐츠 행 렌더링 */}
           {contents.map((content) => (
             <Link
               key={content.id}
               href={`/contents/${content.id}`}
               className={cn(
-                'hover:bg-secondary/10 flex items-center gap-4 p-4 transition-colors bg-card',
-                selectedIds.includes(content.id) && 'bg-secondary/10'
+                'flex items-center gap-4 bg-card p-4 transition-colors hover:bg-secondary/10',
+                selectedIds.includes(content.id) && 'bg-secondary/100'
               )}
               onClick={(e) => {
                 if (e.ctrlKey || e.metaKey || e.shiftKey) {
@@ -219,7 +230,7 @@ export function ContentExplorerView({
               }}
             >
               {/* Thumbnail */}
-              <div className="relative w-16 h-16 overflow-hidden bg-secondary rounded">
+              <div className="relative h-16 w-16 overflow-hidden rounded bg-secondary">
                 <Image
                   src={content.file_path}
                   alt={content.file_name}
@@ -235,14 +246,21 @@ export function ContentExplorerView({
                 <h3 className="truncate font-medium">{content.file_name}</h3>
                 <p className="text-secondary/500 truncate text-sm">{content.message || ''}</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <Badge variant="secondary" className={getStatusColor(content)}>
-                    {getStatusText(content)}
-                  </Badge>
-                  {getDetectionCount(content.id) > 0 && (
-                    <span className="text-error flex items-center gap-1 text-xs">
-                      <AlertCircle className="h-3 w-3" />
-                      {getDetectionCount(content.id)}건
-                    </span>
+                  <Badge className={getStatusColor(content)}>{getStatusText(content)}</Badge>
+                  {content.is_analyzed &&
+                    ((content.detected_count || 0) > 0 ? (
+                      <Badge className="pointer-events-none bg-error/10 text-error">
+                        {content.detected_count}건
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="pointer-events-none">
+                        0건
+                      </Badge>
+                    ))}
+                  {getCollectionName(content.collection_id) && (
+                    <Badge variant="outline" className="text-xs">
+                      {getCollectionName(content.collection_id)}
+                    </Badge>
                   )}
                 </div>
               </div>

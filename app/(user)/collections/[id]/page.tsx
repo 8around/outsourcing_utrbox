@@ -131,7 +131,6 @@ export default function CollectionPage() {
   // displayData: 컬렉션 뷰 (콘텐츠만)
   const displayData = useMemo(() => {
     return {
-      collections: [],
       contents: userContents,
     }
   }, [userContents])
@@ -180,7 +179,6 @@ export default function CollectionPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <ContentExplorerView
           contents={filteredContents}
-          collections={displayData.collections}
           viewMode={viewMode}
           selectedIds={selectedContentIds}
           onSelectContent={setSelectedContents}

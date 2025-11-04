@@ -6,11 +6,10 @@ import { useAuthStore } from '@/lib/stores/authStore'
 import { useExplorerStore } from '@/lib/stores/explorerStore'
 import { StatsCards, ExplorerToolbar, CreateCollectionModal } from '@/components/explorer'
 import { getCollections, getCollection } from '@/lib/api/collections'
-import { Collection } from '@/types'
 
 export default function CollectionsLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
-  const { sortBy, sortOrder } = useExplorerStore()
+  const { sortBy, sortOrder, collections, currentCollection, setCollections, setCurrentCollection } = useExplorerStore()
   const pathname = usePathname()
   const params = useParams()
   const router = useRouter()
@@ -20,8 +19,6 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
     pathname?.startsWith('/collections/') && params?.id ? (params.id as string) : null
 
   // 레이아웃 레벨 상태
-  const [collections, setCollections] = useState<Collection[]>([])
-  const [currentCollection, setCurrentCollection] = useState<Collection | null>(null)
   const [isCreateCollectionModalOpen, setIsCreateCollectionModalOpen] = useState(false)
 
   // 컬렉션 목록 로드

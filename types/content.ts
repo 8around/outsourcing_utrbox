@@ -27,6 +27,7 @@ export interface Content {
   text_data: Record<string, unknown> | null // Google Vision TEXT_DETECTION 결과
   created_at: string
   updated_at: string
+  detected_count?: number // detected_contents 테이블의 건수 (optional, API에서 계산)
 }
 
 // 관리자 상세 페이지용 확장 타입 (users, collections JOIN 포함)

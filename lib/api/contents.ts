@@ -224,8 +224,24 @@ export async function getContentsByCollection(
       }
     }
 
+    // detected_count 계산 (각 content마다 별도 쿼리)
+    const contentsWithCount = await Promise.all(
+      (data || []).map(async (content) => {
+        const { count: detectedCount } = await supabase
+          .from('detected_contents')
+          .select('*', { count: 'exact', head: true })
+          .eq('content_id', content.id)
+          .eq('admin_review_status', 'match')
+
+        return {
+          ...content,
+          detected_count: detectedCount || 0,
+        }
+      })
+    )
+
     return {
-      data: data as Content[],
+      data: contentsWithCount as Content[],
       totalCount: count || 0,
       error: null,
       success: true,

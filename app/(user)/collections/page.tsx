@@ -143,7 +143,6 @@ export default function ExplorerPage() {
   // displayData: 루트 뷰 (미분류 콘텐츠만)
   const displayData = useMemo(() => {
     return {
-      collections: [], // 레이아웃에서 관리
       contents: userContents,
     }
   }, [userContents])
@@ -172,7 +171,6 @@ export default function ExplorerPage() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <ContentExplorerView
           contents={displayData.contents}
-          collections={displayData.collections}
           viewMode={viewMode}
           selectedIds={selectedContentIds}
           onSelectContent={setSelectedContents}
