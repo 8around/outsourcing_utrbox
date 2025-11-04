@@ -23,6 +23,7 @@ interface ExplorerStore {
   setSelectedContents: (ids: string[]) => void
 
   // 뷰 설정 액션
+  setViewMode: (mode: ViewMode) => void
   toggleViewMode: () => void
   setSortBy: (sort: SortBy) => void
   setSortOrder: (order: SortOrder) => void
@@ -39,7 +40,7 @@ interface ExplorerStore {
 
 const initialState = {
   selectedContentIds: [],
-  viewMode: 'grid' as ViewMode,
+  viewMode: 'list' as ViewMode,
   sortBy: 'date' as SortBy,
   sortOrder: 'desc' as SortOrder,
   searchQuery: '',
@@ -53,6 +54,11 @@ export const useExplorerStore = create<ExplorerStore>((set) => ({
   setSelectedContents: (ids) =>
     set({
       selectedContentIds: ids,
+    }),
+
+  setViewMode: (mode) =>
+    set({
+      viewMode: mode,
     }),
 
   toggleViewMode: () =>

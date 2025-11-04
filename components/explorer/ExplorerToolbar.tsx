@@ -31,7 +31,7 @@ export function ExplorerToolbar({
   onCreateCollection,
   onRefresh,
 }: ExplorerToolbarProps) {
-  const { viewMode, sortBy, sortOrder, searchQuery, toggleViewMode, setSortBy, toggleSortOrder, setSearchQuery } =
+  const { viewMode, sortBy, sortOrder, searchQuery, setViewMode, setSortBy, toggleSortOrder, setSearchQuery } =
     useExplorerStore()
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
 
@@ -92,22 +92,22 @@ export function ExplorerToolbar({
             {/* View Mode */}
             <div className="flex gap-1 rounded-lg border p-1">
               <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => toggleViewMode()}
-                className="h-8 w-8 p-0"
-                title="그리드 뷰"
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
                 variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                 size="sm"
-                onClick={() => toggleViewMode()}
+                onClick={() => setViewMode('list')}
                 className="h-8 w-8 p-0"
                 title="리스트 뷰"
               >
                 <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="h-8 w-8 p-0"
+                title="그리드 뷰"
+              >
+                <Grid className="h-4 w-4" />
               </Button>
             </div>
 
