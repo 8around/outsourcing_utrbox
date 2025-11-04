@@ -17,7 +17,7 @@ export interface DashboardStatsResponse {
 /**
  * 대시보드 통계 데이터 조회 (관리자용 - userId 필터 없음)
  * - 콘텐츠 상태별 개수
- * - 전체 회원 수
+ * - 승인된 회원 수 (is_approved = true)
  */
 export async function getDashboardStats(): Promise<DashboardStatsResponse> {
   try {
@@ -41,8 +41,8 @@ export async function getDashboardStats(): Promise<DashboardStatsResponse> {
       // 분석완료 (is_analyzed = TRUE)
       supabase.from('contents').select('*', { count: 'exact', head: true }).eq('is_analyzed', true),
 
-      // 총 회원 수
-      supabase.from('users').select('*', { count: 'exact', head: true }),
+      // 승인된 회원 수 (is_approved = TRUE)
+      supabase.from('users').select('*', { count: 'exact', head: true }).eq('is_approved', true),
     ])
 
     // 에러 체크

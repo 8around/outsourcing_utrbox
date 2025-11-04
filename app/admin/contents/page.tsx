@@ -5,21 +5,18 @@ import { useAdminTitle } from '@/components/admin/layout/AdminContext'
 import { ContentFilters } from '@/components/admin/contents/ContentFilters'
 import { ContentTableClient } from '@/components/admin/contents/ContentTableClient'
 import { useToast } from '@/hooks/use-toast'
-import { Content, ContentFilters as ContentFiltersType } from '@/lib/admin/types'
+import { useAdminStore } from '@/lib/admin/store'
+import { Content } from '@/lib/admin/types'
 import { getContentsWithPagination, bulkDeleteContents } from '@/lib/api/contents'
 
 export default function AdminContentsPage() {
   useAdminTitle('콘텐츠 관리')
   const { toast } = useToast()
+  const { contentFilters, setContentFilters } = useAdminStore()
 
   const [contents, setContents] = useState<Content[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState<ContentFiltersType>({
-    page: 1,
-    search: undefined,
-    is_analyzed: undefined,
-  })
 
   // 데이터 페칭
   useEffect(() => {
@@ -27,10 +24,10 @@ export default function AdminContentsPage() {
       setLoading(true)
       try {
         const result = await getContentsWithPagination({
-          page: filters.page,
+          page: contentFilters.page,
           pageSize: 10,
-          search: filters.search,
-          is_analyzed: filters.is_analyzed,
+          search: contentFilters.search,
+          is_analyzed: contentFilters.is_analyzed,
         })
 
         if (result.success && result.data) {
@@ -54,10 +51,10 @@ export default function AdminContentsPage() {
       }
     }
     fetchData()
-  }, [filters, toast])
+  }, [contentFilters, toast])
 
   const handlePageChange = (page: number) => {
-    setFilters({ ...filters, page })
+    setContentFilters({ ...contentFilters, page })
   }
 
   const handleBulkDelete = async (contentIds: string[]) => {
@@ -73,7 +70,7 @@ export default function AdminContentsPage() {
           description: `${contentIds.length}개의 콘텐츠를 삭제했습니다.`,
         })
         // 데이터 새로고침
-        setFilters({ ...filters })
+        setContentFilters({ ...contentFilters })
       } else {
         toast({
           title: '오류',
@@ -93,13 +90,13 @@ export default function AdminContentsPage() {
   return (
     <div className="space-y-6">
       {/* 필터 */}
-      <ContentFilters filters={filters} onFilterChange={setFilters} />
+      <ContentFilters filters={contentFilters} onFilterChange={setContentFilters} />
 
       {/* 콘텐츠 테이블 */}
       <ContentTableClient
         contents={contents}
         totalCount={totalCount}
-        currentPage={filters.page}
+        currentPage={contentFilters.page}
         pageSize={10}
         loading={loading}
         onPageChange={handlePageChange}
