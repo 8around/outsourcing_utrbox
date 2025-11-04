@@ -22,7 +22,6 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
   // 레이아웃 레벨 상태
   const [collections, setCollections] = useState<Collection[]>([])
   const [currentCollection, setCurrentCollection] = useState<Collection | null>(null)
-  const [isLoadingLayout, setIsLoadingLayout] = useState(true)
   const [isCreateCollectionModalOpen, setIsCreateCollectionModalOpen] = useState(false)
 
   // 컬렉션 목록 로드
@@ -37,8 +36,6 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
         }
       } catch (err) {
         console.error('컬렉션 로드 오류:', err)
-      } finally {
-        setIsLoadingLayout(false)
       }
     }
 
@@ -83,8 +80,7 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
   // 새로고침 핸들러
   const handleRefresh = async () => {
     if (!user) return
-
-    setIsLoadingLayout(true)
+    
     try {
       const [collectionsRes, collectionRes] = await Promise.all([
         getCollections(user.id, sortBy, sortOrder),
@@ -102,8 +98,6 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
       window.dispatchEvent(new CustomEvent('refresh-explorer-contents'))
     } catch (err) {
       console.error('새로고침 오류:', err)
-    } finally {
-      setIsLoadingLayout(false)
     }
   }
 

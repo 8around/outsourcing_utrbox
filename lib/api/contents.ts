@@ -507,6 +507,126 @@ export async function getContentsWithPagination(params: {
 }
 
 /**
+ * 특정 사용자의 콘텐츠를 페이지네이션과 필터링을 적용하여 조회합니다.
+ * @param userId - 사용자 ID
+ * @param params - 조회 파라미터 (page, pageSize, is_analyzed, search, sortBy, sortOrder)
+ * @returns PaginatedApiResponse<Content[]> - 콘텐츠 목록 및 전체 개수 또는 에러
+ */
+export async function getUserContentsWithPagination(
+  userId: string,
+  params: {
+    page?: number
+    pageSize?: number
+    is_analyzed?: boolean | null
+    search?: string
+    sortBy?: 'name' | 'date'
+    sortOrder?: 'asc' | 'desc'
+    collection_id?: string | null
+  } = {}
+): Promise<PaginatedApiResponse<Content[]>> {
+  try {
+    const {
+      page = 1,
+      pageSize = 10,
+      is_analyzed,
+      search,
+      sortBy = 'date',
+      sortOrder = 'desc',
+      collection_id,
+    } = params
+
+    // 1. 기본 쿼리 (count: 'exact'로 전체 개수도 함께 조회)
+    let query = supabase
+      .from('contents')
+      .select(
+        `
+        *,
+        collections(name)
+      `,
+        { count: 'exact' }
+      )
+      .eq('user_id', userId)
+
+    // 2. collection_id 필터 적용
+    if (collection_id !== undefined && collection_id !== null) {
+      query = query.eq('collection_id', collection_id)
+    }
+
+    // 3. is_analyzed 필터 적용
+    if (is_analyzed === null) {
+      // 대기: is_analyzed IS NULL
+      query = query.is('is_analyzed', null)
+    } else if (is_analyzed === true) {
+      // 완료: is_analyzed = true
+      query = query.eq('is_analyzed', true)
+    } else if (is_analyzed === false) {
+      // 분석 중: is_analyzed = false
+      query = query.eq('is_analyzed', false)
+    }
+    // is_analyzed가 undefined이면 조건 추가 안 함 (전체)
+
+    // 4. 검색 필터 적용 (파일명)
+    if (search && search.trim() !== '') {
+      const searchPattern = `%${search.trim()}%`
+      query = query.ilike('file_name', searchPattern)
+    }
+
+    // 5. 정렬 적용
+    const column = sortBy === 'name' ? 'file_name' : 'created_at'
+    const ascending = sortOrder === 'asc'
+    query = query.order(column, { ascending })
+
+    // 6. 페이지네이션 적용
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+    query = query.range(from, to)
+
+    const { data, error, count } = await query
+
+    if (error) {
+      console.error('콘텐츠 조회 중 오류:', error)
+      return {
+        data: null,
+        totalCount: 0,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    // 7. detected_count 계산 (각 content마다 별도 쿼리)
+    const contentsWithCount = await Promise.all(
+      (data || []).map(async (content) => {
+        const { count: detectedCount } = await supabase
+          .from('detected_contents')
+          .select('*', { count: 'exact', head: true })
+          .eq('content_id', content.id)
+
+        return {
+          ...content,
+          collection_name: content.collections?.name,
+          detected_count: detectedCount || 0,
+        }
+      })
+    )
+
+    return {
+      data: contentsWithCount as Content[],
+      totalCount: count || 0,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('콘텐츠 조회 중 오류:', error)
+    return {
+      data: null,
+      totalCount: 0,
+      error: '콘텐츠를 불러오는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
+
+/**
  * 콘텐츠 일괄 삭제
  * @param contentIds - 삭제할 콘텐츠 ID 배열
  * @returns ApiResponse<null> - 성공 또는 에러

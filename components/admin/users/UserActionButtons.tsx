@@ -2,12 +2,13 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { User } from '@/lib/admin/types'
 import { CheckCircle, XCircle, Shield, ShieldOff } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
 
 interface UserActionButtonsProps {
   user: User
+  currentUserId?: string
   onApprove: () => void
   onBlock: () => void
   onRoleChange: (role: 'member' | 'admin') => void
@@ -15,36 +16,26 @@ interface UserActionButtonsProps {
 
 export function UserActionButtons({
   user,
+  currentUserId,
   onApprove,
   onBlock,
   onRoleChange,
 }: UserActionButtonsProps) {
-  const { toast } = useToast()
+  const isSelf = user.id === currentUserId
 
   const handleApprove = () => {
     onApprove()
-    toast({
-      title: '승인 완료',
-      description: `${user.name}님의 계정을 승인했습니다.`,
-    })
   }
 
   const handleBlock = () => {
+    if (isSelf) return
     onBlock()
-    toast({
-      title: '차단 완료',
-      description: `${user.name}님의 계정을 차단했습니다.`,
-      variant: 'destructive',
-    })
   }
 
   const handleRoleChange = () => {
+    if (isSelf) return
     const newRole = user.role === 'admin' ? 'member' : 'admin'
     onRoleChange(newRole)
-    toast({
-      title: '권한 변경 완료',
-      description: `${user.name}님을 ${newRole === 'admin' ? '관리자' : '일반 회원'}으로 변경했습니다.`,
-    })
   }
 
   return (
@@ -64,31 +55,63 @@ export function UserActionButtons({
             <CheckCircle className="h-4 w-4" />
             {user.is_approved === true ? '승인됨' : '승인'}
           </Button>
-          <Button
-            onClick={handleBlock}
-            disabled={user.is_approved === false}
-            variant={user.is_approved === false ? 'outline' : 'destructive'}
-            className="gap-2"
-          >
-            <XCircle className="h-4 w-4" />
-            {user.is_approved === false ? '차단됨' : '차단'}
-          </Button>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-block">
+                  <Button
+                    onClick={handleBlock}
+                    disabled={user.is_approved === false || isSelf}
+                    variant={user.is_approved === false ? 'outline' : 'destructive'}
+                    className="w-full gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    {user.is_approved === false ? '차단됨' : '차단'}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {isSelf && (
+                <TooltipContent>
+                  <p>자신의 계정은 차단할 수 없습니다</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* 권한 변경 버튼 */}
-        <Button onClick={handleRoleChange} variant="outline" className="w-full gap-2">
-          {user.role === 'admin' ? (
-            <>
-              <ShieldOff className="h-4 w-4" />
-              일반 회원으로 변경
-            </>
-          ) : (
-            <>
-              <Shield className="h-4 w-4" />
-              관리자로 변경
-            </>
-          )}
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-block w-full">
+                <Button
+                  onClick={handleRoleChange}
+                  disabled={isSelf}
+                  variant="outline"
+                  className="w-full gap-2"
+                >
+                  {user.role === 'admin' ? (
+                    <>
+                      <ShieldOff className="h-4 w-4" />
+                      일반 회원으로 변경
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="h-4 w-4" />
+                      관리자로 변경
+                    </>
+                  )}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {isSelf && (
+              <TooltipContent>
+                <p>자신의 권한은 변경할 수 없습니다</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </CardContent>
     </Card>
   )

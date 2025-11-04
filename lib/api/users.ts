@@ -214,6 +214,45 @@ export async function updateUserRole(
 }
 
 /**
+ * 사용자 정보를 수정합니다.
+ * @param id - 사용자 ID
+ * @param data - 수정할 정보 (name, organization)
+ * @returns ApiResponse<null> - 성공 또는 에러
+ */
+export async function updateUserInfo(
+  id: string,
+  data: { name?: string; organization?: string }
+): Promise<ApiResponse<null>> {
+  try {
+    const { error } = await supabase
+      .from('users')
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq('id', id)
+
+    if (error) {
+      return {
+        data: null,
+        error: error.message,
+        success: false,
+      }
+    }
+
+    return {
+      data: null,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('사용자 정보 수정 중 오류:', error)
+    return {
+      data: null,
+      error: '사용자 정보를 수정하는 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}
+
+/**
  * 일괄 승인 함수
  * @param userIds - 승인할 사용자 ID 배열
  * @returns ApiResponse - 성공 또는 에러
