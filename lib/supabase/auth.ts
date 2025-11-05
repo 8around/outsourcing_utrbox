@@ -89,7 +89,6 @@ export async function signUpUser(
     }
   } | null
   error: string | null
-  message?: string
 }> {
   try {
     // Supabase Auth에 사용자 생성 (metadata에 프로필 정보 포함)
@@ -133,7 +132,6 @@ export async function signUpUser(
         },
       },
       error: null,
-      message: '회원가입이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.',
     }
   } catch (error) {
     return {
@@ -193,7 +191,7 @@ export async function signInUser(
 
     const { data: claimsData, error: AuthError } = await supabase.auth.getClaims()
     const claims = claimsData?.claims
-  
+
     if (AuthError || !claims) {
       await supabase.auth.signOut()
 

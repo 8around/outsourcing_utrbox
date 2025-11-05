@@ -29,10 +29,11 @@ import {
 
 const signupSchema = z
   .object({
-    email: z.string().email('올바른 이메일 형식이 아닙니다'),
+    email: z.email('올바른 이메일 형식이 아닙니다'),
     password: z
       .string()
       .min(8, '비밀번호는 최소 8자 이상이어야 합니다')
+      .regex(/^[a-zA-Z0-9@$!%*?&]*$/, '영어, 숫자, 특수문자(@$!%*?&)만 사용 가능합니다')
       .regex(/[a-z]/, '영어 소문자를 최소 1개 포함해야 합니다')
       .regex(/[A-Z]/, '영어 대문자를 최소 1개 포함해야 합니다')
       .regex(/\d/, '숫자를 최소 1개 포함해야 합니다')
@@ -43,14 +44,14 @@ const signupSchema = z
       .min(2, '이름은 최소 2자 이상이어야 합니다')
       .regex(
         /^[a-zA-Z가-힣]+(\s[a-zA-Z가-힣]+)*$/,
-        '영어와 한글만 입력 가능하며, 단어 사이 단일 공백만 허용됩니다'
+        '영어와 한글만 입력 가능하며, 연속된 공백은 허용되지 않습니다.'
       ),
     organization: z
       .string()
       .min(2, '소속은 최소 2자 이상이어야 합니다')
       .regex(
-        /^[a-zA-Z가-힣]+(\s[a-zA-Z가-힣]+)*$/,
-        '영어와 한글만 입력 가능하며, 단어 사이 단일 공백만 허용됩니다'
+        /^[a-zA-Z가-힣0-9]+(\s[a-zA-Z가-힣0-9]+)*$/,
+        '영어, 한글, 숫자만 입력 가능하며, 연속된 공백은 허용되지 않습니다.'
       ),
     agreeTerms: z.boolean().refine((val) => val === true, {
       message: '이용약관에 동의해주세요',
@@ -74,6 +75,8 @@ export function SignupForm() {
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
+    mode: 'onTouched', // 입력 시점부터 실시간 검증 시작
+    reValidateMode: 'onChange', // 에러 발생 후 실시간 재검증
     defaultValues: {
       email: '',
       password: '',
@@ -132,6 +135,8 @@ export function SignupForm() {
   return (
     <>
       <div className="rounded-lg bg-white p-8 shadow-md">
+        <h2 className="text-center text-xl font-bold text-primary">회원가입</h2>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -139,7 +144,7 @@ export function SignupForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>이메일</FormLabel>
+                  <FormLabel className="text-foreground">이메일</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="이메일" {...field} />
                   </FormControl>
@@ -153,9 +158,21 @@ export function SignupForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>비밀번호</FormLabel>
+                  <FormLabel className="text-foreground">비밀번호</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="비밀번호" {...field} />
+                    <Input
+                      type="password"
+                      placeholder="비밀번호"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e)
+                        // 비밀번호가 변경되면 비밀번호 확인 필드도 재검증
+                        const passwordConfirmValue = form.getValues('passwordConfirm')
+                        if (passwordConfirmValue) {
+                          form.trigger('passwordConfirm')
+                        }
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -167,7 +184,7 @@ export function SignupForm() {
               name="passwordConfirm"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>비밀번호 확인</FormLabel>
+                  <FormLabel className="text-foreground">비밀번호 확인</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="비밀번호 확인" {...field} />
                   </FormControl>
@@ -181,7 +198,7 @@ export function SignupForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>이름</FormLabel>
+                  <FormLabel className="text-foreground">이름</FormLabel>
                   <FormControl>
                     <Input placeholder="이름" {...field} />
                   </FormControl>
@@ -195,7 +212,7 @@ export function SignupForm() {
               name="organization"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>소속</FormLabel>
+                  <FormLabel className="text-foreground">소속</FormLabel>
                   <FormControl>
                     <Input placeholder="회사명 또는 단체명" {...field} />
                   </FormControl>
@@ -214,12 +231,8 @@ export function SignupForm() {
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="cursor-pointer text-sm font-normal">
-                        <Link
-                          href="#"
-                          className="text-primary hover:underline"
-                          target="_blank"
-                        >
+                      <FormLabel className="cursor-pointer text-sm font-normal text-foreground">
+                        <Link href="#" className="text-primary hover:underline" target="_blank">
                           이용약관
                         </Link>
                         에 동의합니다 (필수)
@@ -239,12 +252,8 @@ export function SignupForm() {
                       <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel className="cursor-pointer text-sm font-normal">
-                        <Link
-                          href="#"
-                          className="text-primary hover:underline"
-                          target="_blank"
-                        >
+                      <FormLabel className="cursor-pointer text-sm font-normal text-foreground">
+                        <Link href="#" className="text-primary hover:underline" target="_blank">
                           개인정보처리방침
                         </Link>
                         에 동의합니다 (필수)
@@ -277,7 +286,10 @@ export function SignupForm() {
             <DialogTitle>회원가입 완료</DialogTitle>
             <DialogDescription className="space-y-2 pt-2">
               <p>회원가입이 완료되었습니다.</p>
-              <p className="text-warning">관리자 승인 후 로그인이 가능합니다.</p>
+              <p>
+                <span className="font-bold">이메일 인증</span> 및{' '}
+                <span className="font-bold">관리자 승인</span> 이후 서비스 이용이 가능합니다.
+              </p>
             </DialogDescription>
           </DialogHeader>
           <Button onClick={handleDialogClose}>확인</Button>

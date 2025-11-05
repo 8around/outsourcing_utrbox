@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { Database } from '@/types/database.type'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { signUpUser } from '@/lib/supabase/auth'
 
 export async function POST(request: NextRequest) {
@@ -73,26 +72,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 초기 response 생성 (쿠키 수집용, 내용은 나중에 덮어씀)
-    const response = NextResponse.json({})
-
     // 요청/응답 기반 서버 클라이언트 생성
-    const supabase = createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              response.cookies.set(name, value, options)
-            })
-          },
-        },
-      }
-    )
+    const supabase = createServerSupabase()
 
     // 회원가입 처리 (헬퍼 함수 사용)
     const result = await signUpUser(supabase, {
@@ -112,7 +93,6 @@ export async function POST(request: NextRequest) {
         },
         {
           status: 400,
-          headers: response.headers,
         }
       )
     }
@@ -123,11 +103,9 @@ export async function POST(request: NextRequest) {
         success: true,
         data: result.data,
         error: null,
-        message: result.message,
       },
       {
         status: 201,
-        headers: response.headers,
       }
     )
   } catch (error) {
