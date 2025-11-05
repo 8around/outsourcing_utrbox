@@ -69,8 +69,11 @@ export function LoginForm() {
 
       // 재전송 버튼 표시 (모든 에러 케이스)
       setShowResendButton(true)
+
+      // URL에서 쿼리 파라미터 제거 (history replace)
+      router.replace('/login')
     }
-  }, [searchParams, toast])
+  }, [searchParams, router, toast])
 
   // 인증 메일 재전송 핸들러
   const handleResendEmail = async () => {
@@ -149,16 +152,6 @@ export function LoginForm() {
     <div className="rounded-lg border bg-white p-8 shadow-md">
       <h1 className="text-center text-2xl font-bold text-primary">로그인</h1>
 
-      {/* 재전송 버튼 (에러 발생 시 표시) */}
-      {showResendButton && (
-        <div className="my-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center">
-          <p className="mb-3 text-sm text-gray-700">인증 메일을 재전송하시겠습니까?</p>
-          <Button variant="outline" onClick={handleResendEmail} className="text-sm">
-            인증 메일 재전송
-          </Button>
-        </div>
-      )}
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -188,6 +181,16 @@ export function LoginForm() {
               </FormItem>
             )}
           />
+
+          {/* 재전송 버튼 (에러 발생 시 표시) */}
+          {showResendButton && (
+            <div className="my-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center">
+              <p className="mb-3 text-sm text-gray-700">인증 메일을 재전송하시겠습니까?</p>
+              <Button variant="outline" onClick={handleResendEmail} className="text-sm">
+                인증 메일 재전송
+              </Button>
+            </div>
+          )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? <LoadingSpinner size="sm" /> : '로그인'}
