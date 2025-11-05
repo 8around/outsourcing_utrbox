@@ -106,11 +106,7 @@ export async function getUsersWithPagination(
  */
 export async function getUser(id: string): Promise<ApiResponse<User>> {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const { data, error } = await supabase.from('users').select('*').eq('id', id).single()
 
     if (error) {
       return {
@@ -257,9 +253,7 @@ export async function updateUserInfo(
  * @param userIds - 승인할 사용자 ID 배열
  * @returns ApiResponse - 성공 또는 에러
  */
-export async function bulkApproveUsers(
-  userIds: string[]
-): Promise<ApiResponse<null>> {
+export async function bulkApproveUsers(userIds: string[]): Promise<ApiResponse<null>> {
   try {
     const { error } = await supabase
       .from('users')
@@ -294,9 +288,7 @@ export async function bulkApproveUsers(
  * @param userIds - 차단할 사용자 ID 배열
  * @returns ApiResponse - 성공 또는 에러
  */
-export async function bulkBlockUsers(
-  userIds: string[]
-): Promise<ApiResponse<null>> {
+export async function bulkBlockUsers(userIds: string[]): Promise<ApiResponse<null>> {
   try {
     const { error } = await supabase
       .from('users')

@@ -1,7 +1,8 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { Tables, Database } from '@/types/database.type'
-import { formatApiError } from '../utils/errors'
+import { formatAuthError } from '../utils/errors'
 import { User, UserRole } from '@/types'
+import { AuthResponse } from '@/types/api'
 
 export type UserProfile = Tables<'users'>
 
@@ -77,23 +78,11 @@ export async function signUpUser(
     name: string
     organization: string
   }
-): Promise<{
-  success: boolean
-  data: {
-    user: {
-      id: string
-      email: string
-      name: string
-      organization: string
-      status: string
-    }
-  } | null
-  error: string | null
-}> {
+): Promise<AuthResponse<null>> {
   try {
     // Supabase Auth에 사용자 생성 (metadata에 프로필 정보 포함)
     // handle_new_user 트리거가 자동으로 public.users에 레코드 생성
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -108,36 +97,20 @@ export async function signUpUser(
       return {
         success: false,
         data: null,
-        error: authError.message,
-      }
-    }
-
-    if (!authData.user) {
-      return {
-        success: false,
-        data: null,
-        error: '사용자 생성에 실패했습니다.',
+        error: { errorCode: authError.code, errorMessage: formatAuthError(authError) },
       }
     }
 
     return {
       success: true,
-      data: {
-        user: {
-          id: authData.user.id,
-          email: authData.user.email || '',
-          name: data.name,
-          organization: data.organization,
-          status: 'pending',
-        },
-      },
+      data: null,
       error: null,
     }
   } catch (error) {
     return {
       success: false,
       data: null,
-      error: error instanceof Error ? error.message : '알 수 없는 오류',
+      error: { errorMessage: error instanceof Error ? error.message : '알 수 없는 오류' },
     }
   }
 }
@@ -151,11 +124,7 @@ export async function signInUser(
     email: string
     password: string
   }
-): Promise<{
-  success: boolean
-  data: { user: User } | null
-  error: string | null
-}> {
+): Promise<AuthResponse<{ user: User } | null>> {
   try {
     // 1. Supabase Auth 로그인
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -164,31 +133,17 @@ export async function signInUser(
     })
 
     if (authError) {
-      const error = formatApiError(authError)
+      const errorMessage = formatAuthError(authError)
 
-      return error
-    }
-
-    if (!authData.user) {
       return {
         success: false,
         data: null,
-        error: '로그인에 실패했습니다.',
+        error: { errorCode: authError.code, errorMessage: errorMessage },
       }
     }
 
     // 2. JWT claims에서 사용자 정보 확인 (Custom Access Token Hook 사용)
     // Custom Access Token Hook이 JWT claims 최상위에 role, is_approved, name, organization을 추가함
-    const session = authData.session
-    if (!session?.access_token) {
-      await supabase.auth.signOut()
-      return {
-        success: false,
-        data: null,
-        error: '세션 정보를 찾을 수 없습니다.',
-      }
-    }
-
     const { data: claimsData, error: AuthError } = await supabase.auth.getClaims()
     const claims = claimsData?.claims
 
@@ -198,7 +153,7 @@ export async function signInUser(
       return {
         success: false,
         data: null,
-        error: AuthError?.message || 'JWT 토큰을 해석할 수 없습니다.',
+        error: { errorMessage: '오류가 발생했습니다. 잠시 후 다시 시도해주세요.' },
       }
     }
 
@@ -214,7 +169,9 @@ export async function signInUser(
       return {
         success: false,
         data: null,
-        error: '사용자 정보가 올바르게 설정되지 않았습니다. 관리자에게 문의해주세요.',
+        error: {
+          errorMessage: '사용자 정보가 올바르게 설정되지 않았습니다. 관리자에게 문의해주세요.',
+        },
       }
     }
 
@@ -229,7 +186,7 @@ export async function signInUser(
       return {
         success: false,
         data: null,
-        error: message,
+        error: { errorMessage: message },
       }
     }
 
@@ -251,7 +208,7 @@ export async function signInUser(
     return {
       success: false,
       data: null,
-      error: error instanceof Error ? error.message : '알 수 없는 오류',
+      error: { errorMessage: error instanceof Error ? error.message : '알 수 없는 오류' },
     }
   }
 }

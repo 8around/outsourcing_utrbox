@@ -113,7 +113,7 @@ export function SignupForm() {
         toast({
           variant: 'destructive',
           title: '회원가입 실패',
-          description: result.error || '회원가입에 실패했습니다.',
+          description: result.error?.errorMessage || '회원가입에 실패했습니다.',
         })
       }
     } catch (error) {

@@ -13,8 +13,7 @@ export interface ApiResponse<T> {
 export interface AuthResponse<T = any> {
   success: boolean
   data: T | null
-  error: string | null
-  message?: string
+  error: { errorCode?: string; errorMessage: string } | null
 }
 
 export interface SignupData {
