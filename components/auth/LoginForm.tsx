@@ -107,7 +107,7 @@ export function LoginForm() {
               <FormItem>
                 <FormLabel>이메일</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="example@email.com" {...field} />
+                  <Input type="email" placeholder="이메일" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,7 +121,7 @@ export function LoginForm() {
               <FormItem>
                 <FormLabel>비밀번호</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••" {...field} />
+                  <Input type="password" placeholder="비밀번호" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -141,7 +141,7 @@ export function SignupForm() {
                 <FormItem>
                   <FormLabel>이메일</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="example@email.com" {...field} />
+                    <Input type="email" placeholder="이메일" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -155,7 +155,7 @@ export function SignupForm() {
                 <FormItem>
                   <FormLabel>비밀번호</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••" {...field} />
+                    <Input type="password" placeholder="비밀번호" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -169,7 +169,7 @@ export function SignupForm() {
                 <FormItem>
                   <FormLabel>비밀번호 확인</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••" {...field} />
+                    <Input type="password" placeholder="비밀번호 확인" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -183,7 +183,7 @@ export function SignupForm() {
                 <FormItem>
                   <FormLabel>이름</FormLabel>
                   <FormControl>
-                    <Input placeholder="홍길동" {...field} />
+                    <Input placeholder="이름" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -216,7 +216,7 @@ export function SignupForm() {
                     <div className="space-y-1 leading-none">
                       <FormLabel className="cursor-pointer text-sm font-normal">
                         <Link
-                          href="/terms"
+                          href="#"
                           className="text-primary hover:underline"
                           target="_blank"
                         >
@@ -241,7 +241,7 @@ export function SignupForm() {
                     <div className="space-y-1 leading-none">
                       <FormLabel className="cursor-pointer text-sm font-normal">
                         <Link
-                          href="/privacy"
+                          href="#"
                           className="text-primary hover:underline"
                           target="_blank"
                         >
