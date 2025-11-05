@@ -197,7 +197,7 @@ export function UploadModal({
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>콘텐츠 업로드</DialogTitle>
-          <DialogDescription>JPG, PNG 파일을 업로드하세요 (최대 10MB)</DialogDescription>
+          <DialogDescription>JPG, PNG, GIF, WEBP 파일을 업로드하세요 (최대 10MB)</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -221,7 +221,7 @@ export function UploadModal({
                     파일을 드래그하거나 클릭하여 선택하세요
                   </p>
                   <p className="text-secondary-500 text-sm">
-                    JPG, PNG 형식 • 최대 10MB • 여러 파일 가능
+                    JPG, PNG, GIF, WEBP 형식 • 최대 10MB • 여러 파일 가능
                   </p>
                 </>
               )}
