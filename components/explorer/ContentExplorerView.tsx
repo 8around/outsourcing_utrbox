@@ -40,8 +40,6 @@ export function ContentExplorerView({
         return 'bg-blue-100 text-blue-700 pointer-events-none'
       case 'pending':
         return 'bg-yellow-100 text-yellow-700 pointer-events-none'
-      case 'failed':
-        return 'bg-error/10 text-error pointer-events-none'
       default:
         return 'bg-primary/10 text-primary pointer-events-none'
     }
@@ -56,8 +54,6 @@ export function ContentExplorerView({
         return '분석 중'
       case 'pending':
         return '대기 중'
-      case 'failed':
-        return '실패'
       default:
         return status
     }

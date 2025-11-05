@@ -43,10 +43,8 @@ export interface ContentDetail extends Omit<Content, 'label_data' | 'text_data'>
 export type AnalysisStatus = 'pending' | 'analyzing' | 'completed' | 'failed'
 
 // Content 타입에서 분석 상태 추출 헬퍼 함수
-export function getAnalysisStatus(content: Content): AnalysisStatus {
+export function getAnalysisStatus(content: Content | ContentDetail): AnalysisStatus {
   if (content.is_analyzed === null) return 'pending'
-  if (content.is_analyzed === false) {
-    return content.message ? 'failed' : 'analyzing'
-  }
+  if (content.is_analyzed === false) return 'analyzing'
   return 'completed'
 }

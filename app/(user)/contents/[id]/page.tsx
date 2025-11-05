@@ -3,23 +3,24 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Card } from '@/components/ui/card'
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { getContent, deleteContent } from '@/lib/api/contents'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { getContentDetail, deleteContent } from '@/lib/api/contents'
 import { getDetections } from '@/lib/api/detections'
-import { Content, DetectedContent, getAnalysisStatus } from '@/types'
+import { ContentDetail, DetectedContent, getAnalysisStatus } from '@/types'
+import { DetectionTable } from '@/components/admin/contents/DetectionTable'
 import {
   ArrowLeft,
-  Download,
   Trash2,
   AlertCircle,
-  CheckCircle2,
   ExternalLink,
   FileImage,
 } from 'lucide-react'
-import { ImageViewer, ConfirmDialog } from '@/components/common'
+import { ImageViewer, ConfirmDialog, MessageViewModal } from '@/components/common'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { PageContainer } from '@/components/layout'
@@ -28,52 +29,27 @@ export default function ContentDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
-  const [content, setContent] = useState<Content | null>(null)
+  const [content, setContent] = useState<ContentDetail | null>(null)
   const [detectedContents, setDetectedContents] = useState<DetectedContent[]>([])
   const [selectedDetection, setSelectedDetection] = useState<DetectedContent | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showImageViewer, setShowImageViewer] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [imageError, setImageError] = useState(false)
+  const [showMessageModal, setShowMessageModal] = useState(false)
 
-  // 분석 결과 파생
-  const analysisResult = content
-    ? {
-        labels:
-          content.label_data &&
-          typeof content.label_data === 'object' &&
-          'responses' in content.label_data &&
-          Array.isArray(content.label_data.responses) &&
-          content.label_data.responses.length > 0 &&
-          'labelAnnotations' in content.label_data.responses[0]
-            ? (content.label_data.responses[0].labelAnnotations as Array<{
-                description: string
-                score: number
-              }>)
-            : [],
-        texts:
-          content.text_data &&
-          typeof content.text_data === 'object' &&
-          'responses' in content.text_data &&
-          Array.isArray(content.text_data.responses) &&
-          content.text_data.responses.length > 0 &&
-          'textAnnotations' in content.text_data.responses[0]
-            ? (content.text_data.responses[0].textAnnotations as Array<{
-                description: string
-              }>)
-            : [],
-        full_matching_images: detectedContents.filter((d) => d.detection_type === 'full'),
-        partial_matching_images: detectedContents.filter((d) => d.detection_type === 'partial'),
-        similar_images: detectedContents.filter((d) => d.detection_type === 'similar'),
-      }
-    : null
+  // selectedDetection 변경 시 이미지 에러 상태 초기화
+  useEffect(() => {
+    setImageError(false)
+  }, [selectedDetection])
 
   useEffect(() => {
     const loadContent = async () => {
       const contentId = params.id as string
 
       // Load content
-      const contentResponse = await getContent(contentId)
+      const contentResponse = await getContentDetail(contentId)
       if (!contentResponse.success) {
         toast({
           title: '오류',
@@ -136,32 +112,65 @@ export default function ContentDetailPage() {
         <div className="space-y-6">
           {/* Header Skeleton */}
           <div className="flex items-center justify-between">
-            <Skeleton className="h-10 w-24" />
-            <div className="flex gap-2">
-              <Skeleton className="h-10 w-28" />
-              <Skeleton className="h-10 w-20" />
-            </div>
+            <Skeleton className="h-10 w-40" />
+            <Skeleton className="h-10 w-20" />
           </div>
 
-          {/* Content Skeleton */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* 왼쪽 컬럼: 원본 이미지 + 분석결과 */}
+          {/* 파일 정보 Skeleton */}
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div>
+                    <Skeleton className="h-4 w-16 mb-2" />
+                    <Skeleton className="h-6 w-full" />
+                  </div>
+                  <div>
+                    <Skeleton className="h-4 w-20 mb-2" />
+                    <Skeleton className="h-6 w-32" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div>
+                    <Skeleton className="h-4 w-16 mb-2" />
+                    <Skeleton className="h-6 w-24" />
+                  </div>
+                  <div>
+                    <Skeleton className="h-4 w-20 mb-2" />
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 이미지 카드 Skeleton */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* 왼쪽 컬럼: 원본 이미지 */}
             <div className="space-y-6">
-              <Card className="overflow-hidden">
-                <Skeleton className="aspect-video w-full" />
-              </Card>
-              <Card className="p-6">
-                <Skeleton className="h-64 w-full" />
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="aspect-[16/10] w-full rounded-lg" />
+                </CardContent>
               </Card>
             </div>
 
-            {/* 오른쪽 컬럼: 감지 이미지 + 발견내역 */}
+            {/* 오른쪽 컬럼: 발견 이미지 */}
             <div className="space-y-6">
-              <Card className="overflow-hidden">
-                <Skeleton className="aspect-video w-full" />
-              </Card>
-              <Card className="p-6">
-                <Skeleton className="h-64 w-full" />
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="aspect-[16/10] w-full rounded-lg" />
+                </CardContent>
               </Card>
             </div>
           </div>
@@ -174,310 +183,236 @@ export default function ContentDetailPage() {
     return null
   }
 
-  // 발견내역 그룹화
-  const groupedDetections = {
-    full: detectedContents.filter((d) => d.detection_type === 'full'),
-    partial: detectedContents.filter((d) => d.detection_type === 'partial'),
-    similar: detectedContents.filter((d) => d.detection_type === 'similar'),
-  }
-
   return (
     <PageContainer maxWidth="7xl">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => router.back()} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          뒤로가기
-        </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            다운로드
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            뒤로가기
           </Button>
           <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="gap-2">
             <Trash2 className="h-4 w-4" />
             삭제
           </Button>
         </div>
+
+      {/* 파일 정보 */}
+      <div className="grid gap-6 sm:grid-cols-2">
+        {/* 좌측 카드 - 파일 정보 */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-500">파일명</p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="truncate text-base font-semibold text-gray-900 cursor-default">
+                        {content.file_name}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{content.file_name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">업로드 날짜</p>
+                <p className="text-base text-gray-900">
+                  {format(new Date(content.created_at), 'PPP HH:mm', { locale: ko })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 우측 카드 - 분석 정보 */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-500">분석 상태</p>
+                <div className="mt-1">
+                  {content.is_analyzed === true ? (
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                      분석 완료
+                    </Badge>
+                  ) : content.is_analyzed === null ? (
+                    <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                      대기 중
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                      분석 중
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">관리자 메시지</p>
+                {content.message ? (
+                  <p
+                    className="truncate text-base text-gray-900 cursor-pointer"
+                    onClick={() => setShowMessageModal(true)}
+                    title="클릭하여 전체 메시지 보기"
+                  >
+                    {content.message}
+                  </p>
+                ) : (
+                  <p className="text-base text-gray-900">-</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* 왼쪽 절반: 원본 이미지 + 분석결과 */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* 왼쪽 절반: 원본 이미지 + 라벨/텍스트 검출 결과 */}
         <div className="space-y-6">
           {/* 원본 이미지 */}
-          <Card className="overflow-hidden">
-            <div
-              className="bg-secondary-100 relative aspect-video cursor-pointer"
-              onClick={() => setShowImageViewer(true)}
-            >
-              <Image
-                src={content.file_path}
-                alt={content.file_name}
-                fill
-                className="object-contain"
-                priority
-                unoptimized
-              />
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>원본 이미지</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-100 cursor-pointer"
+                onClick={() => setShowImageViewer(true)}
+              >
+                <Image
+                  src={content.file_path}
+                  alt={content.file_name}
+                  fill
+                  className="object-contain"
+                  priority
+                  unoptimized
+                />
+              </div>
+            </CardContent>
           </Card>
 
-          {/* 분석결과 통합 */}
-          <Card className="p-6">
-            {/* 파일명 */}
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold">{content.file_name}</h2>
-              {content.message && (
-                <p className="text-secondary-500 mt-2">{content.message}</p>
-              )}
-            </div>
-
-            {/* 분석결과 */}
-            <div className="space-y-4">
-              {analysisResult ? (
-                <>
-                  {/* 감지된 레이블 */}
-                  {analysisResult.labels.length > 0 && (
-                    <div>
-                      <h3 className="mb-3 font-semibold">감지된 레이블</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {analysisResult.labels.map((label, index) => (
-                          <Badge key={index} variant="secondary">
-                            {label.description} ({(label.score * 100).toFixed(0)}%)
-                          </Badge>
-                        ))}
-                      </div>
+          {/* 라벨 검출 결과 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>라벨 검출 결과 ({content.label_data?.labels?.length || 0}개)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {content.label_data?.labels && content.label_data.labels.length > 0 ? (
+                <div className="space-y-2">
+                  {content.label_data.labels.map((label, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
+                      <span className="font-medium">{label.description}</span>
+                      <Badge variant="outline">{(label.score * 100).toFixed(0)}%</Badge>
                     </div>
-                  )}
-
-                  {/* 감지된 텍스트 */}
-                  {analysisResult.texts.length > 0 && (
-                    <div>
-                      <h3 className="mb-3 font-semibold">감지된 텍스트</h3>
-                      <div className="space-y-2">
-                        {analysisResult.texts.map((text, index) => (
-                          <Card key={index} className="p-3">
-                            <p className="text-sm">{text.description}</p>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 발견 통계 */}
-                  <div>
-                    <h3 className="mb-3 font-semibold">발견 통계</h3>
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <Card className="p-4">
-                        <p className="text-secondary-500 text-sm">완전 일치</p>
-                        <p className="mt-1 text-2xl font-bold">
-                          {analysisResult.full_matching_images.length}
-                        </p>
-                      </Card>
-                      <Card className="p-4">
-                        <p className="text-secondary-500 text-sm">부분 일치</p>
-                        <p className="mt-1 text-2xl font-bold">
-                          {analysisResult.partial_matching_images.length}
-                        </p>
-                      </Card>
-                      <Card className="p-4">
-                        <p className="text-secondary-500 text-sm">유사 이미지</p>
-                        <p className="mt-1 text-2xl font-bold">
-                          {analysisResult.similar_images.length}
-                        </p>
-                      </Card>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-secondary-500 py-12 text-center">
-                  <AlertCircle className="text-secondary-300 mx-auto mb-3 h-12 w-12" />
-                  <p>분석 결과가 아직 없습니다</p>
+                  ))}
                 </div>
+              ) : (
+                <p className="py-8 text-center text-sm text-gray-500">검출된 라벨이 없습니다.</p>
               )}
-            </div>
+            </CardContent>
+          </Card>
+
+          {/* 텍스트 검출 결과 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>텍스트 검출 결과 ({content.text_data?.words?.length || 0}개)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {content.text_data?.words && content.text_data.words.length > 0 ? (
+                <div className="rounded-lg border bg-gray-50 p-4">
+                  <div className="flex flex-wrap gap-2">
+                    {content.text_data.words.map((word, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-block rounded border bg-white px-2 py-1 text-sm text-gray-900"
+                      >
+                        {word}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="py-8 text-center text-sm text-gray-500">검출된 텍스트가 없습니다.</p>
+              )}
+            </CardContent>
           </Card>
         </div>
 
-        {/* 오른쪽 절반: 감지 이미지 + 발견내역 */}
+        {/* 오른쪽 절반: 발견 이미지 + 이미지 검출 결과 */}
         <div className="space-y-6">
-          {/* 감지 이미지 */}
-          <Card className="overflow-hidden">
-            <div className="bg-secondary-100 relative aspect-video flex items-center justify-center">
-              {selectedDetection ? (
-                <Image
-                  src={selectedDetection.image_url}
-                  alt="감지된 이미지"
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
-              ) : (
-                <div className="text-center text-secondary-400 p-8">
-                  <FileImage className="mx-auto mb-3 h-12 w-12" />
-                  <p className="font-medium">선택된 이미지가 없습니다</p>
-                  <p className="text-sm mt-1">발견내역을 클릭하여 이미지를 확인하세요</p>
-                </div>
-              )}
-            </div>
+          {/* 발견 이미지 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>발견 이미지</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-50">
+                {selectedDetection ? (
+                  !imageError ? (
+                    <Image
+                      referrerPolicy="no-referrer"
+                      src={selectedDetection.image_url}
+                      alt="발견된 이미지"
+                      fill
+                      className="object-contain"
+                      unoptimized
+                      onError={() => setImageError(true)}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center p-8 text-center">
+                      <div>
+                        <AlertCircle className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                        <p className="font-medium">이미지를 출력할 수 없습니다</p>
+                        <p className="mt-1 text-sm">직접 링크에 접속하여 확인하세요</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-4"
+                          onClick={() => window.open(selectedDetection.source_url!, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          페이지 방문
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="flex h-full items-center justify-center p-8 text-center">
+                    <div>
+                      <FileImage className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+                      <p className="font-medium">선택된 이미지가 없습니다</p>
+                      <p className="mt-1 text-sm">발견내역을 클릭하여 이미지를 확인하세요</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
           </Card>
 
-          {/* 발견내역 탭 */}
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">발견 내역</h3>
-
-            {detectedContents.length > 0 ? (
-              <Tabs defaultValue="full" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger
-                    value="full"
-                    className="data-[state=active]:text-error data-[state=active]:bg-error/10"
-                  >
-                    일치 ({groupedDetections.full.length})
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="partial"
-                    className="data-[state=active]:text-warning data-[state=active]:bg-warning/10"
-                  >
-                    부분 일치 ({groupedDetections.partial.length})
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="similar"
-                    className="data-[state=active]:text-primary data-[state=active]:bg-primary/10"
-                  >
-                    유사 ({groupedDetections.similar.length})
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="full" className="mt-4">
-                  {groupedDetections.full.length > 0 ? (
-                    <div className="space-y-2">
-                      {groupedDetections.full.map((detection) => (
-                        <button
-                          key={detection.id}
-                          onClick={() => handleDetectionClick(detection)}
-                          className={`w-full text-left p-4 rounded-lg border transition-all ${
-                            selectedDetection?.id === detection.id
-                              ? 'border-primary bg-primary/5 shadow-sm'
-                              : 'border-secondary-200 hover:border-secondary-300 hover:bg-secondary-50'
-                          }`}
-                        >
-                          <div className="flex gap-4">
-                            <div className="bg-secondary-100 flex h-20 w-20 flex-shrink-0 items-center justify-center rounded">
-                              <FileImage className="text-secondary-400 h-8 w-8" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium truncate">
-                                {detection.page_title || '제목 없음'}
-                              </p>
-                              <a
-                                href={detection.source_url || '#'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-sm text-primary hover:underline mt-1"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <span className="truncate">{detection.source_url || '출처 정보 없음'}</span>
-                                <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                              </a>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-secondary-500 text-center py-8">일치하는 발견내역이 없습니다</p>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="partial" className="mt-4">
-                  {groupedDetections.partial.length > 0 ? (
-                    <div className="space-y-2">
-                      {groupedDetections.partial.map((detection) => (
-                        <button
-                          key={detection.id}
-                          onClick={() => handleDetectionClick(detection)}
-                          className={`w-full text-left p-4 rounded-lg border transition-all ${
-                            selectedDetection?.id === detection.id
-                              ? 'border-primary bg-primary/5 shadow-sm'
-                              : 'border-secondary-200 hover:border-secondary-300 hover:bg-secondary-50'
-                          }`}
-                        >
-                          <div className="flex gap-4">
-                            <div className="bg-secondary-100 flex h-20 w-20 flex-shrink-0 items-center justify-center rounded">
-                              <FileImage className="text-secondary-400 h-8 w-8" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium truncate">
-                                {detection.page_title || '제목 없음'}
-                              </p>
-                              <a
-                                href={detection.source_url || '#'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-sm text-primary hover:underline mt-1"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <span className="truncate">{detection.source_url || '출처 정보 없음'}</span>
-                                <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                              </a>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-secondary-500 text-center py-8">부분일치하는 발견내역이 없습니다</p>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="similar" className="mt-4">
-                  {groupedDetections.similar.length > 0 ? (
-                    <div className="space-y-2">
-                      {groupedDetections.similar.map((detection) => (
-                        <button
-                          key={detection.id}
-                          onClick={() => handleDetectionClick(detection)}
-                          className={`w-full text-left p-4 rounded-lg border transition-all ${
-                            selectedDetection?.id === detection.id
-                              ? 'border-primary bg-primary/5 shadow-sm'
-                              : 'border-secondary-200 hover:border-secondary-300 hover:bg-secondary-50'
-                          }`}
-                        >
-                          <div className="flex gap-4">
-                            <div className="bg-secondary-100 flex h-20 w-20 flex-shrink-0 items-center justify-center rounded">
-                              <FileImage className="text-secondary-400 h-8 w-8" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium truncate">
-                                {detection.page_title || '제목 없음'}
-                              </p>
-                              <a
-                                href={detection.source_url || '#'}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-sm text-primary hover:underline mt-1"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <span className="truncate">{detection.source_url || '출처 정보 없음'}</span>
-                                <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                              </a>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-secondary-500 text-center py-8">유사한 발견내역이 없습니다</p>
-                  )}
-                </TabsContent>
-              </Tabs>
-            ) : (
-              <div className="text-secondary-500 py-12 text-center">
-                <CheckCircle2 className="text-success mx-auto mb-3 h-12 w-12" />
-                <p>발견된 침해 콘텐츠가 없습니다</p>
-              </div>
-            )}
+          {/* 이미지 검출 결과 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>이미지 검출 결과 ({detectedContents.length}건)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {detectedContents.length === 0 ? (
+                <p className="py-8 text-center text-sm text-gray-500">검출된 이미지가 없습니다.</p>
+              ) : (
+                <DetectionTable
+                  detections={detectedContents}
+                  selectedDetection={selectedDetection}
+                  onDetectionClick={handleDetectionClick}
+                  variant="user"
+                />
+              )}
+            </CardContent>
           </Card>
         </div>
       </div>
@@ -500,6 +435,13 @@ export default function ContentDetailPage() {
         confirmText="삭제"
         isDestructive
         isLoading={isDeleting}
+      />
+
+      {/* Message View Modal */}
+      <MessageViewModal
+        isOpen={showMessageModal}
+        onClose={() => setShowMessageModal(false)}
+        message={content.message}
       />
       </div>
     </PageContainer>

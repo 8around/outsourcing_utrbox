@@ -20,12 +20,14 @@ interface DetectionTableProps {
   detections: DetectedContent[]
   selectedDetection: DetectedContent | null
   onDetectionClick: (detection: DetectedContent) => void
+  variant?: 'admin' | 'user' // 기본값: 'admin'
 }
 
 export function DetectionTable({
   detections,
   selectedDetection,
   onDetectionClick,
+  variant = 'admin',
 }: DetectionTableProps) {
   // Collapsible 상태 관리 - 기본으로 완전 일치 섹션만 열림
   const [openSections, setOpenSections] = useState<string[]>(['full'])
@@ -119,15 +121,21 @@ export function DetectionTable({
                   <span className="font-semibold text-gray-900">{group.label}</span>
                 </div>
                 <div>
-                  {pendingCount > 0 && (
-                    <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-                      {pendingCount}건 대기중
-                    </Badge>
-                  )}
-                  {completedCount > 0 && (
-                    <Badge variant="outline" className="ml-2">
-                      {completedCount}건 검토 완료
-                    </Badge>
+                  {variant === 'admin' ? (
+                    <>
+                      {pendingCount > 0 && (
+                        <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
+                          {pendingCount}건 대기중
+                        </Badge>
+                      )}
+                      {completedCount > 0 && (
+                        <Badge variant="outline" className="ml-2">
+                          {completedCount}건 검토 완료
+                        </Badge>
+                      )}
+                    </>
+                  ) : (
+                    <Badge variant="outline">{group.detections.length}건</Badge>
                   )}
                 </div>
               </div>
@@ -140,8 +148,12 @@ export function DetectionTable({
                     <TableRow>
                       <TableHead className="whitespace-nowrap">발견 이미지</TableHead>
                       <TableHead className="whitespace-nowrap">페이지 제목</TableHead>
-                      <TableHead className="whitespace-nowrap text-right">검토 상태</TableHead>
-                      <TableHead className="whitespace-nowrap text-right">작업</TableHead>
+                      {variant === 'admin' && (
+                        <>
+                          <TableHead className="whitespace-nowrap text-right">검토 상태</TableHead>
+                          <TableHead className="whitespace-nowrap text-right">작업</TableHead>
+                        </>
+                      )}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -164,7 +176,10 @@ export function DetectionTable({
                             />
                           </div>
                         </TableCell>
-                        <TableCell className="min-w-0 max-w-xs">
+                        <TableCell
+                          className={`min-w-0 max-w-xs ${variant === 'user' ? 'cursor-pointer' : ''}`}
+                          onClick={variant === 'user' ? () => onDetectionClick(detection) : undefined}
+                        >
                           <div className="flex w-full min-w-0 flex-col">
                             <span className="min-w-0 truncate font-medium text-gray-900">
                               {detection.page_title || '(제목 없음)'}
@@ -182,24 +197,28 @@ export function DetectionTable({
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                          {getReviewStatusBadge(detection.admin_review_status)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onDetectionClick(detection)}
-                            className="gap-1"
-                          >
-                            {selectedDetection?.id === detection.id ? (
-                              <CheckCircle2 className="h-4 w-4 text-blue-600" />
-                            ) : (
-                              <Circle className="h-4 w-4 text-gray-400" />
-                            )}
-                            비교
-                          </Button>
-                        </TableCell>
+                        {variant === 'admin' && (
+                          <>
+                            <TableCell className="text-right">
+                              {getReviewStatusBadge(detection.admin_review_status)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onDetectionClick(detection)}
+                                className="gap-1"
+                              >
+                                {selectedDetection?.id === detection.id ? (
+                                  <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                                ) : (
+                                  <Circle className="h-4 w-4 text-gray-400" />
+                                )}
+                                비교
+                              </Button>
+                            </TableCell>
+                          </>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
