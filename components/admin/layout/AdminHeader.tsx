@@ -42,7 +42,8 @@ export function AdminHeader() {
       }
 
       logout()
-      router.replace('/admin/login')
+
+      router.replace('/login')
     } catch (error) {
       toast({
         variant: 'destructive',
