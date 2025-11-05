@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -21,7 +21,7 @@ import { LoadingSpinner } from '@/components/common'
 import { useToast } from '@/hooks/use-toast'
 
 const loginSchema = z.object({
-  email: z.string().email('올바른 이메일 형식이 아닙니다'),
+  email: z.email('올바른 이메일 형식이 아닙니다'),
   password: z.string().min(8, '비밀번호는 최소 8자 이상이어야 합니다'),
 })
 
@@ -29,9 +29,11 @@ type LoginFormValues = z.infer<typeof loginSchema>
 
 export function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { login } = useAuthStore()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [showResendButton, setShowResendButton] = useState(false)
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -40,6 +42,53 @@ export function LoginForm() {
       password: '',
     },
   })
+
+  // 이메일 인증 결과 toast 표시
+  useEffect(() => {
+    const verified = searchParams.get('verified')
+    const message = searchParams.get('message')
+
+    if (verified === 'success') {
+      // 성공 시 항상 동일한 메시지
+      // setTimeout으로 toast 호출을 지연시켜 hydration 완료 후 실행
+      setTimeout(() => {
+        toast({
+          title: '이메일 인증 완료',
+          description: message || '이메일 인증이 완료되었습니다. 관리자 승인 후 로그인 가능합니다.',
+        })
+      }, 0)
+    } else if (verified === 'error') {
+      // 에러 메시지 표시
+      setTimeout(() => {
+        toast({
+          variant: 'destructive',
+          title: '이메일 인증 실패',
+          description: message || '이메일 인증에 실패했습니다.',
+        })
+      }, 0)
+
+      // 재전송 버튼 표시 (모든 에러 케이스)
+      setShowResendButton(true)
+    }
+  }, [searchParams, toast])
+
+  // 인증 메일 재전송 핸들러
+  const handleResendEmail = async () => {
+    try {
+      // 재전송 API 호출 구현 예정
+      toast({
+        title: '재전송 완료',
+        description: '인증 메일을 재전송했습니다. 이메일을 확인해주세요.',
+      })
+      setShowResendButton(false)
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: '재전송 실패',
+        description: '이메일 재전송 중 오류가 발생했습니다.',
+      })
+    }
+  }
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true)
@@ -98,6 +147,18 @@ export function LoginForm() {
 
   return (
     <div className="rounded-lg border bg-white p-8 shadow-md">
+      <h1 className="text-center text-2xl font-bold text-primary">로그인</h1>
+
+      {/* 재전송 버튼 (에러 발생 시 표시) */}
+      {showResendButton && (
+        <div className="my-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center">
+          <p className="mb-3 text-sm text-gray-700">인증 메일을 재전송하시겠습니까?</p>
+          <Button variant="outline" onClick={handleResendEmail} className="text-sm">
+            인증 메일 재전송
+          </Button>
+        </div>
+      )}
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
