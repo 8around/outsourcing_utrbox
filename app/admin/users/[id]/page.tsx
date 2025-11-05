@@ -10,13 +10,14 @@ import { UserContentToolbar } from '@/components/admin/users/UserContentToolbar'
 import { UserContentTable } from '@/components/admin/users/UserContentTable'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { getUser, updateUserInfo, updateUserApproval, updateUserRole } from '@/lib/api/users'
 import { getUserContentsWithPagination } from '@/lib/api/contents'
 import { getCollections } from '@/lib/api/collections'
 import { User } from '@/lib/admin/types'
 import { Content } from '@/types'
 import { Collection } from '@/types/collection'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 
 export default function AdminUserDetailPage() {
   useAdminTitle('회원 상세')
@@ -64,7 +65,7 @@ export default function AdminUserDetailPage() {
         } else {
           toast({
             title: '오류',
-            description: result.error || '회원 정보를 불러오는데 실패했습니다.',
+            description: '회원 정보를 불러오는데 실패했습니다.',
             variant: 'destructive',
           })
         }
@@ -120,7 +121,7 @@ export default function AdminUserDetailPage() {
         } else {
           toast({
             title: '오류',
-            description: result.error || '콘텐츠 목록을 불러오는데 실패했습니다.',
+            description: '콘텐츠 목록을 불러오는데 실패했습니다.',
             variant: 'destructive',
           })
         }
@@ -154,7 +155,7 @@ export default function AdminUserDetailPage() {
       } else {
         toast({
           title: '오류',
-          description: result.error || '회원 정보 수정에 실패했습니다.',
+          description: '회원 정보 수정에 실패했습니다.',
           variant: 'destructive',
         })
       }
@@ -183,7 +184,7 @@ export default function AdminUserDetailPage() {
       } else {
         toast({
           title: '오류',
-          description: result.error || '승인에 실패했습니다.',
+          description: '승인에 실패했습니다.',
           variant: 'destructive',
         })
       }
@@ -213,7 +214,7 @@ export default function AdminUserDetailPage() {
       } else {
         toast({
           title: '오류',
-          description: result.error || '거부에 실패했습니다.',
+          description: '거부에 실패했습니다.',
           variant: 'destructive',
         })
       }
@@ -242,7 +243,7 @@ export default function AdminUserDetailPage() {
       } else {
         toast({
           title: '오류',
-          description: result.error || '권한 변경에 실패했습니다.',
+          description: '권한 변경에 실패했습니다.',
           variant: 'destructive',
         })
       }
@@ -284,8 +285,8 @@ export default function AdminUserDetailPage() {
   // 로딩 중
   if (loading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="flex h-full items-center justify-center">
+        <LoadingSpinner className="text-gray-400" />
       </div>
     )
   }
@@ -293,7 +294,7 @@ export default function AdminUserDetailPage() {
   // 사용자 없음
   if (!user) {
     return (
-      <div className="flex h-96 items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-semibold text-gray-900">회원을 찾을 수 없습니다.</p>
           <Button variant="outline" onClick={() => router.back()} className="mt-4">

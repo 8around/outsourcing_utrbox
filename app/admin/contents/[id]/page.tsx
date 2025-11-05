@@ -25,6 +25,7 @@ import { ReviewStatusModal } from '@/components/admin/contents/ReviewStatusModal
 import { AIAnalysisRequestModal } from '@/components/admin/contents/AIAnalysisRequestModal'
 import { RedetectionModal } from '@/components/admin/contents/RedetectionModal'
 import { DetectionTable } from '@/components/admin/contents/DetectionTable'
+import { LoadingSpinner } from '@/components/common'
 
 export default function AdminContentDetailPage() {
   useAdminTitle('콘텐츠 상세')
@@ -88,9 +89,10 @@ export default function AdminContentDetailPage() {
       setDetections(detectionsResult.data || [])
     } catch (error) {
       console.error('데이터 조회 에러:', error)
+
       toast({
         title: '데이터 조회 실패',
-        description: error instanceof Error ? error.message : '콘텐츠 데이터를 불러올 수 없습니다.',
+        description: '콘텐츠 데이터를 불러올 수 없습니다.',
         variant: 'destructive',
       })
     } finally {
@@ -112,15 +114,15 @@ export default function AdminContentDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <p className="text-gray-600">로딩 중...</p>
+      <div className="flex h-full items-center justify-center">
+        <LoadingSpinner className="text-gray-400" />
       </div>
     )
   }
 
   if (!content) {
     return (
-      <div className="flex h-96 items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-semibold text-gray-900">콘텐츠를 찾을 수 없습니다.</p>
           <Button variant="outline" onClick={() => router.back()} className="mt-4">
