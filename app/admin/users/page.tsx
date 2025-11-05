@@ -3,15 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useAdminTitle } from '@/components/admin/layout/AdminContext'
 import { UserFilters } from '@/components/admin/users/UserFilters'
-import { UserTableClient } from '@/components/admin/users/UserTableClient'
+import { UserTable } from '@/components/admin/users/UserTable'
 import { useAdminStore } from '@/lib/admin/store'
 import { useToast } from '@/hooks/use-toast'
 import { User } from '@/lib/admin/types'
-import {
-  getUsersWithPagination,
-  bulkApproveUsers,
-  bulkBlockUsers,
-} from '@/lib/api/users'
+import { getUsersWithPagination, bulkApproveUsers, bulkBlockUsers } from '@/lib/api/users'
 
 export default function AdminUsersPage() {
   useAdminTitle('회원 관리')
@@ -120,7 +116,7 @@ export default function AdminUsersPage() {
       <UserFilters filters={userFilters} onFilterChange={setUserFilters} />
 
       {/* 회원 테이블 */}
-      <UserTableClient
+      <UserTable
         users={users}
         totalCount={totalCount}
         currentPage={userFilters.page}

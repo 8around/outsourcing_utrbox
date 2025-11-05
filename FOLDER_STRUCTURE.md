@@ -53,10 +53,16 @@ utrbox/
 
 ```
 utrbox/
-├── PRD.md                     # 제품 요구사항 문서
-├── DATABASE_SCHEMA.md         # 데이터베이스 스키마 문서
-├── FOLDER_STRUCTURE.md        # 폴더 구조 문서 (현재 파일)
-└── CHANGELOG.md               # 변경 이력
+├── CLAUDE.md                          # Claude Code 작업 지시사항
+├── DATABASE_SCHEMA.md                 # 데이터베이스 스키마 문서
+├── FOLDER_STRUCTURE.md                # 폴더 구조 문서 (현재 파일)
+├── GOOGLE_VISION_ERROR_CODES.md       # Google Vision API 에러 코드
+├── PRD.md                             # 제품 요구사항 문서
+├── README.md                          # 프로젝트 README
+├── SUPABASE_COMPUTE_RECOMMENDATION.md # Supabase 컴퓨팅 리소스 권장사항
+├── SUPABASE_EMAIL_TEMPLATES.md        # Supabase 이메일 템플릿
+├── VisionAPIExample.md                # Vision API 사용 예시
+└── utrbox_prd_final.md                # 최종 PRD 문서
 ```
 
 ---
@@ -83,16 +89,15 @@ app/
 │
 ├── (user)/                    # 사용자 포털 라우트 그룹
 │   ├── layout.tsx                 # 사용자 포털 레이아웃 (사이드바, 헤더)
-│   ├── dashboard/
-│   │   └── page.tsx              # 대시보드 메인
+│   ├── page.tsx                   # 사용자 루트 페이지
 │   ├── contents/
-│   │   ├── page.tsx              # 콘텐츠 목록
-│   │   ├── [id]/
-│   │   │   └── page.tsx          # 콘텐츠 상세
-│   │   └── upload/
-│   │       └── page.tsx          # 콘텐츠 업로드
+│   │   └── [id]/
+│   │       └── page.tsx          # 콘텐츠 상세
 │   └── collections/
-│       └── page.tsx              # 컬렉션 목록
+│       ├── layout.tsx            # 컬렉션 레이아웃
+│       ├── page.tsx              # 컬렉션 목록
+│       └── [id]/
+│           └── page.tsx          # 컬렉션 상세
 │
 ├── (admin)/                   # 관리자 포털 라우트 그룹 (admin 경로)
 │   ├── layout.tsx                 # 관리자 레이아웃 (관리자 사이드바, 헤더)
@@ -114,17 +119,34 @@ app/
 │       └── page.tsx              # 관리자 로그인 페이지
 │
 └── api/                       # API 라우트
-    └── auth/
-        ├── login/
-        │   └── route.ts          # POST /api/auth/login
-        ├── logout/
-        │   └── route.ts          # POST /api/auth/logout
-        ├── signup/
-        │   └── route.ts          # POST /api/auth/signup
-        ├── reset-password/
-        │   └── route.ts          # POST /api/auth/reset-password
-        └── me/
-            └── route.ts          # GET /api/auth/me
+    ├── auth/
+    │   ├── login/
+    │   │   └── route.ts          # POST /api/auth/login
+    │   ├── logout/
+    │   │   └── route.ts          # POST /api/auth/logout
+    │   ├── signup/
+    │   │   └── route.ts          # POST /api/auth/signup
+    │   ├── reset-password/
+    │   │   └── route.ts          # POST /api/auth/reset-password
+    │   ├── verify/
+    │   │   └── route.ts          # GET /api/auth/verify (이메일 인증)
+    │   ├── resend-verification/
+    │   │   └── route.ts          # POST /api/auth/resend-verification
+    │   └── me/
+    │       └── route.ts          # GET /api/auth/me
+    ├── contents/
+    │   └── [id]/
+    │       └── status/
+    │           └── route.ts      # PATCH /api/contents/[id]/status
+    ├── detected-contents/
+    │   └── [id]/
+    │       └── review/
+    │           └── route.ts      # POST /api/detected-contents/[id]/review
+    └── vision/
+        ├── analyze/
+        │   └── route.ts          # POST /api/vision/analyze
+        └── redetect/
+            └── route.ts          # POST /api/vision/redetect
 ```
 
 ---
@@ -136,18 +158,33 @@ app/
 ```
 components/
 ├── ui/                        # shadcn/ui 기본 컴포넌트
+│   ├── alert.tsx
+│   ├── avatar.tsx
+│   ├── badge.tsx
+│   ├── breadcrumb.tsx
 │   ├── button.tsx
 │   ├── card.tsx
+│   ├── checkbox.tsx
+│   ├── collapsible.tsx
+│   ├── context-menu.tsx
 │   ├── dialog.tsx
 │   ├── dropdown-menu.tsx
 │   ├── form.tsx
 │   ├── input.tsx
 │   ├── label.tsx
+│   ├── progress.tsx
+│   ├── radio-group.tsx
+│   ├── resizable.tsx
+│   ├── scroll-area.tsx
 │   ├── select.tsx
+│   ├── separator.tsx
+│   ├── skeleton.tsx
 │   ├── table.tsx
 │   ├── tabs.tsx
+│   ├── textarea.tsx
 │   ├── toast.tsx
-│   └── ...
+│   ├── toaster.tsx
+│   └── tooltip.tsx
 ├── auth/                      # 인증 관련 컴포넌트
 │   ├── LoginForm.tsx         # 로그인 폼
 │   ├── SignupForm.tsx        # 회원가입 폼
@@ -155,27 +192,31 @@ components/
 │   └── index.ts              # Export 파일
 ├── admin/                     # 관리자 전용 컴포넌트
 │   ├── contents/             # 콘텐츠 관리 컴포넌트
-│   │   ├── ContentTable.tsx        # 콘텐츠 테이블
-│   │   ├── ContentFilters.tsx      # 콘텐츠 필터
-│   │   ├── AnalysisButton.tsx      # 분석 버튼
-│   │   └── AnalysisStatusBadge.tsx # 분석 상태 배지
+│   │   ├── AIAnalysisRequestModal.tsx  # AI 분석 요청 모달
+│   │   ├── AnalysisStatusModal.tsx     # 분석 상태 모달
+│   │   ├── ContentFilters.tsx          # 콘텐츠 필터
+│   │   ├── ContentTableClient.tsx      # 콘텐츠 테이블 (클라이언트)
+│   │   ├── DetectionTable.tsx          # 발견 테이블
+│   │   ├── RedetectionModal.tsx        # 재검출 모달
+│   │   └── ReviewStatusModal.tsx       # 검토 상태 모달
 │   ├── dashboard/            # 대시보드 컴포넌트
-│   │   ├── StatsCard.tsx           # 통계 카드
-│   │   └── ActivityFeed.tsx        # 활동 피드
+│   │   ├── ActivityFeed.tsx            # 활동 피드
+│   │   ├── DashboardStats.tsx          # 대시보드 통계
+│   │   ├── PendingContentsCard.tsx     # 대기 콘텐츠 카드
+│   │   ├── PendingUsersCard.tsx        # 대기 사용자 카드
+│   │   └── StatsCard.tsx               # 통계 카드
 │   ├── layout/               # 관리자 레이아웃 컴포넌트
-│   │   ├── AdminLayout.tsx         # 관리자 레이아웃
-│   │   ├── AdminHeader.tsx         # 관리자 헤더
-│   │   └── AdminSidebar.tsx        # 관리자 사이드바
-│   ├── review/               # 검토 관련 컴포넌트
-│   │   ├── DetectionList.tsx       # 발견 목록
-│   │   ├── ImageCompareViewer.tsx  # 이미지 비교 뷰어
-│   │   └── ReviewPanel.tsx         # 검토 패널
+│   │   ├── AdminContext.tsx            # 관리자 컨텍스트
+│   │   ├── AdminHeader.tsx             # 관리자 헤더
+│   │   └── AdminSidebar.tsx            # 관리자 사이드바
 │   └── users/                # 회원 관리 컴포넌트
-│       ├── UserTable.tsx           # 회원 테이블 (레거시)
-│       ├── UserTableClient.tsx     # 회원 테이블 (TanStack Table, 실제 사용)
-│       ├── UserFilters.tsx         # 회원 필터
-│       ├── UserActionButtons.tsx   # 회원 액션 버튼
-│       └── UserDetailCard.tsx      # 회원 상세 카드
+│       ├── UserActionButtons.tsx       # 회원 액션 버튼
+│       ├── UserContentTable.tsx        # 회원 콘텐츠 테이블
+│       ├── UserContentToolbar.tsx      # 회원 콘텐츠 툴바
+│       ├── UserDetailCard.tsx          # 회원 상세 카드
+│       ├── UserFilters.tsx             # 회원 필터
+│       ├── UserTable.tsx               # 회원 테이블 (레거시)
+│       └── UserTableClient.tsx         # 회원 테이블 (TanStack Table)
 ├── explorer/                  # 탐색기 컴포넌트
 │   ├── ContentExplorerView.tsx  # 콘텐츠 탐색기 뷰
 │   ├── ExplorerToolbar.tsx      # 탐색기 툴바
@@ -186,17 +227,19 @@ components/
 │   ├── StatsCards.tsx           # 통계 카드
 │   └── index.ts                 # Export 파일
 ├── layout/                    # 레이아웃 컴포넌트
-│   ├── Header.tsx            # 헤더
-│   ├── Sidebar.tsx           # 사이드바
+│   ├── Container.tsx         # 컨테이너
 │   ├── Footer.tsx            # 푸터
-│   └── index.ts              # Export 파일
+│   ├── FullHeightContainer.tsx # 전체 높이 컨테이너
+│   ├── Header.tsx            # 헤더
+│   └── PageContainer.tsx     # 페이지 컨테이너
 └── common/                    # 공통 컴포넌트
-    ├── LoadingSpinner.tsx    # 로딩 스피너
-    ├── EmptyState.tsx        # 빈 상태
-    ├── SearchInput.tsx       # 검색 입력
     ├── ConfirmDialog.tsx     # 확인 대화상자
+    ├── EmptyState.tsx        # 빈 상태
     ├── ImageViewer.tsx       # 이미지 뷰어
-    └── index.ts              # Export 파일
+    ├── LoadingSpinner.tsx    # 로딩 스피너
+    ├── MessageViewModal.tsx  # 메시지 보기 모달
+    ├── Pagination.tsx        # 페이지네이션
+    └── SearchInput.tsx       # 검색 입력
 ```
 
 ---
@@ -215,12 +258,13 @@ lib/
 ├── api/                       # API 클라이언트
 │   ├── collections.ts        # 컬렉션 API (BrowserClient)
 │   ├── contents.ts           # 콘텐츠 API (BrowserClient)
+│   ├── dashboard.ts          # 대시보드 API (BrowserClient)
 │   ├── detections.ts         # 발견 API (BrowserClient)
 │   ├── users.ts              # 사용자 API (BrowserClient)
 │   └── mock/                 # Mock API 데이터
 │       ├── auth.ts           # 인증 Mock
-│       ├── contents.ts       # 콘텐츠 Mock
 │       ├── collections.ts    # 컬렉션 Mock
+│       ├── contents.ts       # 콘텐츠 Mock
 │       └── index.ts          # Export 파일
 ├── admin/                     # 관리자 관련 로직
 │   ├── types.ts              # 관리자 타입 정의
@@ -230,16 +274,19 @@ lib/
 │   ├── authStore.ts          # 인증 상태
 │   ├── contentStore.ts       # 콘텐츠 상태
 │   └── explorerStore.ts      # 탐색기 상태
+├── google-vision/             # Google Vision API 연동
+│   └── client.ts             # Vision API 클라이언트
 ├── mock-data/                 # Mock 데이터
-│   ├── users.ts              # 사용자 Mock 데이터
-│   ├── contents.ts           # 콘텐츠 Mock 데이터
-│   ├── collections.ts        # 컬렉션 Mock 데이터
 │   ├── analysisResults.ts    # 분석 결과 Mock 데이터
-│   ├── detectedContents.ts   # 발견된 콘텐츠 Mock 데이터
+│   ├── collections.ts        # 컬렉션 Mock 데이터
+│   ├── contents.ts           # 콘텐츠 Mock 데이터
+│   ├── detected-contents.ts  # 발견된 콘텐츠 Mock 데이터
+│   ├── detectedContents.ts   # 발견된 콘텐츠 Mock 데이터 (중복)
+│   ├── users.ts              # 사용자 Mock 데이터
 │   └── index.ts              # Export 파일
 ├── utils/                     # 유틸리티 함수
-│   ├── validation.ts         # 유효성 검증 유틸리티
-│   └── errors.ts             # 에러 처리 유틸리티
+│   ├── errors.ts             # 에러 처리 유틸리티
+│   └── validation.ts         # 유효성 검증 유틸리티
 └── utils.ts                   # 공통 유틸리티 함수
 ```
 

@@ -1,3 +1,5 @@
+'use client'
+
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { X, ZoomIn, ZoomOut } from 'lucide-react'
 import { useState } from 'react'
