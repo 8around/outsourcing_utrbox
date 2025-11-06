@@ -159,9 +159,8 @@ export function ContentExplorerView({
                 <Image
                   src={content.file_path}
                   alt={content.file_name}
-                  className="transition-transform group-hover:scale-105"
+                  className="object-contain transition-transform group-hover:scale-105"
                   fill
-                  objectFit="contain"
                   loading="lazy"
                   unoptimized
                 />
@@ -230,8 +229,8 @@ export function ContentExplorerView({
                 <Image
                   src={content.file_path}
                   alt={content.file_name}
+                  className="object-contain"
                   fill
-                  objectFit="contain"
                   loading="lazy"
                   unoptimized
                 />
