@@ -45,12 +45,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    // 성공 시: 세션 유지 (비밀번호 변경을 위해 필요)
-    if (session) {
-      console.log('Password reset token verified successfully, session created for password update')
-    }
-
-    // 성공 리다이렉트
+    // 성공 시: 세션 유지, 리다이렉트 (비밀번호 변경을 위해 필요)
     redirectUrl.searchParams.set('verified', 'true')
 
     return NextResponse.redirect(redirectUrl)

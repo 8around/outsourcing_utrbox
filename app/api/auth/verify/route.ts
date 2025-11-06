@@ -53,7 +53,6 @@ export async function GET(request: NextRequest) {
     // (관리자 승인이 필요하므로 이메일 인증만 완료)
     if (session) {
       await supabase.auth.signOut()
-      console.log('Email verified successfully, session removed for admin approval')
     }
 
     // 성공 리다이렉트

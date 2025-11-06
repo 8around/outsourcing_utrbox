@@ -2,10 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, FileImage, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, FileImage } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import {
   Tooltip,
   TooltipContent,
@@ -35,12 +33,6 @@ const menuItems = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const { collapsed } = useAdminContext()
-
-  const handleLogout = () => {
-    // Mock 로그아웃 - 실제로는 Supabase Auth 로그아웃
-    console.log('Logout clicked')
-    // TODO: 실제 로그아웃 구현 시 추가
-  }
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -99,38 +91,6 @@ export function AdminSidebar() {
             return menuLink
           })}
         </nav>
-
-        {/* 하단 로그아웃 */}
-        <div className="border-t p-4">
-          {!collapsed && <Separator className="mb-4" />}
-
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-full text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>로그아웃</p>
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              onClick={handleLogout}
-            >
-              <LogOut className="mr-3 h-5 w-5" />
-              로그아웃
-            </Button>
-          )}
-        </div>
       </div>
     </TooltipProvider>
   )
