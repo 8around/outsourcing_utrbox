@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useExplorerStore } from '@/lib/stores/explorerStore'
@@ -26,12 +26,14 @@ export default function CollectionPage() {
   const [error, setError] = useState<string | null>(null)
 
   const PAGE_SIZE = 12
+  const isPageResetRef = useRef(false)
 
   const { selectedContentIds, viewMode, sortBy, sortOrder, searchQuery, setSelectedContents } =
     useExplorerStore()
 
   // 검색어 또는 정렬 변경 시 페이지를 1로 리셋
   useEffect(() => {
+    isPageResetRef.current = true
     setCurrentPage(1)
   }, [searchQuery, sortBy, sortOrder])
 
@@ -74,7 +76,10 @@ export default function CollectionPage() {
   // 페이지 변경 시 콘텐츠만 다시 로드
   useEffect(() => {
     const loadContents = async () => {
-      if (!user || isLoading || currentPage === 1) return
+      if (!user || isLoading || isPageResetRef.current) {
+        isPageResetRef.current = false
+        return
+      }
 
       setIsLoadingContents(true)
       setError(null)
@@ -187,7 +192,7 @@ export default function CollectionPage() {
         />
 
         {/* Pagination */}
-        {totalPages > 1 && !isLoadingContents && (
+        {totalPages > 1 && !isLoading && (
           <div className="border-t p-4">
             <Pagination
               currentPage={currentPage}
