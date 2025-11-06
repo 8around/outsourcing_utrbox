@@ -46,7 +46,7 @@ export function ConfirmDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          {description && <DialogDescription className="whitespace-pre-wrap pt-2">{description}</DialogDescription>}
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>
