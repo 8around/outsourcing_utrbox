@@ -22,7 +22,7 @@ import { Trash2 } from 'lucide-react'
 import { Pagination } from '@/components/explorer/Pagination'
 import Image from 'next/image'
 
-interface ContentTableClientProps {
+interface ContentTableProps {
   contents: Content[]
   totalCount: number
   currentPage: number
@@ -32,7 +32,7 @@ interface ContentTableClientProps {
   onBulkDelete: (contentIds: string[]) => void
 }
 
-export function ContentTableClient({
+export function ContentTable({
   contents,
   totalCount,
   currentPage,
@@ -40,7 +40,7 @@ export function ContentTableClient({
   loading,
   onPageChange,
   onBulkDelete,
-}: ContentTableClientProps) {
+}: ContentTableProps) {
   const router = useRouter()
   const [rowSelection, setRowSelection] = useState({})
 
@@ -48,13 +48,19 @@ export function ContentTableClient({
 
   const getStatusBadge = (isAnalyzed: boolean | null) => {
     if (isAnalyzed === true) {
-      return <Badge className="truncate bg-success/10 text-success pointer-events-none">분석 완료</Badge>
+      return (
+        <Badge className="pointer-events-none truncate bg-success/10 text-success">분석 완료</Badge>
+      )
     } else if (isAnalyzed === null) {
       return (
-        <Badge className="truncate bg-yellow-100 text-yellow-700 pointer-events-none">대기 중</Badge>
+        <Badge className="pointer-events-none truncate bg-yellow-100 text-yellow-700">
+          대기 중
+        </Badge>
       )
     } else {
-      return <Badge className="truncate bg-blue-100 text-blue-700 pointer-events-none">분석 중</Badge>
+      return (
+        <Badge className="pointer-events-none truncate bg-blue-100 text-blue-700">분석 중</Badge>
+      )
     }
   }
 

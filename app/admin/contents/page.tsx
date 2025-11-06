@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAdminTitle } from '@/components/admin/layout/AdminContext'
 import { ContentFilters } from '@/components/admin/contents/ContentFilters'
-import { ContentTableClient } from '@/components/admin/contents/ContentTableClient'
+import { ContentTable } from '@/components/admin/contents/ContentTable'
 import { useToast } from '@/hooks/use-toast'
 import { useAdminStore } from '@/lib/admin/store'
 import { Content } from '@/lib/admin/types'
@@ -93,7 +93,7 @@ export default function AdminContentsPage() {
       <ContentFilters filters={contentFilters} onFilterChange={setContentFilters} />
 
       {/* 콘텐츠 테이블 */}
-      <ContentTableClient
+      <ContentTable
         contents={contents}
         totalCount={totalCount}
         currentPage={contentFilters.page}
