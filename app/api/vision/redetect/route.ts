@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
     // 인증 확인
     const {
-      data: { session }
+      data: { session },
     } = await supabase.auth.getSession()
 
     if (!session) {
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     if (featureType === 'label') {
       const labelData = extractLabelData(visionResponse)
 
-      if (!labelData) {
+      if (labelData) {
         await supabase.from('contents').update({ label_data: labelData }).eq('id', contentId)
       }
 
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     } else if (featureType === 'text') {
       const textData = extractTextData(visionResponse)
 
-      if (!textData) {
+      if (textData) {
         await supabase.from('contents').update({ text_data: textData }).eq('id', contentId)
       }
 
