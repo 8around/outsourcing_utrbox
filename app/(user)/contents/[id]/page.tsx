@@ -90,7 +90,7 @@ export default function ContentDetailPage() {
         title: '삭제 완료',
         description: '콘텐츠가 삭제되었습니다',
       })
-      router.push('/contents')
+      router.back()
     } else {
       toast({
         title: '삭제 실패',

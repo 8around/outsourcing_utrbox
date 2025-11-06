@@ -14,7 +14,7 @@ import {
   ExternalLink,
   AlertCircle,
   SearchIcon,
-  Trash2
+  Trash2,
 } from 'lucide-react'
 import Image from 'next/image'
 import { useToast } from '@/hooks/use-toast'
@@ -115,7 +115,7 @@ export default function AdminContentDetailPage() {
         title: '삭제 완료',
         description: '콘텐츠가 삭제되었습니다',
       })
-      router.push('/admin/contents')
+      router.back()
     } else {
       toast({
         title: '삭제 실패',
