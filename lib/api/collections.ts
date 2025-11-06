@@ -200,3 +200,64 @@ export async function getCollectionsCount(userId: string): Promise<ApiResponse<n
     }
   }
 }
+
+/**
+ * 컬렉션을 삭제합니다.
+ * 주의: 컬렉션 삭제 시 연관된 모든 콘텐츠도 함께 삭제됩니다 (CASCADE DELETE).
+ * Storage에 저장된 파일들도 함께 정리됩니다.
+ * @param id - 컬렉션 ID
+ * @returns ApiResponse<void> - 성공 또는 에러
+ */
+export async function deleteCollection(id: string): Promise<ApiResponse<void>> {
+  try {
+    // 1. 해당 컬렉션의 모든 콘텐츠 조회 (Storage 파일 삭제를 위해)
+    const { data: contents, error: fetchError } = await supabase
+      .from('contents')
+      .select('file_path')
+      .eq('collection_id', id)
+
+    if (fetchError) {
+      console.error('컬렉션 콘텐츠 조회 실패:', fetchError)
+      // 콘텐츠 조회 실패해도 컬렉션 삭제는 진행 (콘텐츠가 없을 수 있음)
+    }
+
+    // 2. Storage에서 파일 삭제
+    if (contents && contents.length > 0) {
+      const filePaths = contents.map((c) => {
+        // file_path가 전체 URL인 경우 경로만 추출
+        return c.file_path.includes('/') ? c.file_path.split('/').slice(-3).join('/') : c.file_path
+      })
+
+      const { error: storageError } = await supabase.storage.from('contents').remove(filePaths)
+
+      if (storageError) {
+        console.error('Storage 파일 삭제 실패:', storageError)
+        // Storage 삭제 실패해도 DB는 삭제 진행 (파일이 이미 없을 수 있음)
+      }
+    }
+
+    // 3. DB에서 컬렉션 삭제 (contents는 CASCADE로 자동 삭제)
+    const { error: deleteError } = await supabase.from('collections').delete().eq('id', id)
+
+    if (deleteError) {
+      return {
+        data: null,
+        error: `컬렉션 삭제 실패: ${deleteError.message}`,
+        success: false,
+      }
+    }
+
+    return {
+      data: null,
+      error: null,
+      success: true,
+    }
+  } catch (error) {
+    console.error('컬렉션 삭제 중 오류:', error)
+    return {
+      data: null,
+      error: '컬렉션 삭제 중 오류가 발생했습니다.',
+      success: false,
+    }
+  }
+}

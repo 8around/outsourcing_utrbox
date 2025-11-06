@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Grid, List, Search, Upload, SortAsc, SortDesc, RefreshCw } from 'lucide-react'
+import { Grid, List, Search, Upload, SortAsc, SortDesc, Trash2 } from 'lucide-react'
 import { UploadModal } from './UploadModal'
 import { CollectionSelect } from './CollectionSelect'
 
@@ -21,7 +21,7 @@ interface ExplorerToolbarProps {
   collections: Collection[]
   onCollectionChange: (collectionId: string | null) => void
   onCreateCollection: () => void
-  onRefresh?: () => void
+  onDeleteCollection?: () => void
 }
 
 export function ExplorerToolbar({
@@ -29,7 +29,7 @@ export function ExplorerToolbar({
   collections,
   onCollectionChange,
   onCreateCollection,
-  onRefresh,
+  onDeleteCollection,
 }: ExplorerToolbarProps) {
   const { viewMode, sortBy, sortOrder, searchQuery, setViewMode, setSortBy, toggleSortOrder, setSearchQuery } =
     useExplorerStore()
@@ -48,10 +48,16 @@ export function ExplorerToolbar({
               onCreateCollection={onCreateCollection}
             />
 
-            {/* Refresh Button */}
-            {onRefresh && (
-              <Button variant="outline" size="icon" onClick={onRefresh} title="새로고침">
-                <RefreshCw className="h-4 w-4" />
+            {/* Delete Collection Button */}
+            {currentCollection && onDeleteCollection && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onDeleteCollection}
+                title="컬렉션 삭제"
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             )}
 
@@ -127,9 +133,8 @@ export function ExplorerToolbar({
         defaultCollectionId={currentCollection?.id || null}
         collections={collections}
         onUploadComplete={() => {
-          if (onRefresh) {
-            onRefresh()
-          }
+          // 업로드 완료 후 페이지 새로고침 이벤트 발행
+          window.dispatchEvent(new CustomEvent('refresh-explorer-contents'))
         }}
       />
     </>

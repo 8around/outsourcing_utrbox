@@ -5,11 +5,14 @@ import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useExplorerStore } from '@/lib/stores/explorerStore'
 import { StatsCards, ExplorerToolbar, CreateCollectionModal } from '@/components/explorer'
-import { getCollections, getCollection } from '@/lib/api/collections'
+import { ConfirmDialog } from '@/components/common'
+import { getCollections, getCollection, deleteCollection } from '@/lib/api/collections'
+import { useToast } from '@/hooks/use-toast'
 
 export default function CollectionsLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
   const { sortBy, sortOrder, collections, currentCollection, setCollections, setCurrentCollection } = useExplorerStore()
+  const { toast } = useToast()
   const pathname = usePathname()
   const params = useParams()
   const router = useRouter()
@@ -20,6 +23,8 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
 
   // 레이아웃 레벨 상태
   const [isCreateCollectionModalOpen, setIsCreateCollectionModalOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // 컬렉션 목록 로드
   useEffect(() => {
@@ -76,27 +81,55 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
     setIsCreateCollectionModalOpen(true)
   }
 
-  // 새로고침 핸들러
-  const handleRefresh = async () => {
-    if (!user) return
-    
+  // 컬렉션 삭제 핸들러
+  const handleDeleteCollection = () => {
+    setIsDeleteDialogOpen(true)
+  }
+
+  // 컬렉션 삭제 확인
+  const handleConfirmDelete = async () => {
+    if (!currentCollection) return
+
+    setIsDeleting(true)
     try {
-      const [collectionsRes, collectionRes] = await Promise.all([
-        getCollections(user.id, sortBy, sortOrder),
-        collectionId ? getCollection(collectionId) : Promise.resolve({ success: true, data: null }),
-      ])
+      const result = await deleteCollection(currentCollection.id)
 
-      if (collectionsRes.success && collectionsRes.data) {
-        setCollections(collectionsRes.data)
-      }
-      if (collectionRes.success) {
-        setCurrentCollection(collectionRes.data)
-      }
+      if (result.success) {
+        // 성공 메시지
+        toast({
+          title: '성공',
+          description: '컬렉션이 삭제되었습니다.',
+        })
 
-      // 페이지에 새로고침 이벤트 발행
-      window.dispatchEvent(new CustomEvent('refresh-explorer-contents'))
-    } catch (err) {
-      console.error('새로고침 오류:', err)
+        // 다이얼로그 닫기
+        setIsDeleteDialogOpen(false)
+
+        // 컬렉션 목록 페이지로 이동
+        router.push('/collections')
+
+        // 컬렉션 목록 새로고침
+        if (user) {
+          const collectionsRes = await getCollections(user.id, sortBy, sortOrder)
+          if (collectionsRes.success && collectionsRes.data) {
+            setCollections(collectionsRes.data)
+          }
+        }
+      } else {
+        toast({
+          title: '오류',
+          description: result.error || '컬렉션 삭제에 실패했습니다.',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      console.error('컬렉션 삭제 중 오류:', error)
+      toast({
+        title: '오류',
+        description: '컬렉션 삭제 중 오류가 발생했습니다.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -112,7 +145,7 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
           collections={collections}
           onCollectionChange={handleCollectionChange}
           onCreateCollection={handleCreateCollection}
-          onRefresh={handleRefresh}
+          onDeleteCollection={handleDeleteCollection}
         />
       </div>
 
@@ -123,9 +156,31 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
       <CreateCollectionModal
         open={isCreateCollectionModalOpen}
         onOpenChange={setIsCreateCollectionModalOpen}
-        onCollectionCreated={() => {
-          handleRefresh()
+        onCollectionCreated={async (collection) => {
+          // 생성된 컬렉션 페이지로 이동
+          router.push(`/collections/${collection.id}`)
+
+          // 컬렉션 목록도 업데이트
+          if (user) {
+            const collectionsRes = await getCollections(user.id, sortBy, sortOrder)
+            if (collectionsRes.success && collectionsRes.data) {
+              setCollections(collectionsRes.data)
+            }
+          }
         }}
+      />
+
+      {/* 컬렉션 삭제 다이얼로그 */}
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="컬렉션을 삭제하시겠습니까?"
+        description={`[${currentCollection?.name}] 컬렉션을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.\n컬렉션에 포함된 모든 콘텐츠도 함께 삭제됩니다.`}
+        confirmText={isDeleting ? '삭제 중...' : '삭제'}
+        cancelText="취소"
+        isDestructive={true}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
       />
     </>
   )
