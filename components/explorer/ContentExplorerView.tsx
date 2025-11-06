@@ -20,6 +20,7 @@ interface ContentExplorerViewProps {
   onSelectContent: (ids: string[]) => void
   onOpenContent: (id: string) => void
   isLoading?: boolean
+  totalCount?: number
 }
 
 export function ContentExplorerView({
@@ -29,6 +30,7 @@ export function ContentExplorerView({
   onSelectContent,
   onOpenContent,
   isLoading = false,
+  totalCount,
 }: ContentExplorerViewProps) {
   const { collections } = useExplorerStore()
   const getStatusColor = (content: Content) => {
@@ -143,61 +145,72 @@ export function ContentExplorerView({
   if (viewMode === 'grid') {
     return (
       <ScrollArea className="h-full">
-        <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {/* 콘텐츠 카드 렌더링 */}
-          {contents.map((content) => (
-            <Card
-              key={content.id}
-              className={cn(
-                'group cursor-pointer overflow-hidden transition-all hover:border-primary',
-                selectedIds.includes(content.id) && 'border-primary ring-2 ring-primary'
-              )}
-              onClick={(e) => handleContentClick(content.id, e)}
-            >
-              {/* Thumbnail */}
-              <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
-                <Image
-                  src={content.file_path}
-                  alt={content.file_name}
-                  className="object-contain transition-transform group-hover:scale-105"
-                  fill
-                  loading="lazy"
-                  unoptimized
-                />
-                {getCollectionName(content.collection_id) && (
-                  <div className="absolute right-2 top-2">
-                    <Badge variant="outline" className="text-xs">
-                      {getCollectionName(content.collection_id)}
-                    </Badge>
-                  </div>
-                )}
-              </div>
+        <div className="px-4 pb-4">
+          {/* 총 아이템 수 표시 */}
+          {totalCount !== undefined && (
+            <div className="text-secondary-500 mb-4 text-sm">
+              전체 <span className="font-medium text-foreground">{totalCount}</span>개
+            </div>
+          )}
 
-              {/* Info */}
-              <div className="p-3">
-                <h3 className="truncate font-medium">{content.file_name}</h3>
-                <p className="text-secondary-500 mt-1 truncate text-sm">{content.message || ''}</p>
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(content)}>{getStatusText(content)}</Badge>
-                    {content.is_analyzed &&
-                      ((content.detected_count || 0) > 0 ? (
-                        <Badge className="pointer-events-none bg-error/10 text-error">
-                          {content.detected_count}건
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="pointer-events-none">
-                          0건
-                        </Badge>
-                      ))}
-                  </div>
-                  <span className="text-secondary-400 text-xs">
-                    {format(new Date(content.created_at), 'yyyy.MM.dd HH:mm', { locale: ko })}
-                  </span>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {/* 콘텐츠 카드 렌더링 */}
+            {contents.map((content) => (
+              <Card
+                key={content.id}
+                className={cn(
+                  'group cursor-pointer overflow-hidden transition-all hover:border-primary',
+                  selectedIds.includes(content.id) && 'border-primary ring-2 ring-primary'
+                )}
+                onClick={(e) => handleContentClick(content.id, e)}
+              >
+                {/* Thumbnail */}
+                <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
+                  <Image
+                    src={content.file_path}
+                    alt={content.file_name}
+                    className="object-contain transition-transform group-hover:scale-105"
+                    fill
+                    loading="lazy"
+                    unoptimized
+                  />
+                  {getCollectionName(content.collection_id) && (
+                    <div className="absolute right-2 top-2">
+                      <Badge variant="outline" className="text-xs">
+                        {getCollectionName(content.collection_id)}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Card>
-          ))}
+
+                {/* Info */}
+                <div className="p-3">
+                  <h3 className="truncate font-medium">{content.file_name}</h3>
+                  <p className="text-secondary-500 mt-1 truncate text-sm">
+                    {content.message || ''}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge className={getStatusColor(content)}>{getStatusText(content)}</Badge>
+                      {content.is_analyzed &&
+                        ((content.detected_count || 0) > 0 ? (
+                          <Badge className="pointer-events-none bg-error/10 text-error">
+                            {content.detected_count}건
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="pointer-events-none">
+                            0건
+                          </Badge>
+                        ))}
+                    </div>
+                    <span className="text-secondary-400 text-xs">
+                      {format(new Date(content.created_at), 'yyyy.MM.dd HH:mm', { locale: ko })}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </ScrollArea>
     )
@@ -206,7 +219,14 @@ export function ContentExplorerView({
   // List View
   return (
     <ScrollArea className="h-full">
-      <div className="p-4">
+      <div className="px-4 pb-4">
+        {/* 총 아이템 수 표시 */}
+        {totalCount !== undefined && (
+          <div className="text-secondary-500 mb-4 text-sm">
+            전체 <span className="font-medium text-foreground">{totalCount}</span>개
+          </div>
+        )}
+
         <div className="divide-y overflow-hidden rounded-lg border">
           {/* 콘텐츠 행 렌더링 */}
           {contents.map((content) => (

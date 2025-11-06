@@ -189,6 +189,7 @@ export default function CollectionPage() {
           onSelectContent={setSelectedContents}
           onOpenContent={handleOpenContent}
           isLoading={isLoading || isLoadingContents}
+          totalCount={totalContents}
         />
 
         {/* Pagination */}

@@ -182,6 +182,7 @@ export default function ExplorerPage() {
           onSelectContent={setSelectedContents}
           onOpenContent={handleOpenContent}
           isLoading={isLoading || isLoadingContents}
+          totalCount={totalContents}
         />
 
         {/* Pagination */}
