@@ -15,13 +15,12 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { mockAuthApi } from '@/lib/api/mock'
 import { LoadingSpinner } from '@/components/common'
 import { useToast } from '@/hooks/use-toast'
 import { CheckCircle2 } from 'lucide-react'
 
 const resetPasswordSchema = z.object({
-  email: z.string().email('올바른 이메일 형식이 아닙니다'),
+  email: z.email('올바른 이메일 형식이 아닙니다'),
 })
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>
@@ -42,15 +41,23 @@ export function ResetPasswordForm() {
     setIsLoading(true)
 
     try {
-      const response = await mockAuthApi.resetPassword(data.email)
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: data.email }),
+      })
 
-      if (response.success) {
+      const result = await response.json()
+
+      if (result.success) {
         setIsSuccess(true)
       } else {
         toast({
           variant: 'destructive',
-          title: '오류',
-          description: response.error || '비밀번호 재설정에 실패했습니다.',
+          title: '비밀번호 재설정 실패',
+          description: result.error?.errorMessage || '비밀번호 재설정에 실패했습니다.',
         })
       }
     } catch (error) {
@@ -68,9 +75,7 @@ export function ResetPasswordForm() {
     return (
       <div className="rounded-lg bg-white p-8 text-center shadow-md">
         <div className="mb-4 flex justify-center">
-          <div className="bg-success/10 rounded-full p-4">
-            <CheckCircle2 className="text-success h-12 w-12" />
-          </div>
+          <CheckCircle2 className="h-12 w-12 text-success" />
         </div>
         <h2 className="mb-2 text-xl font-semibold">이메일이 발송되었습니다</h2>
         <p className="text-secondary-500 mb-6">
@@ -90,7 +95,7 @@ export function ResetPasswordForm() {
       <div className="mb-6">
         <h2 className="mb-2 text-xl font-semibold">비밀번호 재설정</h2>
         <p className="text-secondary-500 text-sm">
-          등록된 이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다.
+          이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다.
         </p>
       </div>
 
@@ -103,7 +108,7 @@ export function ResetPasswordForm() {
               <FormItem>
                 <FormLabel>이메일</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="example@email.com" {...field} />
+                  <Input type="email" placeholder="이메일" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

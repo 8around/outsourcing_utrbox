@@ -1,34 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { resetUserPassword } from '@/lib/supabase/auth'
+import { AuthResponse } from '@/types'
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse<AuthResponse<null>>> {
   try {
     const body = await request.json()
     const { email } = body
-
-    // 입력 데이터 검증
-    if (!email) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '이메일을 입력해주세요.',
-        },
-        { status: 400 }
-      )
-    }
-
-    // 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: '올바른 이메일 형식이 아닙니다.',
-        },
-        { status: 400 }
-      )
-    }
 
     const supabase = createServerSupabase()
 
@@ -36,29 +14,24 @@ export async function POST(request: NextRequest) {
     const result = await resetUserPassword(supabase, email)
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error,
-        },
-        { status: 400 }
-      )
+      // Rate limit 에러는 429 상태 코드 사용
+      const statusCode =
+        result.error?.errorCode === 'over_email_send_rate_limit' ||
+        result.error?.errorCode === 'over_request_rate_limit'
+          ? 429
+          : 400
+
+      return NextResponse.json(result, { status: statusCode })
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        error: null,
-        message: result.message,
-      },
-      { status: 200 }
-    )
+    return NextResponse.json(result, { status: 200 })
   } catch (error) {
-    console.error('Reset password error:', error)
+    console.error('Reset password unexpected error:', error)
     return NextResponse.json(
       {
         success: false,
-        error: '비밀번호 재설정 중 오류가 발생했습니다.',
+        data: null,
+        error: { errorMessage: '비밀번호 재설정 중 오류가 발생했습니다.' },
       },
       { status: 500 }
     )

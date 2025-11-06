@@ -248,32 +248,72 @@ export async function signOutUser(supabase: SupabaseClient<Database>): Promise<{
 export async function resetUserPassword(
   supabase: SupabaseClient<Database>,
   email: string
-): Promise<{
-  success: boolean
-  error: string | null
-  message?: string
-}> {
+): Promise<AuthResponse<null>> {
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
-    })
+    // 커스텀 이메일 템플릿 사용 - redirectTo 옵션 불필요
+    // 템플릿에서 {{ .SiteURL }}/api/auth/reset-password/confirm 직접 구성
+    const { error } = await supabase.auth.resetPasswordForEmail(email)
 
     if (error) {
+      console.error('Reset password error:', error)
+
+      const errorMessage = formatAuthError(error)
+
       return {
         success: false,
-        error: error.message,
+        data: null,
+        error: { errorCode: error.code, errorMessage: errorMessage },
       }
     }
 
     return {
       success: true,
+      data: null,
       error: null,
-      message: '비밀번호 재설정 이메일이 전송되었습니다.',
     }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : '알 수 없는 오류',
+      data: null,
+      error: { errorMessage: '비밀번호 재설정 중 오류가 발생했습니다.' },
+    }
+  }
+}
+
+/**
+ * 비밀번호 변경 (인증된 사용자)
+ */
+export async function updateUserPassword(
+  supabase: SupabaseClient<Database>,
+  password: string
+): Promise<AuthResponse<null>> {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: password,
+    })
+
+    if (error) {
+      console.error('Update password error:', error)
+
+      const errorMessage = formatAuthError(error)
+
+      return {
+        success: false,
+        data: null,
+        error: { errorCode: error.code, errorMessage: errorMessage },
+      }
+    }
+
+    return {
+      success: true,
+      data: null,
+      error: null,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      error: { errorMessage: '비밀번호 변경 중 오류가 발생했습니다.' },
     }
   }
 }

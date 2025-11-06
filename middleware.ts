@@ -2,14 +2,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createMiddlewareSupabase } from '@/lib/supabase/middleware'
 
-// 보호된 경로 목록
-const protectedPaths = ['/', '/collections', '/contents']
-
 // 관리자 전용 경로
 const adminPaths = ['/admin']
 
 // 인증이 필요 없는 공개 경로
-const authPaths = ['/login', '/signup', '/reset-password']
+const authPaths = ['/login', '/signup']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -18,12 +15,20 @@ export async function middleware(request: NextRequest) {
   const { supabase, response } = createMiddlewareSupabase(request)
 
   try {
-    // Session만 확인 (가장 빠른 인증 체크)
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    if (pathname.startsWith('/reset-password')) {
+      return response
+    }
 
-    if (!session?.access_token) {
+    // Session Refresh
+    await supabase.auth.getSession()
+
+    const { data } = await supabase.auth.getClaims()
+    const claims = data?.claims
+    const isApproved = claims?.is_approved
+
+    if (!isApproved) {
+      await supabase.auth.signOut()
+
       if (authPaths.some((path) => pathname.startsWith(path))) {
         return response
       }
@@ -31,18 +36,11 @@ export async function middleware(request: NextRequest) {
       // 세션이 없으면 로그인 페이지로 리다이렉트 (lib/supabase/auth.ts의 signInUser에서 is_approved falsy한 경우 세션 삭제)
       return NextResponse.redirect(new URL('/login', request.url))
     } else {
-      const { data } = await supabase.auth.getClaims()
-      const claims = data?.claims
-
-      if (!claims?.is_approved) {
-        await supabase.auth.signOut()
-        return NextResponse.redirect(new URL('/login', request.url))
-      }
-
       if (authPaths.some((path) => pathname.startsWith(path))) {
-        // 이미 로그인한 사용자가 로그인/회원가입 페이지 접근 시 리다이렉트
+        // 로그인한 사용자가 로그인/회원가입 페이지 접근 시 리다이렉트
         return NextResponse.redirect(new URL('/collections', request.url))
       } else if (adminPaths.some((path) => pathname.startsWith(path))) {
+        // 로그인한 사용자가 관리자 페이지 접근 시 검증
         if (claims?.user_role !== 'admin') {
           return NextResponse.redirect(new URL('/collections', request.url))
         } else if (pathname === '/admin') {
