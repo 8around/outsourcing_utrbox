@@ -13,11 +13,13 @@ import {
   FileImage,
   ExternalLink,
   AlertCircle,
+  SearchIcon,
+  Trash2
 } from 'lucide-react'
 import Image from 'next/image'
 import { useToast } from '@/hooks/use-toast'
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { getContentDetail } from '@/lib/api/contents'
+import { getContentDetail, deleteContent } from '@/lib/api/contents'
 import { getDetections } from '@/lib/api/detections'
 import { ContentDetail, DetectedContent } from '@/types'
 import { AnalysisStatusModal } from '@/components/admin/contents/AnalysisStatusModal'
@@ -25,7 +27,7 @@ import { ReviewStatusModal } from '@/components/admin/contents/ReviewStatusModal
 import { AIAnalysisRequestModal } from '@/components/admin/contents/AIAnalysisRequestModal'
 import { RedetectionModal } from '@/components/admin/contents/RedetectionModal'
 import { DetectionTable } from '@/components/admin/contents/DetectionTable'
-import { LoadingSpinner } from '@/components/common'
+import { LoadingSpinner, ConfirmDialog } from '@/components/common'
 
 export default function AdminContentDetailPage() {
   useAdminTitle('콘텐츠 상세')
@@ -49,6 +51,8 @@ export default function AdminContentDetailPage() {
   const [aiAnalysisModalOpen, setAIAnalysisModalOpen] = useState(false)
   const [redetectionModalOpen, setRedetectionModalOpen] = useState(false)
   const [redetectType, setRedetectType] = useState<'label' | 'text'>('label')
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -100,6 +104,56 @@ export default function AdminContentDetailPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!content) return
+
+    setIsDeleting(true)
+    const response = await deleteContent(contentId)
+
+    if (response.success) {
+      toast({
+        title: '삭제 완료',
+        description: '콘텐츠가 삭제되었습니다',
+      })
+      router.push('/admin/contents')
+    } else {
+      toast({
+        title: '삭제 실패',
+        description: response.error || '콘텐츠를 삭제할 수 없습니다',
+        variant: 'destructive',
+      })
+      setIsDeleting(false)
+    }
+  }
+
+  const handleDownloadOriginalImage = async () => {
+    try {
+      const response = await fetch(content!.file_path)
+      if (!response.ok) {
+        throw new Error('이미지를 가져올 수 없습니다')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = content!.file_name
+      document.body.appendChild(a)
+      a.click()
+
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('이미지 다운로드 에러:', error)
+      toast({
+        title: '다운로드 실패',
+        description: '이미지를 다운로드할 수 없습니다.',
+        variant: 'destructive',
+      })
+    }
+  }
+
   // file_path는 이미 Supabase public URL이므로 그대로 사용
 
   const getAnalysisStatusBadge = (isAnalyzed: boolean | null) => {
@@ -136,11 +190,21 @@ export default function AdminContentDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* 뒤로 가기 버튼 */}
-      <Button variant="outline" onClick={() => router.back()}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        콘텐츠 목록으로
-      </Button>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          콘텐츠 목록으로
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => setShowDeleteDialog(true)}
+          className="gap-2 text-error hover:text-error"
+        >
+          <Trash2 className="h-4 w-4" />
+          삭제
+        </Button>
+      </div>
 
       {/* 파일 정보 */}
       <div className="grid gap-6 sm:grid-cols-2">
@@ -193,7 +257,20 @@ export default function AdminContentDetailPage() {
         {/* 원본 이미지 */}
         <Card>
           <CardHeader>
-            <CardTitle>원본 이미지</CardTitle>
+            <CardTitle>
+              <div className="flex items-center justify-between">
+                <span>원본 이미지</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                  onClick={handleDownloadOriginalImage}
+                >
+                  <Download className="h-4 w-4" />
+                  다운로드
+                </Button>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-100">
@@ -204,19 +281,36 @@ export default function AdminContentDetailPage() {
                 className="object-contain"
               />
             </div>
-            <div className="mt-4 flex justify-end gap-2">
+            {/* <div className="mt-4 flex justify-end gap-2">
               <Button variant="outline" size="sm" className="gap-1">
                 <Download className="h-4 w-4" />
                 다운로드
               </Button>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
         {/* 발견 이미지 */}
         <Card ref={detectedImageCardRef}>
           <CardHeader>
-            <CardTitle>발견 이미지</CardTitle>
+            <CardTitle>
+              <div className="flex items-center justify-between">
+                <span>발견 이미지</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReviewStatusModalOpen(true)}
+                  disabled={!selectedDetection}
+                >
+                  <SearchIcon className="h-4 w-4" />
+                  {selectedDetection === null
+                    ? '검토'
+                    : selectedDetection.admin_review_status === 'pending'
+                      ? '검토'
+                      : '검토 수정'}
+                </Button>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-50">
@@ -279,7 +373,7 @@ export default function AdminContentDetailPage() {
                 </div>
               )}
             </div>
-            <div className="mt-4 flex justify-end gap-2">
+            {/* <div className="mt-4 flex justify-end gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -292,7 +386,7 @@ export default function AdminContentDetailPage() {
                     ? '검토'
                     : '검토 수정'}
               </Button>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </div>
@@ -428,6 +522,18 @@ export default function AdminContentDetailPage() {
         contentId={contentId}
         featureType={redetectType}
         onSuccess={fetchData}
+      />
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleDelete}
+        title="콘텐츠 삭제"
+        description="이 콘텐츠를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmText="삭제"
+        isDestructive
+        isLoading={isDeleting}
       />
     </div>
   )

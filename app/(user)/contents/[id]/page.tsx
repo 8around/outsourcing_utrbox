@@ -191,7 +191,7 @@ export default function ContentDetailPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             뒤로가기
           </Button>
-          <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="gap-2">
+          <Button variant="outline" onClick={() => setShowDeleteDialog(true)} className="gap-2 text-error hover:text-error">
             <Trash2 className="h-4 w-4" />
             삭제
           </Button>

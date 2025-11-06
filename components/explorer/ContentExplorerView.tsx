@@ -130,9 +130,9 @@ export function ContentExplorerView({
     }
   }
 
-  if (collections.length === 0 && contents.length === 0) {
+  if (contents.length === 0) {
     return (
-      <div className="text-secondary-500 flex h-full flex-col items-center justify-center">
+      <div className="text-secondary-500 flex flex-1 flex-col items-center justify-center">
         <ImageIcon className="text-secondary-300 mb-4 h-16 w-16" />
         <p className="text-lg font-medium">콘텐츠가 없습니다</p>
         <p className="text-secondary-400 mt-1 text-sm">콘텐츠를 업로드해보세요</p>
