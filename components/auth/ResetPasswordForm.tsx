@@ -60,7 +60,7 @@ export function ResetPasswordForm() {
           description: result.error?.errorMessage || '비밀번호 재설정에 실패했습니다.',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: '오류',

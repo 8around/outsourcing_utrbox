@@ -69,7 +69,7 @@ export default function AdminUserDetailPage() {
             variant: 'destructive',
           })
         }
-      } catch (error) {
+      } catch {
         toast({
           title: '오류',
           description: '회원 정보를 불러오는데 실패했습니다.',
@@ -80,6 +80,7 @@ export default function AdminUserDetailPage() {
       }
     }
     fetchUser()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
   // 컬렉션 목록 조회
@@ -125,7 +126,7 @@ export default function AdminUserDetailPage() {
             variant: 'destructive',
           })
         }
-      } catch (error) {
+      } catch {
         toast({
           title: '오류',
           description: '콘텐츠 목록을 불러오는데 실패했습니다.',
@@ -136,6 +137,7 @@ export default function AdminUserDetailPage() {
       }
     }
     fetchContents()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, user, contentFilters, selectedCollectionId])
 
   // 이벤트 핸들러: 회원 정보 수정
@@ -159,7 +161,7 @@ export default function AdminUserDetailPage() {
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: '오류',
         description: '회원 정보 수정에 실패했습니다.',
@@ -188,7 +190,7 @@ export default function AdminUserDetailPage() {
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: '오류',
         description: '승인에 실패했습니다.',
@@ -218,7 +220,7 @@ export default function AdminUserDetailPage() {
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: '오류',
         description: '거부에 실패했습니다.',
@@ -247,7 +249,7 @@ export default function AdminUserDetailPage() {
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: '오류',
         description: '권한 변경에 실패했습니다.',

@@ -61,15 +61,6 @@ export function DetectionTable({
     },
   ]
 
-  const getDetectionTypeBadge = (type: string, badgeClass: string) => {
-    const labels = {
-      full: '완전 일치',
-      partial: '부분 일치',
-      similar: '시각적 유사',
-    }
-    return <Badge className={badgeClass}>{labels[type as keyof typeof labels] || type}</Badge>
-  }
-
   const getReviewStatusBadge = (status: string | null) => {
     if (!status) status = 'pending'
     switch (status) {

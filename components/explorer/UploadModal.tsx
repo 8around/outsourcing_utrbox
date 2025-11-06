@@ -26,6 +26,7 @@ import { uploadContent } from '@/lib/api/contents'
 import { Collection } from '@/types'
 import { Upload, X, CheckCircle2, AlertCircle } from 'lucide-react'
 import { LoadingSpinner } from '@/components/common'
+import Image from 'next/image'
 
 interface FileWithPreview extends File {
   preview: string
@@ -256,10 +257,12 @@ export function UploadModal({
                     <div className="flex gap-4">
                       {/* Preview */}
                       <div className="relative h-32 w-32 flex-shrink-0 rounded-xl bg-secondary">
-                        <img
+                        <Image
                           src={item.file.preview}
                           alt={item.title}
-                          className="h-full w-full rounded object-contain"
+                          className="rounded-xl object-contain"
+                          fill
+                          unoptimized
                         />
                         {item.status === 'success' && (
                           <div className="absolute inset-0 flex items-center justify-center rounded bg-success/20">

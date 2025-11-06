@@ -116,7 +116,7 @@ export function SignupForm() {
           description: result.error?.errorMessage || '회원가입에 실패했습니다.',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: '오류',

@@ -118,7 +118,7 @@ export function LoginForm() {
           description: result.error?.errorMessage || '인증 메일 재전송에 실패했습니다.',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: '오류',
@@ -177,7 +177,7 @@ export function LoginForm() {
           description: result.error?.errorMessage || '로그인에 실패했습니다.',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: '오류',

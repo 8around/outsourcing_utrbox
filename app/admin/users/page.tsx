@@ -40,7 +40,7 @@ export default function AdminUsersPage() {
             variant: 'destructive',
           })
         }
-      } catch (error) {
+      } catch {
         toast({
           title: '오류',
           description: '사용자 목록을 불러오는데 실패했습니다.',
@@ -74,7 +74,7 @@ export default function AdminUsersPage() {
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: '오류',
         description: '일괄 승인에 실패했습니다.',
@@ -101,7 +101,7 @@ export default function AdminUsersPage() {
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: '오류',
         description: '일괄 차단에 실패했습니다.',

@@ -66,7 +66,7 @@ export function UserDetailCard({ user, onUpdate }: UserDetailCardProps) {
         organization: editData.organization.trim() || undefined,
       })
       setIsEditing(false)
-    } catch (error) {
+    } catch {
       // 에러는 부모 컴포넌트에서 처리
     } finally {
       setIsSaving(false)

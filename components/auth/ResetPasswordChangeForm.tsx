@@ -94,7 +94,7 @@ export function ResetPasswordChangeForm() {
       // 세션 정리 후 로그인 페이지로
       await supabase.auth.signOut()
       router.push('/login')
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: '오류',

@@ -271,7 +271,7 @@ export async function resetUserPassword(
       data: null,
       error: null,
     }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       data: null,
@@ -309,7 +309,7 @@ export async function updateUserPassword(
       data: null,
       error: null,
     }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       data: null,

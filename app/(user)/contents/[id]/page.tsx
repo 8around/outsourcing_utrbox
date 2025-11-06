@@ -20,7 +20,7 @@ import {
   ExternalLink,
   FileImage,
 } from 'lucide-react'
-import { ImageViewer, ConfirmDialog, MessageViewModal } from '@/components/common'
+import { ConfirmDialog, MessageViewModal } from '@/components/common'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
 import { PageContainer } from '@/components/layout'
@@ -33,7 +33,6 @@ export default function ContentDetailPage() {
   const [detectedContents, setDetectedContents] = useState<DetectedContent[]>([])
   const [selectedDetection, setSelectedDetection] = useState<DetectedContent | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [showImageViewer, setShowImageViewer] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -280,8 +279,7 @@ export default function ContentDetailPage() {
             </CardHeader>
             <CardContent>
               <div
-                className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-100 cursor-pointer"
-                onClick={() => setShowImageViewer(true)}
+                className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-100"
               >
                 <Image
                   src={content.file_path}
@@ -416,14 +414,6 @@ export default function ContentDetailPage() {
           </Card>
         </div>
       </div>
-
-      {/* Image Viewer */}
-      <ImageViewer
-        src={content.file_path}
-        alt={content.file_name}
-        open={showImageViewer}
-        onClose={() => setShowImageViewer(false)}
-      />
 
       {/* Delete Confirmation */}
       <ConfirmDialog

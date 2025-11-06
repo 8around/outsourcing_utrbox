@@ -46,7 +46,7 @@ export async function uploadContent(
     const filePath = `${params.userId}/${collectionFolder}/${timestamp}_${sanitizedFileName}`
 
     // 2. Storage에 파일 업로드
-    const { data: storageData, error: storageError } = await supabase.storage
+    const { error: storageError } = await supabase.storage
       .from('contents')
       .upload(filePath, params.file, {
         cacheControl: '86400',

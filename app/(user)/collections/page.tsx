@@ -101,6 +101,7 @@ export default function ExplorerPage() {
     }
 
     loadContents()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage])
 
   // 새로고침 이벤트 리스너

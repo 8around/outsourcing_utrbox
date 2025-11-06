@@ -27,7 +27,8 @@ export default function CollectionPage() {
 
   const PAGE_SIZE = 12
 
-  const { selectedContentIds, viewMode, sortBy, sortOrder, searchQuery, setSelectedContents } = useExplorerStore()
+  const { selectedContentIds, viewMode, sortBy, sortOrder, searchQuery, setSelectedContents } =
+    useExplorerStore()
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -38,7 +39,14 @@ export default function CollectionPage() {
       setError(null)
 
       try {
-        const contentsRes = await getContentsByCollection(user.id, collectionId, sortBy, sortOrder, 1, PAGE_SIZE)
+        const contentsRes = await getContentsByCollection(
+          user.id,
+          collectionId,
+          sortBy,
+          sortOrder,
+          1,
+          PAGE_SIZE
+        )
 
         if (contentsRes.success && contentsRes.data) {
           setUserContents(contentsRes.data)
@@ -90,6 +98,7 @@ export default function CollectionPage() {
     }
 
     loadContents()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage])
 
   // 새로고침 이벤트 리스너

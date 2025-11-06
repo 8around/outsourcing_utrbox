@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     let analysisResult: VisionAnalysisResult
     try {
       analysisResult = await analyzeImage(publicUrl, [featureType])
-    } catch (visionError) {
+    } catch {
       // 네트워크 에러 등 예외 처리
       return NextResponse.json(
         {

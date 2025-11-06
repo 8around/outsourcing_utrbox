@@ -44,7 +44,7 @@ export function Header() {
       logout()
       
       router.replace('/login')
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: '네트워크 오류',

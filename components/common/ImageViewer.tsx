@@ -47,6 +47,7 @@ export function ImageViewer({ src, alt, open, onClose }: ImageViewerProps) {
 
           {/* Image */}
           <div className="flex h-full w-full items-center justify-center overflow-auto p-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={src}
               alt={alt}

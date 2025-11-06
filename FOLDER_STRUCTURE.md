@@ -260,15 +260,9 @@ lib/
 │   ├── contents.ts           # 콘텐츠 API (BrowserClient)
 │   ├── dashboard.ts          # 대시보드 API (BrowserClient)
 │   ├── detections.ts         # 발견 API (BrowserClient)
-│   ├── users.ts              # 사용자 API (BrowserClient)
-│   └── mock/                 # Mock API 데이터
-│       ├── auth.ts           # 인증 Mock
-│       ├── collections.ts    # 컬렉션 Mock
-│       ├── contents.ts       # 콘텐츠 Mock
-│       └── index.ts          # Export 파일
+│   └── users.ts              # 사용자 API (BrowserClient)
 ├── admin/                     # 관리자 관련 로직
 │   ├── types.ts              # 관리자 타입 정의
-│   ├── mock-data.ts          # 관리자 Mock 데이터
 │   └── store.ts              # 관리자 상태 관리
 ├── stores/                    # 전역 상태 관리
 │   ├── authStore.ts          # 인증 상태
@@ -276,14 +270,6 @@ lib/
 │   └── explorerStore.ts      # 탐색기 상태
 ├── google-vision/             # Google Vision API 연동
 │   └── client.ts             # Vision API 클라이언트
-├── mock-data/                 # Mock 데이터
-│   ├── analysisResults.ts    # 분석 결과 Mock 데이터
-│   ├── collections.ts        # 컬렉션 Mock 데이터
-│   ├── contents.ts           # 콘텐츠 Mock 데이터
-│   ├── detected-contents.ts  # 발견된 콘텐츠 Mock 데이터
-│   ├── detectedContents.ts   # 발견된 콘텐츠 Mock 데이터 (중복)
-│   ├── users.ts              # 사용자 Mock 데이터
-│   └── index.ts              # Export 파일
 ├── utils/                     # 유틸리티 함수
 │   ├── errors.ts             # 에러 처리 유틸리티
 │   └── validation.ts         # 유효성 검증 유틸리티

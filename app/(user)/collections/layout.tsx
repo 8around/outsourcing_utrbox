@@ -37,6 +37,7 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
     }
 
     loadCollections()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, sortBy, sortOrder])
 
   // 현재 컬렉션 로드
@@ -58,6 +59,7 @@ export default function CollectionsLayout({ children }: { children: React.ReactN
     }
 
     loadCurrentCollection()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collectionId])
 
   // 컬렉션 변경 핸들러 (드롭다운에서 선택 시)
