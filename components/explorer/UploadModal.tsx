@@ -109,7 +109,7 @@ export function UploadModal({
     })
   }
 
-  const uploadFile = async (item: UploadItem, index: number) => {
+  const uploadFile = async (item: UploadItem, index: number): Promise<boolean> => {
     updateItem(index, { status: 'uploading', progress: 0 })
 
     try {
@@ -128,11 +128,13 @@ export function UploadModal({
 
       if (response.success) {
         updateItem(index, { status: 'success', progress: 100 })
+        return true
       } else {
         updateItem(index, {
           status: 'error',
           error: response.error || '업로드 실패',
         })
+        return false
       }
     } catch (error) {
       console.error('업로드 중 오류:', error)
@@ -140,6 +142,7 @@ export function UploadModal({
         status: 'error',
         error: '업로드 중 오류가 발생했습니다',
       })
+      return false
     }
   }
 
@@ -163,17 +166,20 @@ export function UploadModal({
 
     setIsUploading(true)
 
+    let successCount = 0
+
     // Upload all files
     for (let i = 0; i < uploadItems.length; i++) {
       const item = uploadItems[i]
       if (item.status === 'pending' || item.status === 'error') {
-        await uploadFile(item, i)
+        const isSuccess = await uploadFile(item, i)
+        if (isSuccess) {
+          successCount++
+        }
       }
     }
 
     setIsUploading(false)
-
-    const successCount = uploadItems.filter((item) => item.status === 'success').length
 
     toast({
       title: '업로드 완료',
