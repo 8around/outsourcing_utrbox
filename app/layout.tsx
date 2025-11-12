@@ -15,7 +15,7 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'UTRBOX - 콘텐츠 저작권 탐지 시스템',
+  title: 'UTRBOX - 콘텐츠 저작권 관리 시스템',
   description: 'AI 기반 콘텐츠 저작권 관리 및 침해 탐지 시스템',
 }
 
