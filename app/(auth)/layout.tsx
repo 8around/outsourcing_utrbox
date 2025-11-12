@@ -6,7 +6,13 @@ function AuthHeader() {
     <header className="w-full px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex items-center gap-1">
         <div className="relative h-8 w-8">
-          <Image src="/images/logo.png" alt="UTRBOX Logo" fill className="object-contain" />
+          <Image
+            src="/images/logo.png"
+            alt="UTRBOX Logo"
+            fill
+            className="object-contain"
+            unoptimized
+          />
         </div>
         <h1 className="text-2xl font-bold text-primary">UTRBOX</h1>
       </div>
@@ -69,13 +75,32 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* 오른쪽 영역: 배경 이미지 */}
       <div className="hidden items-center justify-center bg-background lg:flex lg:w-1/2">
         <div className="relative h-full w-full">
+          {/* 배경 이미지 */}
           <Image
             src="/images/auth-background.jpg"
             alt="Authentication background"
             fill
             className="object-cover"
-            priority
+            unoptimized
           />
+
+          {/* 중앙 오버레이: 로고 + 텍스트 */}
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center">
+            <div className="relative flex flex-col items-center">
+              <p className="text-center text-4xl font-bold text-white">Beyond AI, Control.</p>
+              <div className="absolute -top-20 left-1/2 -translate-x-1/2">
+                <div className="relative h-16 w-16">
+                  <Image
+                    src="/images/logo.png"
+                    alt="UTRBOX Logo"
+                    fill
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
