@@ -1,4 +1,6 @@
 import Image from 'next/image'
+import Link from 'next/link'
+import { EXTERNAL_LINKS } from '@/lib/constants/externalLinks'
 
 // Auth Header 컴포넌트
 function AuthHeader() {
@@ -29,29 +31,29 @@ function AuthFooter() {
       <div className="text-center text-sm text-primary">
         <span>© {currentYear} UTRBOX</span>
         <span className="mx-2">·</span>
-        <a
+        <Link
           target="_blank"
-          href="https://utrbox.oopy.io/29b13c6a-c40f-805e-b802-e249f5c89edf"
+          href={EXTERNAL_LINKS.PRICING}
           className="text-primary/80 transition-colors hover:text-primary/100"
         >
           Pricing
-        </a>
+        </Link>
         <span className="mx-2">·</span>
-        <a
+        <Link
           target="_blank"
-          href="https://utrbox.oopy.io/29913c6a-c40f-80d2-84f7-ecefbd123042"
+          href={EXTERNAL_LINKS.TERMS_OF_SERVICE}
           className="text-primary/80 transition-colors hover:text-primary/100"
         >
           이용약관
-        </a>
+        </Link>
         <span className="mx-2">·</span>
-        <a
+        <Link
           target="_blank"
-          href="https://utrbox.oopy.io/29913c6a-c40f-807f-b4cb-f1ec9a682384"
+          href={EXTERNAL_LINKS.PRIVACY_POLICY}
           className="text-primary/80 transition-colors hover:text-primary/100"
         >
           개인정보처리방침
-        </a>
+        </Link>
       </div>
     </footer>
   )

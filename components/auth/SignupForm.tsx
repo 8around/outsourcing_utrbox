@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { EXTERNAL_LINKS } from '@/lib/constants/externalLinks'
 
 const signupSchema = z
   .object({
@@ -232,7 +233,11 @@ export function SignupForm() {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="cursor-pointer text-sm font-normal text-foreground">
-                        <Link href="#" className="text-primary hover:underline" target="_blank">
+                        <Link
+                          href={EXTERNAL_LINKS.TERMS_OF_SERVICE}
+                          className="text-primary hover:underline"
+                          target="_blank"
+                        >
                           이용약관
                         </Link>
                         에 동의합니다 (필수)
@@ -253,7 +258,11 @@ export function SignupForm() {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="cursor-pointer text-sm font-normal text-foreground">
-                        <Link href="#" className="text-primary hover:underline" target="_blank">
+                        <Link
+                          href={EXTERNAL_LINKS.PRIVACY_POLICY}
+                          className="text-primary hover:underline"
+                          target="_blank"
+                        >
                           개인정보처리방침
                         </Link>
                         에 동의합니다 (필수)
