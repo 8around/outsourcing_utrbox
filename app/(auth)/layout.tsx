@@ -1,29 +1,80 @@
 import Image from 'next/image'
 
+// Auth Header 컴포넌트
+function AuthHeader() {
+  return (
+    <header className="w-full px-4 py-6 sm:px-6 lg:px-8">
+      <div className="flex items-center gap-1">
+        <div className="relative h-8 w-8">
+          <Image src="/images/logo.png" alt="UTRBOX Logo" fill className="object-contain" />
+        </div>
+        <h1 className="text-2xl font-bold text-primary">UTRBOX</h1>
+      </div>
+    </header>
+  )
+}
+
+// Auth Footer 컴포넌트
+function AuthFooter() {
+  const currentYear = new Date().getFullYear()
+
+  return (
+    <footer className="w-full px-4 py-6 sm:px-6 lg:px-8">
+      <div className="text-center text-sm text-primary">
+        <span>© {currentYear} UTRBOX</span>
+        <span className="mx-2">·</span>
+        <a
+          target="_blank"
+          href="https://utrbox.oopy.io/29b13c6a-c40f-805e-b802-e249f5c89edf"
+          className="text-primary/80 transition-colors hover:text-primary/100"
+        >
+          Pricing
+        </a>
+        <span className="mx-2">·</span>
+        <a
+          target="_blank"
+          href="https://utrbox.oopy.io/29913c6a-c40f-80d2-84f7-ecefbd123042"
+          className="text-primary/80 transition-colors hover:text-primary/100"
+        >
+          이용약관
+        </a>
+        <span className="mx-2">·</span>
+        <a
+          target="_blank"
+          href="https://utrbox.oopy.io/29913c6a-c40f-807f-b4cb-f1ec9a682384"
+          className="text-primary/80 transition-colors hover:text-primary/100"
+        >
+          개인정보처리방침
+        </a>
+      </div>
+    </footer>
+  )
+}
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
       {/* 왼쪽 영역: 인증 컨텐츠 */}
-      <div className="flex w-full lg:w-1/2 flex-col items-center justify-center bg-secondary/50 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-primary">UTRBOX</h1>
-            <p className="text-secondary/500 mt-2">콘텐츠 저작권 관리 시스템</p>
-          </div>
-          {children}
+      <div className="flex w-full flex-col bg-secondary/50 lg:w-1/2">
+        <AuthHeader />
+
+        {/* 중앙 컨텐츠 영역 */}
+        <div className="flex flex-1 items-center justify-center px-4 sm:px-6 lg:px-8">
+          <div className="w-full max-w-md">{children}</div>
         </div>
+
+        <AuthFooter />
       </div>
 
       {/* 오른쪽 영역: 배경 이미지 */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-background">
-        <div className="relative w-full h-full">
+      <div className="hidden items-center justify-center bg-background lg:flex lg:w-1/2">
+        <div className="relative h-full w-full">
           <Image
             src="/images/auth-background.jpg"
             alt="Authentication background"
             fill
             className="object-cover"
             priority
-            unoptimized
           />
         </div>
       </div>
