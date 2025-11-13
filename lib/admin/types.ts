@@ -7,6 +7,7 @@ export interface User {
   name: string
   email: string // from auth.users
   organization: string | null
+  phone: string // xxx-xxxx-xxxx 형식
   role: 'member' | 'admin'
   is_approved: boolean | null // NULL: 대기, TRUE: 승인, FALSE: 거부
   created_at: string // ISO 8601
