@@ -1,8 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { User } from '@/lib/admin/types'
 import { CheckCircle, XCircle, Shield, ShieldOff } from 'lucide-react'
 
@@ -11,7 +13,7 @@ interface UserActionButtonsProps {
   currentUserId?: string
   onApprove: () => void
   onBlock: () => void
-  onRoleChange: (role: 'member' | 'admin') => void
+  onRoleChange: (role: 'member' | 'admin') => Promise<void>
 }
 
 export function UserActionButtons({
@@ -23,6 +25,11 @@ export function UserActionButtons({
 }: UserActionButtonsProps) {
   const isSelf = user.id === currentUserId
 
+  // 역할 변경 다이얼로그 상태
+  const [toAdminDialogOpen, setToAdminDialogOpen] = useState(false)
+  const [toMemberDialogOpen, setToMemberDialogOpen] = useState(false)
+  const [isChangingRole, setIsChangingRole] = useState(false)
+
   const handleApprove = () => {
     onApprove()
   }
@@ -32,10 +39,26 @@ export function UserActionButtons({
     onBlock()
   }
 
-  const handleRoleChange = () => {
+  const handleRoleChangeClick = () => {
     if (isSelf) return
-    const newRole = user.role === 'admin' ? 'member' : 'admin'
-    onRoleChange(newRole)
+
+    // 현재 역할에 따라 적절한 다이얼로그 표시
+    if (user.role === 'member') {
+      setToAdminDialogOpen(true) // 관리자로 변경
+    } else {
+      setToMemberDialogOpen(true) // 일반회원으로 변경
+    }
+  }
+
+  const confirmRoleChange = async (newRole: 'admin' | 'member') => {
+    // 로딩 상태, 실제 권한 변경
+    setIsChangingRole(true)
+    await onRoleChange(newRole)
+    setIsChangingRole(false)
+
+    // 다이얼로그 닫기
+    setToAdminDialogOpen(false)
+    setToMemberDialogOpen(false)
   }
 
   return (
@@ -86,7 +109,7 @@ export function UserActionButtons({
             <TooltipTrigger asChild>
               <span className="inline-block w-full">
                 <Button
-                  onClick={handleRoleChange}
+                  onClick={handleRoleChangeClick}
                   disabled={isSelf}
                   variant="outline"
                   className="w-full gap-2"
@@ -112,6 +135,32 @@ export function UserActionButtons({
             )}
           </Tooltip>
         </TooltipProvider>
+
+        {/* 관리자로 변경 확인 다이얼로그 */}
+        <ConfirmDialog
+          open={toAdminDialogOpen}
+          title="관리자로 변경"
+          description={`${user.name} (${user.email})을(를) 관리자로 권한을 변경하시겠습니까?\n해당 사용자의 재로그인 이후 적용됩니다.`}
+          confirmText="변경"
+          cancelText="취소"
+          isDestructive={true}
+          isLoading={isChangingRole}
+          onConfirm={() => confirmRoleChange('admin')}
+          onCancel={() => setToAdminDialogOpen(false)}
+        />
+
+        {/* 일반회원으로 변경 확인 다이얼로그 */}
+        <ConfirmDialog
+          open={toMemberDialogOpen}
+          title="일반 회원으로 변경"
+          description={`${user.name} (${user.email})을(를) 일반회원으로 권한을 변경하시겠습니까?\n해당 사용자의 재로그인 이후 적용됩니다.`}
+          confirmText="변경"
+          cancelText="취소"
+          isDestructive={false}
+          isLoading={isChangingRole}
+          onConfirm={() => confirmRoleChange('member')}
+          onCancel={() => setToMemberDialogOpen(false)}
+        />
       </CardContent>
     </Card>
   )
