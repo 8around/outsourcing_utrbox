@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -34,6 +34,11 @@ export function ReviewStatusModal({
     (currentStatus || 'pending') as ReviewStatus
   )
   const [isLoading, setIsLoading] = useState(false)
+
+  // currentStatus 또는 모달이 열릴 때마다 selectedStatus 동기화
+  useEffect(() => {
+    setSelectedStatus((currentStatus || 'pending') as ReviewStatus)
+  }, [currentStatus, isOpen])
 
   const statuses: Array<{
     value: ReviewStatus
