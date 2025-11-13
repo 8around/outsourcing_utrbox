@@ -4,13 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Users, FileImage } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAdminContext } from './AdminContext'
+import Image from 'next/image'
 
 const menuItems = [
   {
@@ -27,7 +23,7 @@ const menuItems = [
     title: '콘텐츠 관리',
     href: '/admin/contents',
     icon: FileImage,
-  }
+  },
 ]
 
 export function AdminSidebar() {
@@ -43,14 +39,17 @@ export function AdminSidebar() {
         )}
       >
         {/* 로고 */}
-        <div className="flex h-16 items-center justify-center border-b px-4">
-          {collapsed ? (
-            <div className="text-2xl font-bold text-primary">U</div>
-          ) : (
-            <Link href="/admin/dashboard" className="text-xl font-bold text-primary">
-              UTRBOX Admin
-            </Link>
-          )}
+        <div className="flex h-16 items-center justify-center gap-1 border-b px-4 text-lg font-bold text-primary">
+          <div className="relative h-7 w-7">
+            <Image
+              src="/images/logo.png"
+              alt="UTRBOX Logo"
+              fill
+              className="object-contain"
+              unoptimized
+            />
+          </div>
+          {!collapsed && <span>UTRBOX Admin</span>}
         </div>
 
         {/* 메뉴 아이템 */}

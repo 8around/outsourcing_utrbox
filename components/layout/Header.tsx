@@ -14,6 +14,7 @@ import {
 import { useAuthStore } from '@/lib/stores/authStore'
 import { User, LogOut } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import Image from 'next/image'
 
 export function Header() {
   const { user, logout } = useAuthStore()
@@ -42,7 +43,7 @@ export function Header() {
 
       // 성공 시
       logout()
-      
+
       router.replace('/login')
     } catch {
       toast({
@@ -55,8 +56,17 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white">
-      <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
+      <div className="flex h-16 items-center gap-1 px-4 sm:px-6">
         {/* Logo */}
+        <div className="relative h-7 w-7">
+          <Image
+            src="/images/logo.png"
+            alt="UTRBOX Logo"
+            fill
+            className="object-contain"
+            unoptimized
+          />
+        </div>
         <Link href="/" className="flex items-center gap-2">
           <div className="text-xl font-bold text-primary">UTRBOX</div>
         </Link>
