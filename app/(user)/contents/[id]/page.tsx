@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { format } from 'date-fns'
@@ -19,6 +19,8 @@ import {
   AlertCircle,
   ExternalLink,
   FileImage,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { ConfirmDialog, MessageViewModal } from '@/components/common'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -101,9 +103,37 @@ export default function ContentDetailPage() {
     }
   }
 
+  // detection_type별로 그룹화하여 순회용 배열 생성
+  const orderedDetections = useMemo(() => {
+    const full = detectedContents.filter((d) => d.detection_type === 'full')
+    const partial = detectedContents.filter((d) => d.detection_type === 'partial')
+    const similar = detectedContents.filter((d) => d.detection_type === 'similar')
+    return [...full, ...partial, ...similar]
+  }, [detectedContents])
+
   const handleDetectionClick = (detection: DetectedContent) => {
     setSelectedDetection(detection)
   }
+
+  // 이전/다음 detection으로 순회
+  const handleNavigateDetection = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (!selectedDetection || orderedDetections.length <= 1) return
+
+      const currentIndex = orderedDetections.findIndex((d) => d.id === selectedDetection.id)
+      if (currentIndex === -1) return
+
+      let newIndex
+      if (direction === 'next') {
+        newIndex = (currentIndex + 1) % orderedDetections.length
+      } else {
+        newIndex = (currentIndex - 1 + orderedDetections.length) % orderedDetections.length
+      }
+
+      setSelectedDetection(orderedDetections[newIndex])
+    },
+    [selectedDetection, orderedDetections]
+  )
 
   if (isLoading) {
     return (
@@ -351,7 +381,7 @@ export default function ContentDetailPage() {
               <CardTitle>발견 이미지</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-50">
+              <div className="group relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-50">
                 {selectedDetection ? (
                   !imageError ? (
                     <Image
@@ -389,6 +419,26 @@ export default function ContentDetailPage() {
                       <p className="mt-1 text-sm">발견내역을 클릭하여 이미지를 확인하세요</p>
                     </div>
                   </div>
+                )}
+
+                {/* 이미지 순회 화살표 버튼 (호버 시 표시) */}
+                {selectedDetection && orderedDetections.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => handleNavigateDetection('prev')}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border bg-white/80 p-2 shadow-md opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white"
+                      aria-label="이전 이미지"
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </button>
+                    <button
+                      onClick={() => handleNavigateDetection('next')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border bg-white/80 p-2 shadow-md opacity-0 transition-opacity group-hover:opacity-100 hover:bg-white"
+                      aria-label="다음 이미지"
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </button>
+                  </>
                 )}
               </div>
             </CardContent>
