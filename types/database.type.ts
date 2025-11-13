@@ -224,6 +224,10 @@ export type Database = {
     }
     Functions: {
       custom_access_token_hook: { Args: { event: Json }; Returns: Json }
+      delete_user_sessions: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
       get_matched_analyzed_contents_count: {
         Args: { user_id_param: string }
         Returns: number

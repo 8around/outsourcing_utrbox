@@ -140,7 +140,7 @@ export function UserActionButtons({
         <ConfirmDialog
           open={toAdminDialogOpen}
           title="관리자로 변경"
-          description={`${user.name} (${user.email})을(를) 관리자로 권한을 변경하시겠습니까?\n해당 사용자의 재로그인 이후 적용됩니다.`}
+          description={`${user.name} (${user.email})을(를) 관리자로 권한을 변경하시겠습니까?\n해당 사용자의 계정이 로그아웃됩니다.`}
           confirmText="변경"
           cancelText="취소"
           isDestructive={true}
@@ -153,7 +153,7 @@ export function UserActionButtons({
         <ConfirmDialog
           open={toMemberDialogOpen}
           title="일반 회원으로 변경"
-          description={`${user.name} (${user.email})을(를) 일반회원으로 권한을 변경하시겠습니까?\n해당 사용자의 재로그인 이후 적용됩니다.`}
+          description={`${user.name} (${user.email})을(를) 일반회원으로 권한을 변경하시겠습니까?\n해당 사용자의 계정이 로그아웃됩니다.`}
           confirmText="변경"
           cancelText="취소"
           isDestructive={false}
