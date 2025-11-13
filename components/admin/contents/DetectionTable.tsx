@@ -169,7 +169,9 @@ export function DetectionTable({
                         </TableCell>
                         <TableCell
                           className={`min-w-0 max-w-xs ${variant === 'user' ? 'cursor-pointer' : ''}`}
-                          onClick={variant === 'user' ? () => onDetectionClick(detection) : undefined}
+                          onClick={
+                            variant === 'user' ? () => onDetectionClick(detection) : undefined
+                          }
                         >
                           <div className="flex w-full min-w-0 flex-col">
                             <span className="min-w-0 truncate font-medium text-gray-900">

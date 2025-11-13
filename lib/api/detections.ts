@@ -68,6 +68,7 @@ export async function getDetections(
       .select('*')
       .eq('content_id', contentId)
       .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
 
     if (error) {
       return {
