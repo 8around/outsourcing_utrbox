@@ -190,6 +190,7 @@ export type Database = {
           is_approved: boolean | null
           name: string
           organization: string | null
+          phone: string
           role: string | null
           updated_at: string | null
         }
@@ -200,6 +201,7 @@ export type Database = {
           is_approved?: boolean | null
           name: string
           organization?: string | null
+          phone: string
           role?: string | null
           updated_at?: string | null
         }
@@ -210,6 +212,7 @@ export type Database = {
           is_approved?: boolean | null
           name?: string
           organization?: string | null
+          phone?: string
           role?: string | null
           updated_at?: string | null
         }

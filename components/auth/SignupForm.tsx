@@ -54,6 +54,10 @@ const signupSchema = z
         /^[a-zA-Z가-힣0-9]+(\s[a-zA-Z가-힣0-9]+)*$/,
         '영어, 한글, 숫자만 입력 가능하며, 연속된 공백은 허용되지 않습니다.'
       ),
+    phone: z
+      .string()
+      .regex(/^\d{3}-\d{4}-\d{4}$/, '전화번호는 xxx-xxxx-xxxx 형식이어야 합니다')
+      .min(13, '전화번호를 정확히 입력해주세요'),
     agreeTerms: z.boolean().refine((val) => val === true, {
       message: '이용약관에 동의해주세요',
     }),
@@ -84,6 +88,7 @@ export function SignupForm() {
       passwordConfirm: '',
       name: '',
       organization: '',
+      phone: '',
       agreeTerms: false,
       agreePrivacy: false,
     },
@@ -103,6 +108,7 @@ export function SignupForm() {
           password: data.password,
           name: data.name,
           organization: data.organization,
+          phone: data.phone,
         }),
       })
 
@@ -216,6 +222,43 @@ export function SignupForm() {
                   <FormLabel className="text-foreground">소속</FormLabel>
                   <FormControl>
                     <Input placeholder="회사명 또는 단체명" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground">전화번호</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="010-1234-5678"
+                      {...field}
+                      onChange={(e) => {
+                        // 숫자만 추출
+                        const numbers = e.target.value.replace(/[^\d]/g, '')
+                        // 자동 하이픈 삽입 (xxx-xxxx-xxxx)
+                        let formatted = numbers
+                        if (numbers.length > 3) {
+                          formatted = numbers.slice(0, 3) + '-' + numbers.slice(3)
+                        }
+                        if (numbers.length > 7) {
+                          formatted =
+                            numbers.slice(0, 3) +
+                            '-' +
+                            numbers.slice(3, 7) +
+                            '-' +
+                            numbers.slice(7, 11)
+                        }
+                        field.onChange(formatted)
+                      }}
+                      maxLength={13}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

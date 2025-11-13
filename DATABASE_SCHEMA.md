@@ -49,6 +49,7 @@ CREATE TABLE public.users (
   name TEXT NOT NULL,
   email TEXT,  -- auth.users의 email 복사 (쿼리 성능 향상)
   organization TEXT,
+  phone TEXT NOT NULL,  -- 전화번호 (형식: xxx-xxxx-xxxx, 필수)
 
   -- Authorization
   role TEXT CHECK (role IN ('member', 'admin')) DEFAULT 'member',
@@ -56,13 +57,17 @@ CREATE TABLE public.users (
 
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  -- Constraints
+  CONSTRAINT check_phone_format CHECK (phone ~ '^\d{3}-\d{4}-\d{4}$')
 );
 
 -- Comments
 COMMENT ON TABLE public.users IS '사용자 프로필 정보 (인증은 auth.users 활용)';
 COMMENT ON COLUMN public.users.id IS 'auth.users.id 참조';
 COMMENT ON COLUMN public.users.email IS '사용자 이메일 (auth.users에서 복사)';
+COMMENT ON COLUMN public.users.phone IS '전화번호 (형식: xxx-xxxx-xxxx, 필수)';
 COMMENT ON COLUMN public.users.is_approved IS 'NULL: 승인 대기, TRUE: 승인, FALSE: 거부';
 COMMENT ON COLUMN public.users.role IS 'member: 일반 사용자, admin: 관리자';
 ```
@@ -608,19 +613,20 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   -- public.users 테이블에 레코드 생성
-  INSERT INTO public.users (id, name, email, organization, role, is_approved)
+  INSERT INTO public.users (id, name, email, organization, phone, role, is_approved)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'name', 'User' || EXTRACT(EPOCH FROM NOW())::BIGINT::TEXT),
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'organization', NULL),
+    COALESCE(NEW.raw_user_meta_data->>'phone', NULL),
     'member',
     NULL  -- 승인 대기 상태
   );
 
   RETURN NEW;
 END;
-$$ LANGUAGE 'plpgsql' SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 트리거 생성
 CREATE TRIGGER on_auth_user_created
