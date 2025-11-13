@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { EXTERNAL_LINKS } from '@/lib/constants/externalLinks'
 
-export function Footer() {
+export function AdminFooter() {
   const currentYear = new Date().getFullYear()
 
   return (

@@ -6,10 +6,10 @@ import { AuthResponse } from '@/types'
 export async function POST(request: NextRequest): Promise<NextResponse<AuthResponse<null>>> {
   try {
     const body = await request.json()
-    const { email, password, name, organization } = body
+    const { email, password, name, organization, phone } = body
 
     // 입력 데이터 검증
-    if (!email || !password || !name || !organization) {
+    if (!email || !password || !name || !organization || !phone) {
       return NextResponse.json(
         {
           success: false,
@@ -53,6 +53,21 @@ export async function POST(request: NextRequest): Promise<NextResponse<AuthRespo
       )
     }
 
+    // 전화번호 검증 (xxx-xxxx-xxxx 형식)
+    const phoneRegex = /^\d{3}-\d{4}-\d{4}$/
+    if (!phoneRegex.test(phone)) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: {
+            errorMessage: '전화번호는 xxx-xxxx-xxxx 형식이어야 합니다.',
+          },
+        },
+        { status: 400 }
+      )
+    }
+
     // 요청/응답 기반 서버 클라이언트 생성
     const supabase = createServerSupabase()
 
@@ -62,6 +77,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<AuthRespo
       password,
       name,
       organization,
+      phone,
     })
 
     if (!result.success) {

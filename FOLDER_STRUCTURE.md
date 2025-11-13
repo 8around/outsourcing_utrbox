@@ -261,6 +261,9 @@ lib/
 │   ├── dashboard.ts          # 대시보드 API (BrowserClient)
 │   ├── detections.ts         # 발견 API (BrowserClient)
 │   └── users.ts              # 사용자 API (BrowserClient)
+├── constants/                 # 전역 상수 정의
+│   ├── externalLinks.ts      # 외부 링크 상수 (개인정보처리방침, 이용약관 등)
+│   └── index.ts              # Export 파일
 ├── admin/                     # 관리자 관련 로직
 │   ├── types.ts              # 관리자 타입 정의
 │   └── store.ts              # 관리자 상태 관리

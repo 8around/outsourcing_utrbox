@@ -232,6 +232,20 @@ export default function AdminUserDetailPage() {
   // 이벤트 핸들러: 권한 변경
   const handleRoleChange = async (role: 'member' | 'admin') => {
     try {
+      const logoutResponse = await fetch(`/api/admin/users/${userId}/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ target_user_id: userId }),
+      })
+
+      const { success: logoutSuccess } = await logoutResponse.json()
+
+      if (!logoutSuccess) {
+        throw new Error()
+      }
+
       const result = await updateUserRole(userId, role)
       if (result.success) {
         toast({

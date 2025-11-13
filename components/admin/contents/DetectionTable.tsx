@@ -30,7 +30,7 @@ export function DetectionTable({
   variant = 'admin',
 }: DetectionTableProps) {
   // Collapsible 상태 관리 - 기본으로 완전 일치 섹션만 열림
-  const [openSections, setOpenSections] = useState<string[]>(['full'])
+  const [openSections, setOpenSections] = useState<string[]>([])
 
   // 섹션 토글 함수
   const toggleSection = (type: string) => {
@@ -169,7 +169,9 @@ export function DetectionTable({
                         </TableCell>
                         <TableCell
                           className={`min-w-0 max-w-xs ${variant === 'user' ? 'cursor-pointer' : ''}`}
-                          onClick={variant === 'user' ? () => onDetectionClick(detection) : undefined}
+                          onClick={
+                            variant === 'user' ? () => onDetectionClick(detection) : undefined
+                          }
                         >
                           <div className="flex w-full min-w-0 flex-col">
                             <span className="min-w-0 truncate font-medium text-gray-900">

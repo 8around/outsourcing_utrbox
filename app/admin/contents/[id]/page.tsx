@@ -15,10 +15,12 @@ import {
   AlertCircle,
   SearchIcon,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import Image from 'next/image'
 import { useToast } from '@/hooks/use-toast'
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { getContentDetail, deleteContent } from '@/lib/api/contents'
 import { getDetections } from '@/lib/api/detections'
 import { ContentDetail, DetectedContent } from '@/types'
@@ -64,6 +66,14 @@ export default function AdminContentDetailPage() {
     setImageError(false)
   }, [selectedDetection])
 
+  // detection_type별로 그룹화하여 순회용 배열 생성
+  const orderedDetections = useMemo(() => {
+    const full = detections.filter((d) => d.detection_type === 'full')
+    const partial = detections.filter((d) => d.detection_type === 'partial')
+    const similar = detections.filter((d) => d.detection_type === 'similar')
+    return [...full, ...partial, ...similar]
+  }, [detections])
+
   // 비교 버튼 클릭 시 발견 이미지로 스크롤
   const handleDetectionClick = useCallback((detection: DetectedContent) => {
     setSelectedDetection(detection)
@@ -73,6 +83,26 @@ export default function AdminContentDetailPage() {
       behavior: 'smooth',
     })
   }, [])
+
+  // 이전/다음 detection으로 순회
+  const handleNavigateDetection = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (!selectedDetection || orderedDetections.length <= 1) return
+
+      const currentIndex = orderedDetections.findIndex((d) => d.id === selectedDetection.id)
+      if (currentIndex === -1) return
+
+      let newIndex
+      if (direction === 'next') {
+        newIndex = (currentIndex + 1) % orderedDetections.length
+      } else {
+        newIndex = (currentIndex - 1 + orderedDetections.length) % orderedDetections.length
+      }
+
+      setSelectedDetection(orderedDetections[newIndex])
+    },
+    [selectedDetection, orderedDetections]
+  )
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -103,6 +133,38 @@ export default function AdminContentDetailPage() {
       setIsLoading(false)
     }
   }
+
+  // 검토 완료 후 백그라운드 업데이트 (로딩 없이)
+  const handleReviewUpdate = useCallback(async () => {
+    try {
+      // 백그라운드에서 데이터 새로고침 (isLoading 상태 변경 없음)
+      const contentResult = await getContentDetail(contentId)
+      if (contentResult.success && contentResult.data) {
+        setContent(contentResult.data)
+      }
+
+      const detectionsResult = await getDetections(contentId)
+      if (detectionsResult.success) {
+        const newDetections = detectionsResult.data || []
+        setDetections(newDetections)
+
+        // selectedDetection도 업데이트하여 UI 즉시 반영
+        if (selectedDetection) {
+          const updatedDetection = newDetections.find((d) => d.id === selectedDetection.id)
+          if (updatedDetection) {
+            setSelectedDetection(updatedDetection)
+          }
+        }
+      }
+
+      toast({
+        title: '검토 완료',
+        description: '검토 상태가 업데이트되었습니다.',
+      })
+    } catch {
+      router.refresh()
+    }
+  }, [contentId, toast, selectedDetection, router])
 
   const handleDelete = async () => {
     if (!content) return
@@ -313,7 +375,7 @@ export default function AdminContentDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-50">
+            <div className="group relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-gray-50">
               {selectedDetection ? (
                 !imageError ? (
                   <>
@@ -371,6 +433,24 @@ export default function AdminContentDetailPage() {
                     <p className="mt-1 text-sm">발견내역을 클릭하여 이미지를 확인하세요</p>
                   </div>
                 </div>
+              )}
+
+              {/* 이미지 순회 화살표 버튼 (호버 시 표시) */}
+              {selectedDetection && orderedDetections.length > 1 && (
+                <>
+                  <button
+                    onClick={() => handleNavigateDetection('prev')}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border bg-white/80 p-2 opacity-0 shadow-md transition-opacity hover:bg-white group-hover:opacity-100"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={() => handleNavigateDetection('next')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border bg-white/80 p-2 opacity-0 shadow-md transition-opacity hover:bg-white group-hover:opacity-100"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </>
               )}
             </div>
             {/* <div className="mt-4 flex justify-end gap-2">
@@ -504,7 +584,7 @@ export default function AdminContentDetailPage() {
           onClose={() => setReviewStatusModalOpen(false)}
           detectionId={selectedDetection.id}
           currentStatus={selectedDetection.admin_review_status}
-          onUpdate={fetchData}
+          onUpdate={handleReviewUpdate}
         />
       )}
 

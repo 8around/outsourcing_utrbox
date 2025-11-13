@@ -77,6 +77,7 @@ export async function signUpUser(
     password: string
     name: string
     organization: string
+    phone: string
   }
 ): Promise<AuthResponse<null>> {
   try {
@@ -89,6 +90,7 @@ export async function signUpUser(
         data: {
           name: data.name,
           organization: data.organization,
+          phone: data.phone,
         },
       },
     })

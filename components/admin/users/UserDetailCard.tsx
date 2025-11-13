@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { User } from '@/lib/admin/types'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { User as UserIcon, Mail, Building2, Calendar, Clock, Edit, Save, X } from 'lucide-react'
+import { User as UserIcon, Mail, Phone, Building2, Calendar, Clock, Edit, Save, X } from 'lucide-react'
 
 interface UserDetailCardProps {
   user: User
@@ -160,6 +160,15 @@ export function UserDetailCard({ user, onUpdate }: UserDetailCardProps) {
             <div>
               <p className="text-sm font-medium text-gray-500">이메일</p>
               <p className="text-base text-gray-900">{user.email}</p>
+            </div>
+          </div>
+
+          {/* 전화번호 (읽기 전용) */}
+          <div className="flex items-start gap-3">
+            <Phone className="mt-0.5 h-5 w-5 text-gray-400" />
+            <div>
+              <p className="text-sm font-medium text-gray-500">전화번호</p>
+              <p className="text-base text-gray-900">{user.phone}</p>
             </div>
           </div>
 
