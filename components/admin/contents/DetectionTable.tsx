@@ -30,7 +30,7 @@ export function DetectionTable({
   variant = 'admin',
 }: DetectionTableProps) {
   // Collapsible 상태 관리 - 기본으로 완전 일치 섹션만 열림
-  const [openSections, setOpenSections] = useState<string[]>(['full'])
+  const [openSections, setOpenSections] = useState<string[]>([])
 
   // 섹션 토글 함수
   const toggleSection = (type: string) => {
