@@ -34,8 +34,8 @@ export function AdminSidebar() {
     <TooltipProvider delayDuration={300}>
       <div
         className={cn(
-          'flex h-screen flex-col border-r bg-white transition-all duration-300',
-          collapsed ? 'w-20' : 'w-56'
+          'fixed left-0 top-0 z-50 flex h-screen flex-col border-r bg-white transition-all duration-300',
+          collapsed ? 'w-16' : 'w-56'
         )}
       >
         {/* 로고 */}

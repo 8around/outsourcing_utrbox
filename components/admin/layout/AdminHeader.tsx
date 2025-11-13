@@ -54,7 +54,7 @@ export function AdminHeader() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-6">
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-white px-6">
       {/* 좌측: 토글 버튼 + 페이지 제목 */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={toggleCollapsed} className="h-8 w-8">
