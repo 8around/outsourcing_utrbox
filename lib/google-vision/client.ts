@@ -231,7 +231,7 @@ export async function analyzeImage(
   if (features.includes('web')) {
     visionFeatures.push({
       type: 'WEB_DETECTION',
-      maxResults: 50,
+      maxResults: 2147483647,
     })
   }
 
